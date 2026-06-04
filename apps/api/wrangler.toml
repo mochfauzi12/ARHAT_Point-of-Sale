@@ -1,0 +1,9 @@
+name = "arhat-pos-api"
+main = "src/index.ts"
+compatibility_date = "2024-04-05"
+
+[vars]
+# Environment variables placeholder
+NODE_ENV = "development"
+
+# We will add DB connection strings later

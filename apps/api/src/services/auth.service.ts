@@ -1,0 +1,146 @@
+import * as bcrypt from 'bcryptjs';
+import { sign, verify } from 'jsonwebtoken';
+import { eq, and } from 'drizzle-orm';
+import { AppError } from '../lib/errors';
+import { db } from '../lib/db';
+import { users, emailVerificationTokens, sessions, passwordResetTokens } from '../models';
+import { emailService } from './email.service';
+
+export class AuthService {
+  async register(data: {
+    email: string;
+    password: string;
+    fullName: string;
+    tenantId: string;
+  }) {
+    if (!data.email || !data.password || !data.fullName || !data.tenantId) {
+      throw new AppError('Missing required fields', 400);
+    }
+
+    const existingUser = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, data.email))
+      .limit(1);
+
+    if (existingUser.length > 0) {
+      throw new AppError('Email already registered', 409);
+    }
+
+    this.validatePassword(data.password);
+    const passwordHash = await bcrypt.hash(data.password, 10);
+
+    const newUser = await db
+      .insert(users)
+      .values({
+        email: data.email,
+        passwordHash,
+        fullName: data.fullName,
+        tenantId: data.tenantId,
+        status: 'active',
+        emailVerified: false,
+      })
+      .returning();
+
+    const token = this.generateRandomToken(32);
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    const verificationToken = await db
+      .insert(emailVerificationTokens)
+      .values({
+        userId: newUser[0].id,
+        token,
+        expiresAt,
+      })
+      .returning();
+
+    await emailService.sendVerificationEmail(newUser[0].email, token);
+
+    return {
+      user: newUser[0],
+      verificationTokenId: verificationToken[0].id,
+    };
+  }
+
+  async login(email: string, password: string, ipAddress?: string) {
+    const user = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+
+    if (user.length === 0) {
+      throw new AppError('Invalid email or password', 401);
+    }
+
+    const userRecord = user[0];
+    const isValidPassword = await bcrypt.compare(password, userRecord.passwordHash);
+    if (!isValidPassword) {
+      throw new AppError('Invalid email or password', 401);
+    }
+
+    if (!userRecord.emailVerified) {
+      throw new AppError('Please verify your email first', 403);
+    }
+
+    const accessToken = this.generateAccessToken(userRecord);
+    const refreshToken = this.generateRefreshToken(userRecord);
+
+    await this.createSession(userRecord.id, refreshToken, ipAddress);
+    await db.update(users).set({ lastLogin: new Date() }).where(eq(users.id, userRecord.id));
+
+    return {
+      accessToken,
+      refreshToken,
+      user: {
+        id: userRecord.id,
+        email: userRecord.email,
+        fullName: userRecord.fullName,
+        role: userRecord.role,
+      },
+    };
+  }
+
+  private validatePassword(password: string): void {
+    if (password.length < 8) {
+      throw new AppError('Password must be at least 8 characters', 400);
+    }
+  }
+
+  private generateRandomToken(length: number): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }
+
+  private generateAccessToken(user: any): string {
+    return sign(
+      { userId: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET || 'secret',
+      { expiresIn: '15m' }
+    );
+  }
+
+  private generateRefreshToken(user: any): string {
+    return sign(
+      { userId: user.id },
+      process.env.JWT_REFRESH_SECRET || 'refresh-secret',
+      { expiresIn: '7d' }
+    );
+  }
+
+  private async createSession(userId: string, refreshToken: string, ipAddress?: string): Promise<void> {
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    await db.insert(sessions).values({
+      userId,
+      refreshToken,
+      ipAddress: ipAddress || 'unknown',
+      expiresAt,
+    });
+  }
+}
+
+export const authService = new AuthService();

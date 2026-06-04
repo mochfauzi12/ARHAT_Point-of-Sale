@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: arhat_postgres
+    environment:
+      POSTGRES_USER: arhat_user
+      POSTGRES_PASSWORD: arhat_password
+      POSTGRES_DB: arhat_pos
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - arhat-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: arhat_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - arhat-network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: arhat_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    networks:
+      - arhat-network
+
+volumes:
+  postgres_data:
+
+networks:
+  arhat-network:
+    driver: bridge
