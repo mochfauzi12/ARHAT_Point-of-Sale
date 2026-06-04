@@ -1,44 +1,41 @@
-import axios from 'axios';
+export const API_URL = 'http://127.0.0.1:8787';
 
-const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Request interceptor to attach JWT token
-api.interceptors.request.use(
-  (config) => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('accessToken');
-      if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// Response interceptor to handle errors and token refresh
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    // Handle 401 Unauthorized globally
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      // In a real app, attempt to refresh token here
-      // For now, clear storage and redirect to login
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('accessToken');
-        window.location.href = '/auth/login';
-      }
-    }
-    return Promise.reject(error);
+export async function fetchProducts(query: string = '') {
+  try {
+    const res = await fetch(`${API_URL}/products/search?q=${encodeURIComponent(query)}`);
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (err) {
+    console.error('Failed to fetch products:', err);
+    return [];
   }
-);
+}
 
-export default api;
+export async function checkoutTransaction(payload: any) {
+  try {
+    const res = await fetch(`${API_URL}/transactions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    
+    if (!res.ok) throw new Error('Failed to create transaction');
+    const transaction = await res.json();
+    
+    // Process Checkout
+    const checkoutRes = await fetch(`${API_URL}/transactions/${transaction.id}/checkout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        paymentMethod: payload.paymentMethod,
+        amount: payload.totalAmount
+      })
+    });
+    
+    if (!checkoutRes.ok) throw new Error('Failed to process payment');
+    return await checkoutRes.json();
+  } catch (err) {
+    console.error('Checkout error:', err);
+    throw err;
+  }
+}

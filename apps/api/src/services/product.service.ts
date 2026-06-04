@@ -1,5 +1,5 @@
 import { eq, or, ilike, and } from 'drizzle-orm';
-import { db } from '../db';
+import { db } from '../lib/db';
 import { products } from '../models';
 
 export class ProductService {
