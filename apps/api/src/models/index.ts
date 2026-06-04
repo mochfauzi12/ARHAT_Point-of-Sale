@@ -11,6 +11,7 @@ export const users = pgTable('users', {
   tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   email: varchar('email', { length: 255 }).notNull(),
   passwordHash: varchar('password_hash', { length: 255 }).notNull(),
+  pin: varchar('pin', { length: 10 }),
   fullName: varchar('full_name', { length: 255 }).notNull(),
   role: varchar('role', { length: 50 }).notNull().default('cashier'),
   status: varchar('status', { length: 50 }).default('active'),
@@ -48,6 +49,7 @@ export const products = pgTable('products', {
   name: varchar('name', { length: 255 }).notNull(),
   sku: varchar('sku', { length: 100 }).unique(),
   barcode: varchar('barcode', { length: 100 }),
+  imageUrl: varchar('image_url', { length: 255 }),
   categoryId: uuid('category_id'), // To be implemented
   description: varchar('description', { length: 1000 }),
   purchasePrice: varchar('purchase_price', { length: 20 }), // Use varchar/numeric for decimals

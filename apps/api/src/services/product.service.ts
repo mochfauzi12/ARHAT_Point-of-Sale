@@ -50,4 +50,30 @@ export class ProductService {
     
     return result[0] || null;
   }
+
+  /**
+   * Update product
+   */
+  static async updateProduct(tenantId: string, productId: string, data: any) {
+    const result = await db.update(products).set({ ...data, updatedAt: new Date() }).where(
+      and(
+        eq(products.id, productId),
+        eq(products.tenantId, tenantId)
+      )
+    ).returning();
+    return result[0];
+  }
+
+  /**
+   * Delete product
+   */
+  static async deleteProduct(tenantId: string, productId: string) {
+    const result = await db.delete(products).where(
+      and(
+        eq(products.id, productId),
+        eq(products.tenantId, tenantId)
+      )
+    ).returning();
+    return result[0];
+  }
 }

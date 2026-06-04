@@ -21,9 +21,10 @@ export function ProductGrid() {
     loadProducts();
   }, []);
 
+  const safeProducts = Array.isArray(products) ? products : [];
   const filteredProducts = selectedCategory === 'All' 
-    ? products 
-    : products.filter(p => p.category === selectedCategory); // Currently category might be null in DB
+    ? safeProducts 
+    : safeProducts.filter(p => p.category === selectedCategory);
 
   return (
     <div className="flex flex-col gap-6 h-full">
@@ -56,7 +57,11 @@ export function ProductGrid() {
               className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer flex flex-col gap-3 group"
             >
               <div className="w-full aspect-square bg-gray-50 rounded-xl flex items-center justify-center overflow-hidden">
-                <span className="text-4xl">☕</span>
+                {product.imageUrl ? (
+                  <img src={`http://localhost:8787${product.imageUrl}`} alt={product.name} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-4xl">☕</span>
+                )}
               </div>
               <div>
                 <p className="font-semibold text-gray-900 leading-tight group-hover:text-blue-600 transition-colors">

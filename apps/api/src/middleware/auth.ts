@@ -1,17 +1,30 @@
 import { Context, Next } from 'hono';
+import { verify } from 'jsonwebtoken';
+import { AppError } from '../lib/errors';
 
 export const authMiddleware = async (c: Context, next: Next) => {
-  // TODO: Implement actual JWT authentication later
-  // For development, we set a mock user context so the API works
+  const authHeader = c.req.header('Authorization');
   
-  const mockTenantId = '00000000-0000-0000-0000-000000000000';
-  const mockUserId = '11111111-1111-1111-1111-111111111111';
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    throw new AppError('Unauthorized: Missing or invalid token', 401);
+  }
+
+  const token = authHeader.split(' ')[1];
   
-  c.set('user', {
-    id: mockUserId,
-    tenantId: mockTenantId,
-    role: 'owner'
-  });
-  
-  await next();
+  try {
+    const secret = process.env.JWT_SECRET || 'secret';
+    const decoded = verify(token, secret) as any;
+    
+    // Set user data to context
+    c.set('user', {
+      id: decoded.userId,
+      tenantId: decoded.tenantId,
+      role: decoded.role,
+      email: decoded.email
+    });
+    
+    await next();
+  } catch (error) {
+    throw new AppError('Unauthorized: Invalid or expired token', 401);
+  }
 };

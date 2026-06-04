@@ -97,6 +97,38 @@ export class AuthService {
         email: userRecord.email,
         fullName: userRecord.fullName,
         role: userRecord.role,
+      }
+    };
+  }
+
+  async loginPin(pin: string, ipAddress?: string) {
+    const user = await db
+      .select()
+      .from(users)
+      .where(eq(users.pin, pin))
+      .limit(1);
+
+    if (user.length === 0) {
+      throw new AppError('Invalid PIN', 401);
+    }
+
+    const userRecord = user[0];
+
+    const accessToken = this.generateAccessToken(userRecord);
+    const refreshToken = this.generateRefreshToken(userRecord);
+
+    await this.createSession(userRecord.id, refreshToken, ipAddress);
+    await db.update(users).set({ lastLogin: new Date() }).where(eq(users.id, userRecord.id));
+
+    return {
+      accessToken,
+      refreshToken,
+      user: {
+        id: userRecord.id,
+        email: userRecord.email,
+        fullName: userRecord.fullName,
+        role: userRecord.role,
+        tenantId: userRecord.tenantId,
       },
     };
   }
@@ -118,7 +150,7 @@ export class AuthService {
 
   private generateAccessToken(user: any): string {
     return sign(
-      { userId: user.id, email: user.email, role: user.role },
+      { userId: user.id, email: user.email, role: user.role, tenantId: user.tenantId },
       process.env.JWT_SECRET || 'secret',
       { expiresIn: '15m' }
     );

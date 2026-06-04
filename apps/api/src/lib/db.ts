@@ -1,9 +1,11 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from '../models';
+import 'dotenv/config';
 
-const connectionString = process.env.DATABASE_URL || '';
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL is missing in environment variables!");
+}
 
-// If no DB URL is provided, it will error when queried, which is expected for now.
-const client = postgres(connectionString, { prepare: false });
+const client = postgres(process.env.DATABASE_URL as string, { prepare: false });
 export const db = drizzle(client, { schema });

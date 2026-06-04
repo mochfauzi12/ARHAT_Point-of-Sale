@@ -6,6 +6,7 @@ export interface Product {
   sellingPrice: number | string;
   stockQuantity?: number | string;
   image?: string;
+  imageUrl?: string;
   category?: string;
 }
 
