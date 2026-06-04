@@ -10,21 +10,24 @@
     "lint": "eslint \"src/**/*.ts\""
   },
   "dependencies": {
-    "hono": "^4.0.0",
-    "drizzle-orm": "^0.30.0",
-    "postgres": "^3.4.4",
+    "@supabase/supabase-js": "^2.39.8",
     "bcryptjs": "^2.4.3",
+    "drizzle-orm": "^0.45.2",
+    "hono": "^4.0.0",
     "jsonwebtoken": "^9.0.2",
-    "zod": "^3.22.4",
-    "@supabase/supabase-js": "^2.39.8"
+    "postgres": "^3.4.9",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@arhat-pos/eslint-config": "workspace:*",
     "@cloudflare/workers-types": "^4.20240405.0",
-    "wrangler": "^3.48.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.6",
-    "vitest": "^1.4.0",
+    "dotenv": "^17.4.2",
+    "drizzle-kit": "^0.31.10",
+    "tsx": "^4.22.4",
     "typescript": "^5.0.0",
-    "@arhat-pos/eslint-config": "workspace:*"
+    "vitest": "^1.4.0",
+    "wrangler": "^3.48.0"
   }
 }
