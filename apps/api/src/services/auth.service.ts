@@ -152,7 +152,7 @@ export class AuthService {
     return sign(
       { userId: user.id, email: user.email, role: user.role, tenantId: user.tenantId },
       process.env.JWT_SECRET || 'secret',
-      { expiresIn: '15m' }
+      { expiresIn: '7d' }
     );
   }
 

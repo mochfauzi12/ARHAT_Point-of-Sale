@@ -6,6 +6,14 @@ export const tenants = pgTable('tenants', {
   email: varchar('email', { length: 255 }).notNull().unique(),
 });
 
+export const outlets = pgTable('outlets', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
+  name: varchar('name', { length: 255 }).notNull(),
+  address: varchar('address', { length: 500 }),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
@@ -54,8 +62,19 @@ export const products = pgTable('products', {
   description: varchar('description', { length: 1000 }),
   purchasePrice: varchar('purchase_price', { length: 20 }), // Use varchar/numeric for decimals
   sellingPrice: varchar('selling_price', { length: 20 }).notNull(),
-  stockQuantity: varchar('stock_quantity', { length: 10 }).default('0'), // or integer
+  stockQuantity: varchar('stock_quantity', { length: 10 }).default('0'), // Legacy: total stock or simple mode stock
+  minStockLevel: varchar('min_stock_level', { length: 10 }).default('0'), // Legacy: min stock for simple mode
   isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+export const productStocks = pgTable('product_stocks', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  productId: uuid('product_id').notNull().references(() => products.id),
+  outletId: uuid('outlet_id').notNull().references(() => outlets.id),
+  stockQuantity: varchar('stock_quantity', { length: 10 }).default('0'),
+  minStockLevel: varchar('min_stock_level', { length: 10 }).default('0'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
@@ -112,4 +131,67 @@ export const stockMovements = pgTable('stock_movements', {
   reason: varchar('reason', { length: 255 }),
   recordedBy: uuid('recorded_by').references(() => users.id),
   createdAt: timestamp('created_at').defaultNow(),
+});
+
+export const stockAdjustments = pgTable('stock_adjustments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
+  outletId: uuid('outlet_id').notNull().references(() => outlets.id),
+  adjustmentNumber: varchar('adjustment_number', { length: 50 }).notNull(),
+  status: varchar('status', { length: 50 }).notNull().default('pending'), // pending, approved, rejected
+  createdBy: uuid('created_by').notNull().references(() => users.id),
+  approvedBy: uuid('approved_by').references(() => users.id),
+  createdAt: timestamp('created_at').defaultNow(),
+  approvedAt: timestamp('approved_at'),
+});
+
+export const stockAdjustmentItems = pgTable('stock_adjustment_items', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  adjustmentId: uuid('adjustment_id').notNull().references(() => stockAdjustments.id),
+  productId: uuid('product_id').notNull().references(() => products.id),
+  currentStock: varchar('current_stock', { length: 10 }).notNull(),
+  adjustedStock: varchar('adjusted_stock', { length: 10 }).notNull(),
+  variance: varchar('variance', { length: 10 }).notNull(),
+  reason: varchar('reason', { length: 255 }),
+});
+
+export const stockOpnameSessions = pgTable('stock_opname_sessions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
+  outletId: uuid('outlet_id').notNull().references(() => outlets.id),
+  opnameNumber: varchar('opname_number', { length: 50 }).notNull(),
+  status: varchar('status', { length: 50 }).notNull().default('in_progress'), // in_progress, completed
+  startedBy: uuid('started_by').notNull().references(() => users.id),
+  completedBy: uuid('completed_by').references(() => users.id),
+  createdAt: timestamp('created_at').defaultNow(),
+  completedAt: timestamp('completed_at'),
+});
+
+export const stockOpnameItems = pgTable('stock_opname_items', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  opnameId: uuid('opname_id').notNull().references(() => stockOpnameSessions.id),
+  productId: uuid('product_id').notNull().references(() => products.id),
+  expectedQuantity: varchar('expected_quantity', { length: 10 }).notNull(),
+  actualQuantity: varchar('actual_quantity', { length: 10 }).notNull(),
+  variance: varchar('variance', { length: 10 }).notNull(),
+});
+
+export const stockTransfers = pgTable('stock_transfers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
+  transferNumber: varchar('transfer_number', { length: 50 }).notNull(),
+  sourceOutletId: uuid('source_outlet_id').notNull().references(() => outlets.id),
+  destinationOutletId: uuid('destination_outlet_id').notNull().references(() => outlets.id),
+  status: varchar('status', { length: 50 }).notNull().default('pending'), // pending, received, cancelled
+  createdBy: uuid('created_by').notNull().references(() => users.id),
+  receivedBy: uuid('received_by').references(() => users.id),
+  createdAt: timestamp('created_at').defaultNow(),
+  receivedAt: timestamp('received_at'),
+});
+
+export const stockTransferItems = pgTable('stock_transfer_items', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  transferId: uuid('transfer_id').notNull().references(() => stockTransfers.id),
+  productId: uuid('product_id').notNull().references(() => products.id),
+  quantity: varchar('quantity', { length: 10 }).notNull(),
 });

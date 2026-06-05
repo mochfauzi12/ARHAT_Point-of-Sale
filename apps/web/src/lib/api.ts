@@ -13,7 +13,17 @@ function getHeaders(customHeaders: any = {}) {
     ...(token ? { 'Authorization': `Bearer ${token}` } : {})
   };
 }
-
+async function fetchWithAuth(url: string, options: any = {}) {
+  const res = await fetch(url, options);
+  if (res.status === 401) {
+    if (typeof document !== 'undefined') {
+      document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      window.location.href = '/login';
+    }
+    throw new Error('Session expired');
+  }
+  return res;
+}
 export async function loginPin(pin: string) {
   const res = await fetch(`${API_URL}/auth/login-pin`, {
     method: 'POST',
@@ -30,7 +40,7 @@ export async function loginPin(pin: string) {
 
 export async function fetchProducts(query: string = '') {
   try {
-    const res = await fetch(`${API_URL}/products/search?q=${encodeURIComponent(query)}`, {
+    const res = await fetchWithAuth(`${API_URL}/products/search?q=${encodeURIComponent(query)}`, {
       headers: getHeaders()
     });
     if (!res.ok) return [];
@@ -43,7 +53,7 @@ export async function fetchProducts(query: string = '') {
 }
 
 export async function getTransactions() {
-  const res = await fetch(`${API_URL}/transactions`, {
+  const res = await fetchWithAuth(`${API_URL}/transactions`, {
     headers: getHeaders()
   });
   if (!res.ok) throw new Error('Failed to fetch transactions');
@@ -53,7 +63,7 @@ export async function getTransactions() {
 
 export async function checkoutTransaction(payload: any) {
   try {
-    const res = await fetch(`${API_URL}/transactions`, {
+    const res = await fetchWithAuth(`${API_URL}/transactions`, {
       method: 'POST',
       headers: getHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(payload)
@@ -63,7 +73,7 @@ export async function checkoutTransaction(payload: any) {
     const transaction = await res.json();
     
     // Process Checkout
-    const checkoutRes = await fetch(`${API_URL}/transactions/${transaction.data.id}/checkout`, {
+    const checkoutRes = await fetchWithAuth(`${API_URL}/transactions/${transaction.data.id}/checkout`, {
       method: 'POST',
       headers: getHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({
@@ -81,17 +91,18 @@ export async function checkoutTransaction(payload: any) {
 }
 
 export async function holdTransaction(payload: any) {
-  const res = await fetch(`${API_URL}/transactions/hold`, {
+  const res = await fetchWithAuth(`${API_URL}/transactions/hold`, {
     method: 'POST',
     headers: getHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(payload)
   });
   if (!res.ok) throw new Error('Failed to hold transaction');
-  return await res.json();
+  const json = await res.json();
+  return json.data;
 }
 
 export async function getHeldTransactions() {
-  const res = await fetch(`${API_URL}/transactions/held`, {
+  const res = await fetchWithAuth(`${API_URL}/transactions/held`, {
     headers: getHeaders()
   });
   if (!res.ok) throw new Error('Failed to get held transactions');
@@ -100,7 +111,7 @@ export async function getHeldTransactions() {
 }
 
 export async function resumeTransaction(id: string) {
-  const res = await fetch(`${API_URL}/transactions/${id}/resume`, {
+  const res = await fetchWithAuth(`${API_URL}/transactions/${id}/resume`, {
     method: 'POST',
     headers: getHeaders()
   });
@@ -110,7 +121,7 @@ export async function resumeTransaction(id: string) {
 }
 
 export async function refundTransaction(id: string) {
-  const res = await fetch(`${API_URL}/transactions/${id}/refund`, {
+  const res = await fetchWithAuth(`${API_URL}/transactions/${id}/refund`, {
     method: 'POST',
     headers: getHeaders()
   });
@@ -120,7 +131,7 @@ export async function refundTransaction(id: string) {
 }
 
 export async function voidTransaction(id: string) {
-  const res = await fetch(`${API_URL}/transactions/${id}/void`, {
+  const res = await fetchWithAuth(`${API_URL}/transactions/${id}/void`, {
     method: 'POST',
     headers: getHeaders()
   });
@@ -131,40 +142,43 @@ export async function voidTransaction(id: string) {
 
 export async function createProduct(payload: any) {
   const isFormData = payload instanceof FormData;
-  const res = await fetch(`${API_URL}/products`, {
+  const res = await fetchWithAuth(`${API_URL}/products`, {
     method: 'POST',
     headers: getHeaders(isFormData ? {} : { 'Content-Type': 'application/json' }),
     body: isFormData ? payload : JSON.stringify(payload)
   });
   if (!res.ok) throw new Error('Failed to create product');
-  return await res.json();
+  const json = await res.json();
+  return json.data;
 }
 
 export async function updateProduct(id: string, payload: any) {
   const isFormData = payload instanceof FormData;
-  const res = await fetch(`${API_URL}/products/${id}`, {
+  const res = await fetchWithAuth(`${API_URL}/products/${id}`, {
     method: 'PUT',
     headers: getHeaders(isFormData ? {} : { 'Content-Type': 'application/json' }),
     body: isFormData ? payload : JSON.stringify(payload)
   });
   if (!res.ok) throw new Error('Failed to update product');
-  return await res.json();
+  const json = await res.json();
+  return json.data;
 }
 
 export async function deleteProduct(id: string) {
-  const res = await fetch(`${API_URL}/products/${id}`, {
+  const res = await fetchWithAuth(`${API_URL}/products/${id}`, {
     method: 'DELETE',
     headers: getHeaders()
   });
   if (!res.ok) throw new Error('Failed to delete product');
-  return await res.json();
+  const json = await res.json();
+  return json.data;
 }
 
 export async function uploadImage(file: File) {
   const formData = new FormData();
   formData.append('file', file);
   
-  const res = await fetch(`${API_URL}/upload`, {
+  const res = await fetchWithAuth(`${API_URL}/upload`, {
     method: 'POST',
     headers: getHeaders(), // Don't set Content-Type for FormData, browser does it automatically with boundary
     body: formData
@@ -176,7 +190,7 @@ export async function uploadImage(file: File) {
 }
 
 export async function getDashboardAnalytics() {
-  const res = await fetch(`${API_URL}/analytics/dashboard`, {
+  const res = await fetchWithAuth(`${API_URL}/analytics/dashboard`, {
     headers: getHeaders()
   });
   if (!res.ok) {
@@ -188,7 +202,7 @@ export async function getDashboardAnalytics() {
 }
 
 export async function getInventoryMovements() {
-  const res = await fetch(`${API_URL}/inventory/movements`, {
+  const res = await fetchWithAuth(`${API_URL}/inventory/movements`, {
     headers: getHeaders()
   });
   if (!res.ok) throw new Error('Failed to fetch inventory movements');
@@ -196,12 +210,108 @@ export async function getInventoryMovements() {
   return json.data;
 }
 
-export async function restockProduct(productId: string, quantity: number, reason: string = 'Restock') {
-  const res = await fetch(`${API_URL}/inventory/restock`, {
+export async function fetchOutlets() {
+  const res = await fetchWithAuth(`${API_URL}/inventory/outlets`, { headers: getHeaders() });
+  if (!res.ok) return [];
+  const json = await res.json();
+  return json.data || [];
+}
+
+export async function createOutlet(name: string, address: string = '') {
+  const res = await fetchWithAuth(`${API_URL}/inventory/outlets`, {
     method: 'POST',
     headers: getHeaders({ 'Content-Type': 'application/json' }),
-    body: JSON.stringify({ productId, quantity, reason })
+    body: JSON.stringify({ name, address })
   });
-  if (!res.ok) throw new Error('Failed to restock product');
-  return await res.json();
+  if (!res.ok) throw new Error('Failed to create outlet');
+  const json = await res.json();
+  return json.data;
+}
+
+export async function fetchProductStockByOutlet(outletId: string) {
+  const res = await fetchWithAuth(`${API_URL}/inventory/outlets/${outletId}/products`, { headers: getHeaders() });
+  if (!res.ok) return [];
+  const json = await res.json();
+  return json.data || [];
+}
+
+export async function recordStockMovement(outletId: string, productId: string, type: 'in'|'out', quantity: number, reason: string = '') {
+  const res = await fetchWithAuth(`${API_URL}/inventory/movements`, {
+    method: 'POST',
+    headers: getHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ outletId, productId, type, quantity, reason })
+  });
+  if (!res.ok) throw new Error('Failed to record stock movement');
+  const json = await res.json();
+  return json.data;
+}
+
+export async function fetchAdjustments(outletId: string) {
+  const res = await fetchWithAuth(`${API_URL}/inventory/outlets/${outletId}/adjustments`, { headers: getHeaders() });
+  if (!res.ok) return [];
+  const json = await res.json();
+  return json.data || [];
+}
+
+export async function createAdjustment(outletId: string, items: Array<{productId: string, adjustedStock: number, reason: string}>) {
+  const res = await fetchWithAuth(`${API_URL}/inventory/outlets/${outletId}/adjustments`, {
+    method: 'POST',
+    headers: getHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ items })
+  });
+  if (!res.ok) throw new Error('Failed to create adjustment');
+  const json = await res.json();
+  return json.data;
+}
+
+export async function approveAdjustment(id: string) {
+  const res = await fetchWithAuth(`${API_URL}/inventory/adjustments/${id}/approve`, {
+    method: 'PATCH',
+    headers: getHeaders()
+  });
+  if (!res.ok) throw new Error('Failed to approve adjustment');
+  const json = await res.json();
+  return json.data;
+}
+
+export async function createOpname(outletId: string) {
+  const res = await fetchWithAuth(`${API_URL}/inventory/outlets/${outletId}/opname`, {
+    method: 'POST',
+    headers: getHeaders()
+  });
+  if (!res.ok) throw new Error('Failed to create opname');
+  const json = await res.json();
+  return json.data;
+}
+
+export async function completeOpname(id: string, items: Array<{productId: string, actualQuantity: number}>) {
+  const res = await fetchWithAuth(`${API_URL}/inventory/opname/${id}/complete`, {
+    method: 'POST',
+    headers: getHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ items })
+  });
+  if (!res.ok) throw new Error('Failed to complete opname');
+  const json = await res.json();
+  return json.data;
+}
+
+export async function createTransfer(sourceOutletId: string, destinationOutletId: string, items: Array<{productId: string, quantity: number}>) {
+  const res = await fetchWithAuth(`${API_URL}/inventory/transfers`, {
+    method: 'POST',
+    headers: getHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ sourceOutletId, destinationOutletId, items })
+  });
+  if (!res.ok) throw new Error('Failed to create transfer');
+  const json = await res.json();
+  return json.data;
+}
+
+export async function receiveTransfer(id: string) {
+  const res = await fetchWithAuth(`${API_URL}/inventory/transfers/${id}/receive`, {
+    method: 'PATCH',
+    headers: getHeaders()
+  });
+  if (!res.ok) throw new Error('Failed to receive transfer');
+  const json = await res.json();
+  return json.data;
 }

@@ -3,11 +3,12 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { LayoutDashboard, Package, ShoppingCart, LogOut, Settings } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, LogOut, Settings, CreditCard, ClipboardList } from 'lucide-react';
 
 const MENU_ITEMS = [
   { name: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard size={20} /> },
   { name: 'Products', href: '/products', icon: <Package size={20} /> },
+  { name: 'Inventory', href: '/inventory', icon: <ClipboardList size={20} /> },
   { name: 'Transactions', href: '/transactions', icon: <CreditCard size={20} /> },
   { name: 'POS', href: '/pos', icon: <ShoppingCart size={20} /> },
 ];

@@ -23,7 +23,7 @@ export default function LoginPage() {
       setLoading(true);
       try {
         await loginPin(newPin);
-        router.push('/pos');
+        router.push('/dashboard');
       } catch (err) {
         setError(true);
         setPin('');

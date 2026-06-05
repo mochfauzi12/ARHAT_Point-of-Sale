@@ -11,12 +11,12 @@ export default function POSPage() {
         
         {/* Navbar (Top) */}
         <div className="flex-none p-4 sm:p-6 flex items-center justify-between border-b border-gray-100">
-          <div className="flex items-center gap-3 bg-white/60 backdrop-blur-md rounded-2xl shadow-sm pl-3 pr-4 py-2 border border-gray-100">
+          <a href="/dashboard" className="flex items-center gap-3 bg-white/60 backdrop-blur-md rounded-2xl shadow-sm pl-3 pr-4 py-2 border border-gray-100 hover:bg-white transition-colors cursor-pointer">
             <div className="w-8 h-8 bg-black rounded-xl flex items-center justify-center text-white">
               <Store size={18} />
             </div>
             <span className="font-semibold text-black tracking-tight">ARHAT POS</span>
-          </div>
+          </a>
           
           <div className="flex-1 max-w-md mx-6">
             <ProductSearch />

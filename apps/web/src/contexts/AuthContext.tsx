@@ -22,8 +22,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     setIsMounted(true);
-    const auth = localStorage.getItem('arhat_auth_token');
-    if (auth === 'valid') {
+    const hasToken = document.cookie.includes('token=');
+    if (hasToken) {
       setIsAuthenticated(true);
     } else {
       if (pathname !== '/login' && pathname !== '/pos') {
@@ -33,18 +33,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [pathname, router]);
 
   const login = (pass: string) => {
-    // Simple password for MVP
-    if (pass === 'admin123') {
-      localStorage.setItem('arhat_auth_token', 'valid');
-      setIsAuthenticated(true);
-      router.push('/products');
-      return true;
-    }
+    // Legacy mock login is no longer used, login is handled by /login page
     return false;
   };
 
   const logout = () => {
     localStorage.removeItem('arhat_auth_token');
+    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     setIsAuthenticated(false);
     router.push('/login');
   };
