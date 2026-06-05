@@ -42,6 +42,15 @@ export async function fetchProducts(query: string = '') {
   }
 }
 
+export async function getTransactions() {
+  const res = await fetch(`${API_URL}/transactions`, {
+    headers: getHeaders()
+  });
+  if (!res.ok) throw new Error('Failed to fetch transactions');
+  const json = await res.json();
+  return json.data;
+}
+
 export async function checkoutTransaction(payload: any) {
   try {
     const res = await fetch(`${API_URL}/transactions`, {
@@ -69,6 +78,55 @@ export async function checkoutTransaction(payload: any) {
     console.error('Checkout error:', err);
     throw err;
   }
+}
+
+export async function holdTransaction(payload: any) {
+  const res = await fetch(`${API_URL}/transactions/hold`, {
+    method: 'POST',
+    headers: getHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) throw new Error('Failed to hold transaction');
+  return await res.json();
+}
+
+export async function getHeldTransactions() {
+  const res = await fetch(`${API_URL}/transactions/held`, {
+    headers: getHeaders()
+  });
+  if (!res.ok) throw new Error('Failed to get held transactions');
+  const json = await res.json();
+  return json.data;
+}
+
+export async function resumeTransaction(id: string) {
+  const res = await fetch(`${API_URL}/transactions/${id}/resume`, {
+    method: 'POST',
+    headers: getHeaders()
+  });
+  if (!res.ok) throw new Error('Failed to resume transaction');
+  const json = await res.json();
+  return json.data;
+}
+
+export async function refundTransaction(id: string) {
+  const res = await fetch(`${API_URL}/transactions/${id}/refund`, {
+    method: 'POST',
+    headers: getHeaders()
+  });
+  if (!res.ok) throw new Error('Failed to refund transaction');
+  const json = await res.json();
+  return json.data;
+}
+
+export async function voidTransaction(id: string) {
+  const res = await fetch(`${API_URL}/transactions/${id}/void`, {
+    method: 'POST',
+    headers: getHeaders()
+  });
+  if (!res.ok) throw new Error('Failed to void transaction');
+  const json = await res.json();
+  return json.data;
 }
 
 export async function createProduct(payload: any) {

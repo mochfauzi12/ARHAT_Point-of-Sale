@@ -42,3 +42,18 @@ body {
 .animate-shake {
   animation: shake 0.3s ease-in-out;
 }
+
+@media print {
+  body > *:not(.print-only) {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+}

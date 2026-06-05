@@ -3,25 +3,27 @@ import React, { useState } from 'react';
 import { useCartStore } from '@/store/useCartStore';
 import { Trash2, Plus, Minus, CreditCard, Wallet, Banknote, PauseCircle, ListTodo } from 'lucide-react';
 import { HeldTransactionsModal } from './HeldTransactionsModal';
-import { checkoutTransaction } from '@/lib/api';
+import { checkoutTransaction, holdTransaction as apiHoldTransaction } from '@/lib/api';
+import { PrintReceiptPortal } from './ReceiptTemplate';
 
 export function CartPanel() {
-  const { items, removeItem, updateQuantity, updateDiscount, clearCart, getSubtotal, getTotalDiscount, holdTransaction, heldTransactions } = useCartStore();
-  const [paymentMethod, setPaymentMethod] = useState<string>('Cash');
+  const { items, removeItem, updateQuantity, updateDiscount, clearCart, getSubtotal, getTotalDiscount, holdTransaction, heldTransactions, globalDiscount, setGlobalDiscount, isTaxEnabled, setTaxEnabled } = useCartStore();
+  const [paymentMethod, setPaymentMethod] = useState('cash');
   const [isCheckout, setIsCheckout] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [showHeldModal, setShowHeldModal] = useState(false);
+  const [printTx, setPrintTx] = useState<any>(null);
 
   const subtotal = getSubtotal();
   const totalDiscount = getTotalDiscount();
   const subtotalAfterDiscount = subtotal - totalDiscount;
-  const tax = subtotalAfterDiscount * 0.11;
+  const tax = isTaxEnabled ? subtotalAfterDiscount * 0.11 : 0;
   const total = subtotalAfterDiscount + tax;
 
   const handleCheckout = async () => {
     setIsCheckout(true);
     try {
-      await checkoutTransaction({
+      const res = await checkoutTransaction({
         tenantId: '00000000-0000-0000-0000-000000000000',
         cashierId: '11111111-1111-1111-1111-111111111111',
         paymentMethod,
@@ -36,11 +38,40 @@ export function CartPanel() {
           subtotal: (typeof i.sellingPrice === 'string' ? parseFloat(i.sellingPrice) : i.sellingPrice) * i.quantity - i.discount * i.quantity
         }))
       });
-      setIsSuccess(true);
-      setTimeout(() => {
-        setIsSuccess(false);
-        clearCart();
-      }, 2000);
+      
+      const txForPrinting = {
+        transactionNumber: res.data?.transactionNumber || `TRX-${Date.now()}`,
+        createdAt: new Date(),
+        subtotal,
+        taxAmount: tax,
+        discountAmount: totalDiscount,
+        totalAmount: total,
+        paymentMethod,
+        items: items.map(i => ({
+          productName: i.name,
+          quantity: i.quantity,
+          unitPrice: i.sellingPrice,
+          discount: i.discount || 0
+        }))
+      };
+
+      if (confirm('Checkout successful! Do you want to print the receipt?')) {
+        setPrintTx(txForPrinting);
+        setTimeout(() => {
+          window.print();
+          setTimeout(() => {
+            setPrintTx(null);
+            setIsSuccess(false);
+            clearCart();
+          }, 500);
+        }, 100);
+      } else {
+        setIsSuccess(true);
+        setTimeout(() => {
+          setIsSuccess(false);
+          clearCart();
+        }, 2000);
+      }
     } catch (err) {
       alert('Checkout failed. Make sure API is running and seeding is done.');
     } finally {
@@ -48,10 +79,34 @@ export function CartPanel() {
     }
   };
 
-  const handleHold = () => {
+  const handleHold = async () => {
     const note = prompt('Enter a note for this held transaction (e.g. Table 5):');
     if (note !== null) {
-      holdTransaction(note || `Customer ${heldTransactions.length + 1}`);
+      try {
+        await apiHoldTransaction({
+          tenantId: '00000000-0000-0000-0000-000000000000',
+          cashierId: '11111111-1111-1111-1111-111111111111',
+          notes: note || `Customer ${heldTransactions.length + 1}`,
+          subtotal: subtotal,
+          taxAmount: tax,
+          discountAmount: totalDiscount,
+          totalAmount: total,
+          items: items.map(i => ({
+            productId: i.id,
+            quantity: i.quantity,
+            unitPrice: typeof i.sellingPrice === 'string' ? parseFloat(i.sellingPrice) : i.sellingPrice,
+            discount: i.discount || 0,
+            tax: isTaxEnabled ? ((typeof i.sellingPrice === 'string' ? parseFloat(i.sellingPrice) : i.sellingPrice) - (i.discount || 0)) * 0.11 : 0,
+            subtotal: (typeof i.sellingPrice === 'string' ? parseFloat(i.sellingPrice) : i.sellingPrice) * i.quantity - i.discount * i.quantity
+          }))
+        });
+        clearCart();
+        setGlobalDiscount(0);
+        alert('Transaction held successfully!');
+      } catch (err) {
+        console.error(err);
+        alert('Failed to hold transaction. Is the backend running?');
+      }
     }
   };
 
@@ -80,11 +135,7 @@ export function CartPanel() {
             className="flex items-center gap-1 text-sm font-medium text-gray-500 hover:text-black transition-colors relative"
           >
             <ListTodo size={16} />
-            {heldTransactions.length > 0 && (
-              <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
-                {heldTransactions.length}
-              </span>
-            )}
+            <span>Held</span>
           </button>
           <button 
             onClick={clearCart}
@@ -157,19 +208,40 @@ export function CartPanel() {
 
       {/* Summary & Checkout */}
       <div className="p-5 border-t border-gray-100 bg-gray-50/30">
-        <div className="flex flex-col gap-2 mb-4">
-          <div className="flex justify-between text-sm text-gray-500 font-medium">
+        <div className="flex flex-col gap-3 mb-4">
+          <div className="flex justify-between items-center text-sm text-gray-500 font-medium">
             <span>Subtotal</span>
             <span className="text-gray-900">Rp {subtotal.toLocaleString('id-ID')}</span>
           </div>
+
+          <div className="flex justify-between items-center text-sm font-medium">
+            <span className="text-gray-500">Global Discount (Rp)</span>
+            <input 
+              type="number" 
+              value={globalDiscount || ''}
+              onChange={(e) => setGlobalDiscount(parseFloat(e.target.value) || 0)}
+              className="bg-white border border-gray-200 rounded-lg text-sm px-2 py-1 w-28 text-right focus:outline-none focus:border-black text-gray-900"
+              placeholder="0"
+            />
+          </div>
+
           {totalDiscount > 0 && (
             <div className="flex justify-between text-sm text-green-500 font-medium">
-              <span>Discount</span>
+              <span>Total Discount</span>
               <span>- Rp {totalDiscount.toLocaleString('id-ID')}</span>
             </div>
           )}
-          <div className="flex justify-between text-sm text-gray-500 font-medium">
-            <span>Tax (11%)</span>
+          
+          <div className="flex justify-between items-center text-sm text-gray-500 font-medium">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input 
+                type="checkbox" 
+                checked={isTaxEnabled}
+                onChange={(e) => setTaxEnabled(e.target.checked)}
+                className="w-4 h-4 rounded text-black focus:ring-black border-gray-300"
+              />
+              <span>Tax (PPN 11%)</span>
+            </label>
             <span className="text-gray-900">Rp {tax.toLocaleString('id-ID')}</span>
           </div>
           <div className="flex justify-between text-xl font-bold text-black mt-2 pt-2 border-t border-gray-200/60">
@@ -220,6 +292,7 @@ export function CartPanel() {
       </div>
 
       {showHeldModal && <HeldTransactionsModal onClose={() => setShowHeldModal(false)} />}
+      {printTx && <PrintReceiptPortal transaction={printTx} />}
     </div>
   );
 }

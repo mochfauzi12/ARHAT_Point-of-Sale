@@ -1,9 +1,60 @@
 'use client';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useCartStore } from '@/store/useCartStore';
+import { getHeldTransactions, resumeTransaction as apiResumeTransaction, voidTransaction } from '@/lib/api';
 
 export function HeldTransactionsModal({ onClose }: { onClose: () => void }) {
-  const { heldTransactions, resumeTransaction, removeHeldTransaction } = useCartStore();
+  const { addItem, clearCart } = useCartStore();
+  const [heldTransactions, setHeldTransactions] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchHeld();
+  }, []);
+
+  const fetchHeld = async () => {
+    try {
+      const data = await getHeldTransactions();
+      setHeldTransactions(data || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResume = async (id: string) => {
+    try {
+      const data = await apiResumeTransaction(id);
+      // Wait, data is the updatedTx, we need the items too.
+      // But we already have the items in `heldTransactions` state from `fetchHeld`!
+      const tx = heldTransactions.find(t => t.id === id);
+      if (tx) {
+        clearCart();
+        tx.items.forEach((item: any) => {
+          addItem({
+            id: item.productId,
+            name: item.productName || 'Unknown Product',
+            sellingPrice: item.unitPrice,
+            image: item.productImage
+          }, parseInt(item.quantity));
+        });
+      }
+      onClose();
+    } catch (err) {
+      console.error('Failed to resume:', err);
+      alert('Failed to resume transaction');
+    }
+  };
+
+  const handleDiscard = async (id: string) => {
+    try {
+      await voidTransaction(id);
+      fetchHeld();
+    } catch (err) {
+      console.error('Failed to void:', err);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in">
@@ -15,7 +66,9 @@ export function HeldTransactionsModal({ onClose }: { onClose: () => void }) {
           </button>
         </div>
 
-        {heldTransactions.length === 0 ? (
+        {isLoading ? (
+          <div className="text-center py-8 text-gray-500">Loading...</div>
+        ) : heldTransactions.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             No transactions on hold.
           </div>
@@ -35,16 +88,13 @@ export function HeldTransactionsModal({ onClose }: { onClose: () => void }) {
                 
                 <div className="flex gap-2 mt-2">
                   <button
-                    onClick={() => {
-                      resumeTransaction(tx.id);
-                      onClose();
-                    }}
+                    onClick={() => handleResume(tx.id)}
                     className="flex-1 bg-black text-white py-2 rounded-xl text-sm font-semibold hover:bg-gray-800"
                   >
                     Resume
                   </button>
                   <button
-                    onClick={() => removeHeldTransaction(tx.id)}
+                    onClick={() => handleDiscard(tx.id)}
                     className="px-4 py-2 bg-red-50 text-red-600 rounded-xl text-sm font-semibold hover:bg-red-100"
                   >
                     Discard

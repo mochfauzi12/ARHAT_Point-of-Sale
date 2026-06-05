@@ -25,6 +25,8 @@ export interface HeldTransaction {
 interface CartState {
   items: CartItem[];
   heldTransactions: HeldTransaction[];
+  globalDiscount: number;
+  isTaxEnabled: boolean;
   
   // Actions
   addItem: (product: Product, quantity?: number) => void;
@@ -41,11 +43,17 @@ interface CartState {
   // Selectors
   getSubtotal: () => number;
   getTotalDiscount: () => number;
+  
+  // Global settings
+  setGlobalDiscount: (discount: number) => void;
+  setTaxEnabled: (enabled: boolean) => void;
 }
 
 export const useCartStore = create<CartState>((set, get) => ({
   items: [],
   heldTransactions: [],
+  globalDiscount: 0,
+  isTaxEnabled: true,
   
   addItem: (product, quantity = 1) => {
     set((state) => {
@@ -125,6 +133,10 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   getTotalDiscount: () => {
-    return get().items.reduce((total, item) => total + (item.discount * item.quantity), 0);
-  }
+    const itemsDiscount = get().items.reduce((total, item) => total + (item.discount * item.quantity), 0);
+    return itemsDiscount + get().globalDiscount;
+  },
+  
+  setGlobalDiscount: (discount) => set({ globalDiscount: discount }),
+  setTaxEnabled: (enabled) => set({ isTaxEnabled: enabled })
 }));

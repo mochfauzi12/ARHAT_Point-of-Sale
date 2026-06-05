@@ -8,6 +8,7 @@ import { LayoutDashboard, Package, ShoppingCart, LogOut, Settings } from 'lucide
 const MENU_ITEMS = [
   { name: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard size={20} /> },
   { name: 'Products', href: '/products', icon: <Package size={20} /> },
+  { name: 'Transactions', href: '/transactions', icon: <CreditCard size={20} /> },
   { name: 'POS', href: '/pos', icon: <ShoppingCart size={20} /> },
 ];
 
