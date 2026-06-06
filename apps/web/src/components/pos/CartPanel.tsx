@@ -1,10 +1,11 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useCartStore } from '@/store/useCartStore';
-import { Trash2, Plus, Minus, CreditCard, Wallet, Banknote, PauseCircle, ListTodo, User, X } from 'lucide-react';
+import { Trash2, Plus, Minus, CreditCard, Wallet, Banknote, PauseCircle, ListTodo, User, X, MessageSquare } from 'lucide-react';
 import { HeldTransactionsModal } from './HeldTransactionsModal';
 import { checkoutTransaction, holdTransaction as apiHoldTransaction, getCustomers } from '@/lib/api';
 import { PrintReceiptPortal } from './ReceiptTemplate';
+import { Toast, ToastType } from '../ui/Toast';
 
 export function CartPanel() {
   const { items, removeItem, updateQuantity, updateDiscount, clearCart, getSubtotal, getTotalDiscount, holdTransaction, heldTransactions, globalDiscount, setGlobalDiscount, isTaxEnabled, setTaxEnabled } = useCartStore();
@@ -18,7 +19,11 @@ export function CartPanel() {
   const [customers, setCustomers] = useState<any[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [pointsToRedeem, setPointsToRedeem] = useState<number>(0);
-  const [showCustomerSelect, setShowCustomerSelect] = useState(false);
+  const [customerWhatsapp, setCustomerWhatsapp] = useState('');
+  const [sendWhatsapp, setSendWhatsapp] = useState(false);
+  const [cashTendered, setCashTendered] = useState<number>(0);
+  const [toast, setToast] = useState<{message: string, type: ToastType} | null>(null);
+  const showToast = (message: string, type: ToastType) => setToast({ message, type });
 
   useEffect(() => {
     getCustomers().then(data => setCustomers(data)).catch(console.error);
@@ -41,6 +46,7 @@ export function CartPanel() {
         tenantId: '00000000-0000-0000-0000-000000000000',
         cashierId: '11111111-1111-1111-1111-111111111111',
         customerId: selectedCustomer?.id,
+        customerPhone: sendWhatsapp ? customerWhatsapp : undefined,
         pointsRedeemed: pointsToRedeem,
         paymentMethod,
         subtotal: subtotal,
@@ -73,6 +79,7 @@ export function CartPanel() {
 
       if (confirm('Checkout successful! Do you want to print the receipt?')) {
         setPrintTx(txForPrinting);
+        showToast('Transaksi Berhasil!', 'success');
         setTimeout(() => {
           window.print();
           setTimeout(() => {
@@ -81,19 +88,24 @@ export function CartPanel() {
             clearCart();
             setSelectedCustomer(null);
             setPointsToRedeem(0);
+            setCustomerWhatsapp('');
+            setCashTendered(0);
           }, 500);
         }, 100);
       } else {
         setIsSuccess(true);
+        showToast('Transaksi Berhasil!', 'success');
         setTimeout(() => {
           setIsSuccess(false);
           clearCart();
           setSelectedCustomer(null);
           setPointsToRedeem(0);
+          setCustomerWhatsapp('');
+          setCashTendered(0);
         }, 2000);
       }
     } catch (err) {
-      alert('Checkout failed. Make sure API is running and seeding is done.');
+      showToast('Gagal memproses transaksi. Pastikan API menyala.', 'error');
     } finally {
       setIsCheckout(false);
     }
@@ -124,10 +136,10 @@ export function CartPanel() {
         setGlobalDiscount(0);
         setSelectedCustomer(null);
         setPointsToRedeem(0);
-        alert('Transaction held successfully!');
+        showToast('Transaksi berhasil ditahan', 'info');
       } catch (err) {
         console.error(err);
-        alert('Failed to hold transaction. Is the backend running?');
+        showToast('Gagal menahan transaksi. Pastikan API menyala.', 'error');
       }
     }
   };
@@ -190,6 +202,34 @@ export function CartPanel() {
             ))}
           </datalist>
         </div>
+
+        {/* WhatsApp Checkbox & Input */}
+        <div className="mt-3 flex items-center gap-2">
+          <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-600">
+            <input 
+              type="checkbox" 
+              className="rounded text-[#0B5A63] focus:ring-[#0B5A63] h-4 w-4 border-gray-300"
+              checked={sendWhatsapp}
+              onChange={(e) => setSendWhatsapp(e.target.checked)}
+            />
+            <MessageSquare size={16} className={sendWhatsapp ? "text-[#0B5A63]" : "text-gray-400"} />
+            <span className="font-medium">Kirim struk via WhatsApp</span>
+          </label>
+        </div>
+        
+        {sendWhatsapp && (
+          <div className="mt-2 flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-xl border border-gray-200 focus-within:border-[#0B5A63] focus-within:ring-1 focus-within:ring-[#0B5A63] transition-all">
+             <span className="text-gray-500 text-sm font-medium">+62</span>
+             <input 
+               type="text"
+               placeholder="81234567890"
+               value={customerWhatsapp}
+               onChange={(e) => setCustomerWhatsapp(e.target.value.replace(/\D/g, ''))}
+               className="w-full bg-transparent border-none focus:outline-none text-sm text-gray-700"
+             />
+          </div>
+        )}
+
         
         {/* If customer selected and has points */}
         {selectedCustomer && parseInt(selectedCustomer.points || '0') > 0 && (
@@ -355,6 +395,38 @@ export function CartPanel() {
           ))}
         </div>
 
+        {paymentMethod === 'Cash' && (
+          <div className="mb-4 bg-gray-50 p-3 rounded-xl border border-gray-200">
+             <div className="flex justify-between items-center text-sm font-medium mb-2">
+               <span className="text-gray-700">Nominal Uang</span>
+               <div className="relative">
+                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-normal">Rp</span>
+                 <input 
+                   type="text"
+                   value={cashTendered === 0 ? '' : cashTendered.toLocaleString('id-ID')}
+                   onChange={(e) => setCashTendered(parseInt(e.target.value.replace(/\D/g, '')) || 0)}
+                   className="bg-white border border-gray-300 rounded-lg text-sm pl-8 pr-3 py-2 w-36 text-right focus:outline-none focus:border-black font-bold text-gray-900"
+                   placeholder="0"
+                 />
+               </div>
+             </div>
+             
+             {/* Quick cash buttons */}
+             <div className="flex gap-2 mb-3">
+               <button onClick={() => setCashTendered(total)} className="flex-1 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-600 hover:border-black hover:text-black transition-colors">Uang Pas</button>
+               <button onClick={() => setCashTendered(50000)} className="flex-1 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-600 hover:border-black hover:text-black transition-colors">50k</button>
+               <button onClick={() => setCashTendered(100000)} className="flex-1 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-600 hover:border-black hover:text-black transition-colors">100k</button>
+             </div>
+
+             {cashTendered > 0 && (
+               <div className={`flex justify-between items-center text-sm pt-2 border-t border-gray-200 border-dashed ${cashTendered >= total ? 'text-green-600 font-bold' : 'text-red-500 font-bold'}`}>
+                 <span>{cashTendered >= total ? 'Kembalian' : 'Kurang'}</span>
+                 <span className="text-lg">Rp {Math.abs(cashTendered - total).toLocaleString('id-ID')}</span>
+               </div>
+             )}
+          </div>
+        )}
+
         <div className="flex gap-2">
           <button 
             onClick={handleHold}
@@ -366,7 +438,7 @@ export function CartPanel() {
           </button>
           <button 
             onClick={handleCheckout}
-            disabled={items.length === 0 || isCheckout}
+            disabled={items.length === 0 || isCheckout || (paymentMethod === 'Cash' && cashTendered > 0 && cashTendered < total)}
             className="flex-1 py-4 bg-black text-white rounded-2xl font-semibold text-lg hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {isCheckout ? 'Processing...' : `Charge Rp ${total.toLocaleString('id-ID')}`}
@@ -376,6 +448,7 @@ export function CartPanel() {
 
       {showHeldModal && <HeldTransactionsModal onClose={() => setShowHeldModal(false)} />}
       {printTx && <PrintReceiptPortal transaction={printTx} />}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 }

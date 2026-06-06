@@ -160,7 +160,7 @@ export default function ReportsPage() {
                         <XAxis dataKey="date" tick={{fontSize: 12, fill: '#6b7280'}} tickMargin={10} axisLine={false} tickLine={false} />
                         <YAxis tickFormatter={(val) => `Rp${val/1000}k`} tick={{fontSize: 12, fill: '#6b7280'}} axisLine={false} tickLine={false} />
                         <RechartsTooltip 
-                          formatter={(value: number) => [formatCurrency(value), 'Pendapatan']}
+                          formatter={(value: any) => [formatCurrency(Number(value)), 'Pendapatan']}
                           labelStyle={{ color: '#374151', fontWeight: 'bold' }}
                           contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                         />
@@ -184,7 +184,7 @@ export default function ReportsPage() {
                         <XAxis dataKey="date" tick={{fontSize: 12, fill: '#6b7280'}} tickMargin={10} axisLine={false} tickLine={false} />
                         <YAxis tickFormatter={(val) => `Rp${val/1000}k`} tick={{fontSize: 12, fill: '#6b7280'}} axisLine={false} tickLine={false} />
                         <RechartsTooltip 
-                          formatter={(value: number) => [formatCurrency(value), 'Pendapatan']}
+                          formatter={(value: any) => [formatCurrency(Number(value)), 'Pendapatan']}
                           cursor={{fill: '#f3f4f6'}}
                         />
                         <Bar dataKey="revenue" fill="#0d9488" radius={[4, 4, 0, 0]} />
@@ -211,7 +211,7 @@ export default function ReportsPage() {
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                           ))}
                         </Pie>
-                        <RechartsTooltip formatter={(value: number) => formatCurrency(value)} />
+                        <RechartsTooltip formatter={(value: any) => formatCurrency(Number(value))} />
                         <Legend verticalAlign="bottom" height={36} iconType="circle" />
                       </PieChart>
                     </ResponsiveContainer>
@@ -246,7 +246,7 @@ export default function ReportsPage() {
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
                         <XAxis dataKey="date" tick={{fontSize: 12, fill: '#6b7280'}} axisLine={false} tickLine={false} />
                         <YAxis tickFormatter={(val) => `Rp${val/1000}k`} tick={{fontSize: 12, fill: '#6b7280'}} axisLine={false} tickLine={false} />
-                        <RechartsTooltip formatter={(value: number) => formatCurrency(value)} />
+                        <RechartsTooltip formatter={(value: any) => formatCurrency(Number(value))} />
                         <Legend />
                         <Line type="monotone" dataKey="revenue" name="Pendapatan" stroke="#0ea5e9" strokeWidth={2} dot={false} />
                         <Line type="monotone" dataKey="profit" name="Laba" stroke="#10b981" strokeWidth={2} dot={false} />

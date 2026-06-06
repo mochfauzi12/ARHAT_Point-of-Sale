@@ -1,5 +1,6 @@
 import { Context } from 'hono';
 import { TransactionService } from '../services/transaction.service';
+import { WhatsAppService } from '../services/whatsapp.service';
 
 export const transactionController = {
   async list(c: Context) {
@@ -22,6 +23,13 @@ export const transactionController = {
         user.id,
         body
       );
+      
+      // WhatsApp Receipt Trigger (Mock)
+      if (body.customerPhone) {
+        // Send asynchronously so it doesn't block the API response
+        WhatsAppService.sendReceipt(body.customerPhone, transaction).catch(console.error);
+      }
+      
       return c.json({ message: 'Transaction created successfully', data: transaction }, 201);
     } catch (error: any) {
       return c.json({ error: error.message }, 400);

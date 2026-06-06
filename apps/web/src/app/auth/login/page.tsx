@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Logo } from '@/components/ui/Logo';
-import api from '@/lib/api';
+import { API_URL } from '@/lib/api';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,15 +19,22 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await api.post('/auth/login', { email, password });
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await response.json();
       
-      if (response.data?.data?.accessToken) {
-        localStorage.setItem('accessToken', response.data.data.accessToken);
+      if (response.ok && data?.data?.accessToken) {
+        localStorage.setItem('accessToken', data.data.accessToken);
         // Redirect to dashboard
         router.push('/');
+      } else {
+        throw new Error(data.error || 'Failed to login');
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to login');
+      setError(err.message || 'Failed to login');
     } finally {
       setIsLoading(false);
     }
