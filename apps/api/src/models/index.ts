@@ -118,6 +118,7 @@ export const transactions = pgTable('transactions', {
   id: uuid('id').primaryKey().defaultRandom(),
   tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   cashierId: uuid('cashier_id').references(() => users.id),
+  shiftId: uuid('shift_id'), // Add shift relationship
   customerId: uuid('customer_id').references(() => customers.id),
   transactionNumber: varchar('transaction_number', { length: 50 }).unique().notNull(),
   status: varchar('status', { length: 50 }).notNull().default('pending'), // pending, completed, refunded, voided
@@ -235,4 +236,18 @@ export const stockTransferItems = pgTable('stock_transfer_items', {
   transferId: uuid('transfer_id').notNull().references(() => stockTransfers.id),
   productId: uuid('product_id').notNull().references(() => products.id),
   quantity: varchar('quantity', { length: 10 }).notNull(),
+});
+
+export const shifts = pgTable('shifts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
+  cashierId: uuid('cashier_id').notNull().references(() => users.id),
+  outletId: uuid('outlet_id').references(() => outlets.id),
+  startTime: timestamp('start_time').defaultNow().notNull(),
+  endTime: timestamp('end_time'),
+  startingCash: varchar('starting_cash', { length: 20 }).notNull(),
+  actualEndingCash: varchar('actual_ending_cash', { length: 20 }),
+  expectedEndingCash: varchar('expected_ending_cash', { length: 20 }),
+  status: varchar('status', { length: 50 }).notNull().default('open'), // open, closed
+  notes: varchar('notes', { length: 1000 }),
 });

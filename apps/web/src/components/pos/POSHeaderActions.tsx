@@ -5,7 +5,7 @@ import { Settings, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
-export function POSHeaderActions() {
+export function POSHeaderActions({ onShowCloseShift }: { onShowCloseShift?: () => void }) {
   const router = useRouter();
   const { logout } = useAuth();
 
@@ -18,6 +18,15 @@ export function POSHeaderActions() {
       >
         <Settings size={20} />
       </button>
+      {onShowCloseShift && (
+        <button 
+          onClick={onShowCloseShift}
+          className="px-4 h-10 flex items-center justify-center rounded-xl bg-orange-50 text-orange-600 font-bold hover:bg-orange-100 transition-colors"
+          title="Tutup Shift"
+        >
+          Tutup Shift
+        </button>
+      )}
       <button 
         onClick={() => logout()}
         className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors"

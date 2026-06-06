@@ -1,4 +1,7 @@
-import React from 'react';
+'use client';
+import React, { useEffect, useState } from 'react';
+import { getCurrentShift, openShift, closeShift } from '@/lib/api';
+import { ShiftModal } from '@/components/pos/ShiftModal';
 import { ProductSearch } from '@/components/pos/ProductSearch';
 import { ProductGrid } from '@/components/pos/ProductGrid';
 import { Logo } from '@/components/ui/Logo';
@@ -7,9 +10,66 @@ import { Store, UserCircle, Settings } from 'lucide-react';
 import { POSHeaderActions } from '@/components/pos/POSHeaderActions';
 
 export default function POSPage() {
+  const [shift, setShift] = useState<any>(null);
+  const [loadingShift, setLoadingShift] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCloseShift, setShowCloseShift] = useState(false);
+
+  useEffect(() => {
+    checkShift();
+  }, []);
+
+  const checkShift = async () => {
+    try {
+      const activeShift = await getCurrentShift();
+      setShift(activeShift);
+    } catch (e) {
+      console.error('Failed to load shift', e);
+    } finally {
+      setLoadingShift(false);
+    }
+  };
+
+  const handleOpenShift = async (amount: number) => {
+    setIsSubmitting(true);
+    try {
+      const newShift = await openShift(amount);
+      setShift(newShift);
+    } catch (e: any) {
+      alert(e.message || 'Gagal membuka shift');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCloseShift = async (amount: number, notes?: string) => {
+    setIsSubmitting(true);
+    try {
+      await closeShift(amount, notes);
+      setShift(null); // Return to open shift screen
+      setShowCloseShift(false);
+    } catch (e: any) {
+      alert(e.message || 'Gagal menutup shift');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (loadingShift) {
+    return <div className="min-h-screen flex items-center justify-center bg-gray-50"><p className="text-gray-500 font-medium">Memeriksa Shift Kasir...</p></div>;
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6 flex flex-col">
-      <div className="flex-1 w-full bg-white rounded-2xl sm:rounded-3xl shadow-xl overflow-hidden flex flex-col min-h-[calc(100vh-24px)] sm:min-h-[calc(100vh-32px)] md:min-h-[calc(100vh-48px)]">
+    <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6 flex flex-col relative">
+      {!shift && !showCloseShift && (
+        <ShiftModal type="open" onSubmit={handleOpenShift} isSubmitting={isSubmitting} />
+      )}
+      
+      {showCloseShift && shift && (
+        <ShiftModal type="close" shiftData={shift} onSubmit={handleCloseShift} isSubmitting={isSubmitting} />
+      )}
+      
+      <div className={`flex-1 w-full bg-white rounded-2xl sm:rounded-3xl shadow-xl overflow-hidden flex flex-col min-h-[calc(100vh-24px)] sm:min-h-[calc(100vh-32px)] md:min-h-[calc(100vh-48px)] ${(!shift || showCloseShift) ? 'opacity-50 pointer-events-none' : ''}`}>
         
         {/* Navbar (Top) */}
         <div className="flex-none p-4 sm:p-6 flex items-center justify-between border-b border-gray-100">
@@ -22,7 +82,7 @@ export default function POSPage() {
             <ProductSearch />
           </div>
 
-          <POSHeaderActions />
+          <POSHeaderActions onShowCloseShift={() => setShowCloseShift(true)} />
         </div>
 
         {/* Content Layer */}

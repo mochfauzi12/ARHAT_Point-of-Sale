@@ -5,6 +5,7 @@ import { Trash2, Plus, Minus, CreditCard, Wallet, Banknote, PauseCircle, ListTod
 import { HeldTransactionsModal } from './HeldTransactionsModal';
 import { checkoutTransaction, holdTransaction as apiHoldTransaction, getCustomers } from '@/lib/api';
 import { PrintReceiptPortal } from './ReceiptTemplate';
+import { CheckoutSuccessModal } from './CheckoutSuccessModal';
 import { Toast, ToastType } from '../ui/Toast';
 
 export function CartPanel() {
@@ -14,6 +15,7 @@ export function CartPanel() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [showHeldModal, setShowHeldModal] = useState(false);
   const [printTx, setPrintTx] = useState<any>(null);
+  const [successModalData, setSuccessModalData] = useState<{ transaction: any, changeAmount: number, customer: any } | null>(null);
 
   // Customer & Points
   const [customers, setCustomers] = useState<any[]>([]);
@@ -64,49 +66,24 @@ export function CartPanel() {
         }))
       });
       
-      const txForPrinting = {
-        transactionNumber: res.data?.transactionNumber || `TRX-${Date.now()}`,
-        createdAt: new Date(),
-        subtotal,
-        taxAmount: tax,
-        discountAmount: totalDiscount + pointsDiscount,
-        totalAmount: total,
-        paymentMethod,
-        items: items.map(i => ({
-          productName: i.name,
-          quantity: i.quantity,
-          unitPrice: i.sellingPrice,
-          discount: i.discount || 0
-        }))
-      };
-
-      if (confirm('Checkout successful! Do you want to print the receipt?')) {
-        setPrintTx(txForPrinting);
-        showToast('Transaksi Berhasil!', 'success');
-        setTimeout(() => {
-          window.print();
-          setTimeout(() => {
-            setPrintTx(null);
-            setIsSuccess(false);
-            clearCart();
-            setSelectedCustomer(null);
-            setPointsToRedeem(0);
-            setCustomerWhatsapp('');
-            setCashTendered(0);
-          }, 500);
-        }, 100);
-      } else {
-        setIsSuccess(true);
-        showToast('Transaksi Berhasil!', 'success');
-        setTimeout(() => {
-          setIsSuccess(false);
-          clearCart();
-          setSelectedCustomer(null);
-          setPointsToRedeem(0);
-          setCustomerWhatsapp('');
-          setCashTendered(0);
-        }, 2000);
-      }
+      const change = paymentMethod === 'Cash' ? Math.max(0, cashTendered - total) : 0;
+      
+      setSuccessModalData({
+        transaction: {
+          ...res.data,
+          transactionNumber: res.data?.transactionNumber || `TRX-${Date.now()}`,
+          items: items.map(i => ({
+            productName: i.name,
+            quantity: i.quantity,
+            unitPrice: i.sellingPrice,
+            subtotal: (i.sellingPrice * i.quantity) - (i.discount || 0)
+          }))
+        },
+        changeAmount: change,
+        customer: selectedCustomer
+      });
+      
+      showToast('Transaksi Berhasil!', 'success');
     } catch (err) {
       showToast('Gagal memproses transaksi. Pastikan API menyala.', 'error');
     } finally {
@@ -149,20 +126,6 @@ export function CartPanel() {
       }
     }
   };
-
-  if (isSuccess) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full p-8 text-center gap-4 animate-in fade-in zoom-in duration-300">
-        <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center text-green-500 text-3xl">
-          ✓
-        </div>
-        <div>
-          <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">Payment Successful!</h2>
-          <p className="text-gray-500 mt-2 text-sm">Receipt is printing...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col h-full bg-white relative">
@@ -463,7 +426,30 @@ export function CartPanel() {
       </div>
 
       {showHeldModal && <HeldTransactionsModal onClose={() => setShowHeldModal(false)} />}
+      
+      {/* Modals & Portals */}
       {printTx && <PrintReceiptPortal transaction={printTx} />}
+      
+      {successModalData && (
+        <CheckoutSuccessModal
+          transaction={successModalData.transaction}
+          changeAmount={successModalData.changeAmount}
+          customer={successModalData.customer}
+          onPrint={() => {
+            setPrintTx(successModalData.transaction);
+            setTimeout(() => setPrintTx(null), 1000);
+          }}
+          onClose={() => {
+            setSuccessModalData(null);
+            clearCart();
+            setCashTendered(0);
+            setSelectedCustomer(null);
+            setPointsToRedeem(0);
+            setPrintTx(null);
+          }}
+        />
+      )}
+      
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );

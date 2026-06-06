@@ -386,3 +386,100 @@ export async function getProfitLoss() {
   const json = await res.json();
   return json.data;
 }
+
+// =======================
+// SHIFT MANAGEMENT
+// =======================
+
+export async function getCurrentShift() {
+  const res = await fetchWithAuth(`${API_URL}/shifts/current`, { headers: getHeaders() });
+  if (!res.ok) return null;
+  const json = await res.json();
+  return json.data;
+}
+
+export async function openShift(startingCash: number, outletId?: string) {
+  const res = await fetchWithAuth(`${API_URL}/shifts/open`, {
+    method: 'POST',
+    headers: getHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ startingCash, outletId })
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to open shift');
+  }
+  const json = await res.json();
+  return json.data;
+}
+
+export async function closeShift(actualEndingCash: number, notes?: string) {
+  const res = await fetchWithAuth(`${API_URL}/shifts/close`, {
+    method: 'POST',
+    headers: getHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ actualEndingCash, notes })
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to close shift');
+  }
+  const json = await res.json();
+  return json.data;
+}
+
+export async function getShifts() {
+  const res = await fetchWithAuth(`${API_URL}/shifts`, { headers: getHeaders() });
+  if (!res.ok) return [];
+  const json = await res.json();
+  return json.data || [];
+}
+
+// =======================
+// USER MANAGEMENT
+// =======================
+
+export async function getUsers() {
+  const res = await fetchWithAuth(`${API_URL}/users`, { headers: getHeaders() });
+  if (!res.ok) return [];
+  const json = await res.json();
+  return json.data || [];
+}
+
+export async function createUser(data: { fullName: string; email: string; password?: string; role: string; pin?: string }) {
+  const res = await fetchWithAuth(`${API_URL}/users`, {
+    method: 'POST',
+    headers: getHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to create user');
+  }
+  const json = await res.json();
+  return json.data;
+}
+
+export async function updateUser(id: string, data: { fullName?: string; role?: string; password?: string; pin?: string }) {
+  const res = await fetchWithAuth(`${API_URL}/users/${id}`, {
+    method: 'PUT',
+    headers: getHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to update user');
+  }
+  const json = await res.json();
+  return json.data;
+}
+
+export async function deleteUser(id: string) {
+  const res = await fetchWithAuth(`${API_URL}/users/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders()
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to delete user');
+  }
+  return true;
+}

@@ -11,6 +11,7 @@ import inventoryRoutes from './routes/inventory.routes';
 import customersRoutes from './routes/customers.routes';
 import settingsRoutes from './routes/settings.routes';
 import usersRoutes from './routes/users.routes';
+import shiftsRoutes from './routes/shifts.routes';
 import { serveStatic } from '@hono/node-server/serve-static';
 
 const app = new Hono();
@@ -40,6 +41,7 @@ app.route('/api/users', usersRoutes);
 app.route('/api/upload', uploadRoutes);
 app.route('/api/inventory', inventoryRoutes);
 app.route('/api/customers', customersRoutes);
+app.route('/api/shifts', shiftsRoutes);
 
 // Error handling
 app.onError(errorHandler);

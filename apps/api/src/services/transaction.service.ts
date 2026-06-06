@@ -6,7 +6,8 @@ import {
   payments, 
   stockMovements, 
   products,
-  customers
+  customers,
+  shifts
 } from '../models';
 
 export class TransactionService {
@@ -51,10 +52,22 @@ export class TransactionService {
     
     // We use a database transaction to ensure atomicity
     return await db.transaction(async (tx) => {
+      // Find active shift
+      const activeShift = await tx.select().from(shifts).where(
+        and(
+          eq(shifts.tenantId, tenantId),
+          eq(shifts.cashierId, cashierId),
+          eq(shifts.status, 'open')
+        )
+      ).limit(1);
+      
+      const currentShiftId = activeShift.length > 0 ? activeShift[0].id : null;
+
       // 1. Insert header
       const txResult = await tx.insert(transactions).values({
         tenantId,
         cashierId,
+        shiftId: currentShiftId,
         customerId: payload.customerId,
         transactionNumber: txNumber,
         status: 'pending',
