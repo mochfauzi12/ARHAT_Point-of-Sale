@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Logo } from '@/components/ui/Logo';
 import api from '@/lib/api';
 
 export default function LoginPage() {
@@ -35,13 +36,11 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
       <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-8 shadow-lg">
-        <div>
-          <h2 className="text-center text-3xl font-extrabold text-gray-900">
-            ARHAT POS Login
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+        <div className="flex flex-col items-center">
+          <Logo width={64} height={64} showText={true} />
+          <p className="mt-4 text-center text-sm text-gray-600">
             Atau{' '}
-            <Link href="/auth/register" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link href="/auth/register" className="font-medium text-[#0B5A63] hover:text-[#0E8A94]">
               daftar akun baru
             </Link>
           </p>
@@ -89,7 +88,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative flex w-full justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-blue-300"
+              className="group relative flex w-full justify-center rounded-md border border-transparent bg-[#0B5A63] px-4 py-2 text-sm font-medium text-white hover:bg-[#0E8A94] focus:outline-none focus:ring-2 focus:ring-[#0B5A63] focus:ring-offset-2 disabled:bg-blue-300"
             >
               {isLoading ? 'Signing in...' : 'Sign in'}
             </button>

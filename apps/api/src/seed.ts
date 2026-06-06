@@ -1,5 +1,5 @@
 import { db } from './lib/db';
-import { tenants, users } from './models/index';
+import { tenants, users, products } from './models/index';
 import { eq } from 'drizzle-orm';
 import * as bcrypt from 'bcryptjs';
 
@@ -26,7 +26,7 @@ async function seed() {
         tenantId,
         email: 'admin@arhatpos.com',
         passwordHash,
-        pin: '123456',
+        pin: '1234',
         fullName: 'Admin User',
         role: 'admin',
         status: 'active',
@@ -36,6 +36,23 @@ async function seed() {
       console.log('User already exists');
     }
     
+    // Seed Dummy Products
+    const existingProducts = await db.select().from(products).where(eq(products.tenantId, tenantId));
+    if (existingProducts.length === 0) {
+      const dummyProducts = [
+        { name: 'Kopi Gula Aren', sku: 'KOP-001', sellingPrice: '18000', purchasePrice: '8000', stockQuantity: '50', isActive: true, tenantId },
+        { name: 'Americano Dingin', sku: 'KOP-002', sellingPrice: '15000', purchasePrice: '6000', stockQuantity: '45', isActive: true, tenantId },
+        { name: 'Teh Tarik Malaka', sku: 'TEH-001', sellingPrice: '16000', purchasePrice: '7000', stockQuantity: '60', isActive: true, tenantId },
+        { name: 'Matcha Latte', sku: 'TEH-002', sellingPrice: '22000', purchasePrice: '11000', stockQuantity: '30', isActive: true, tenantId },
+        { name: 'Roti Bakar Coklat Keju', sku: 'MKN-001', sellingPrice: '20000', purchasePrice: '9000', stockQuantity: '25', isActive: true, tenantId },
+        { name: 'Croissant Butter', sku: 'MKN-002', sellingPrice: '18000', purchasePrice: '10000', stockQuantity: '15', isActive: true, tenantId },
+      ];
+      await db.insert(products).values(dummyProducts).onConflictDoNothing();
+      console.log('Dummy products seeded successfully!');
+    } else {
+      console.log('Products already exist, skipping dummy data creation.');
+    }
+
     console.log('Database seeded successfully!');
     process.exit(0);
   } catch (error) {

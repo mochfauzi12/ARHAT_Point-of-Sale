@@ -14,7 +14,7 @@ export function ReceiptTemplate({ transaction }: { transaction: any }) {
       </style>
       
       <div style={{ textAlign: 'center', marginBottom: '10px' }}>
-        <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>ARHAT POS</h2>
+        <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>TRANSAKSI KITA</h2>
         <p style={{ margin: '2px 0 0 0', fontSize: '10px' }}>Jl. Contoh Toko No. 123</p>
         <p style={{ margin: 0, fontSize: '10px' }}>Telp: 08123456789</p>
       </div>

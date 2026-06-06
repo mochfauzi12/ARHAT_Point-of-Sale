@@ -8,12 +8,16 @@ import transactionRoutes from './routes/transaction.routes';
 import analyticsRoutes from './routes/analytics.routes';
 import uploadRoutes from './routes/upload.routes';
 import inventoryRoutes from './routes/inventory.routes';
+import customersRoutes from './routes/customers.routes';
 import { serveStatic } from '@hono/node-server/serve-static';
 
 const app = new Hono();
 
 // Middleware
-app.use('*', cors());
+app.use('*', cors({
+  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  credentials: true,
+}));
 app.use('*', logger());
 
 // Static files for uploads
@@ -31,6 +35,7 @@ app.route('/api/transactions', transactionRoutes);
 app.route('/api/analytics', analyticsRoutes);
 app.route('/api/upload', uploadRoutes);
 app.route('/api/inventory', inventoryRoutes);
+app.route('/api/customers', customersRoutes);
 
 // Error handling
 app.onError(errorHandler);
@@ -44,3 +49,4 @@ if (typeof process !== 'undefined' && process.release?.name === 'node') {
 }
 
 export default app;
+ 

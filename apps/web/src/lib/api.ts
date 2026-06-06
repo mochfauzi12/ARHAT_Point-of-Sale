@@ -315,3 +315,57 @@ export async function receiveTransfer(id: string) {
   const json = await res.json();
   return json.data;
 }
+
+// ==========================================
+// CUSTOMERS
+// ==========================================
+
+export async function getCustomers(search?: string) {
+  const url = search ? `${API_URL}/customers?q=${encodeURIComponent(search)}` : `${API_URL}/customers`;
+  const res = await fetchWithAuth(url, { headers: getHeaders() });
+  if (!res.ok) return [];
+  const json = await res.json();
+  return json.data || [];
+}
+
+export async function createCustomer(data: { name: string; phone?: string; email?: string; notes?: string }) {
+  const res = await fetchWithAuth(`${API_URL}/customers`, {
+    method: 'POST',
+    headers: getHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error('Failed to create customer');
+  const json = await res.json();
+  return json.data;
+}
+
+// =======================
+// ANALYTICS & REPORTS
+// =======================
+
+export async function getSalesAnalytics() {
+  const res = await fetchWithAuth(`${API_URL}/analytics/sales`, {
+    headers: getHeaders()
+  });
+  if (!res.ok) throw new Error('Failed to fetch sales analytics');
+  const json = await res.json();
+  return json.data;
+}
+
+export async function getProductAnalytics() {
+  const res = await fetchWithAuth(`${API_URL}/analytics/products`, {
+    headers: getHeaders()
+  });
+  if (!res.ok) throw new Error('Failed to fetch product analytics');
+  const json = await res.json();
+  return json.data;
+}
+
+export async function getProfitLoss() {
+  const res = await fetchWithAuth(`${API_URL}/analytics/profit-loss`, {
+    headers: getHeaders()
+  });
+  if (!res.ok) throw new Error('Failed to fetch profit and loss analytics');
+  const json = await res.json();
+  return json.data;
+}

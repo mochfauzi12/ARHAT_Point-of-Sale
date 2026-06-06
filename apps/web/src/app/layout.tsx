@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ARHAT POS",
-  description: "Modern POS System",
+  title: "TRANSAKSI KITA",
+  description: "Seamless Payments. Effortless Management.",
 };
 
 export default function RootLayout({

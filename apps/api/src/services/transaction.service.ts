@@ -5,7 +5,8 @@ import {
   transactionItems, 
   payments, 
   stockMovements, 
-  products 
+  products,
+  customers
 } from '../models';
 
 export class TransactionService {
@@ -28,6 +29,8 @@ export class TransactionService {
     tenantId: string, 
     cashierId: string, 
     payload: {
+      customerId?: string;
+      pointsRedeemed?: number;
       items: Array<{ productId: string, quantity: number, unitPrice: number, subtotal: number }>;
       subtotal: number;
       taxAmount: number;
@@ -44,12 +47,14 @@ export class TransactionService {
       const txResult = await tx.insert(transactions).values({
         tenantId,
         cashierId,
+        customerId: payload.customerId,
         transactionNumber: txNumber,
         status: 'pending',
         subtotal: payload.subtotal.toString(),
         taxAmount: payload.taxAmount.toString(),
         discountAmount: payload.discountAmount.toString(),
         totalAmount: payload.totalAmount.toString(),
+        pointsRedeemed: payload.pointsRedeemed?.toString() || '0',
       }).returning();
       
       const transactionId = txResult[0].id;
@@ -129,6 +134,30 @@ export class TransactionService {
             quantity: soldQty.toString(),
             reason: 'POS Sale'
           });
+        }
+      }
+
+      // 4. Handle Customer Points if applicable
+      const txData = await tx.select().from(transactions).where(eq(transactions.id, transactionId)).limit(1);
+      if (txData.length && txData[0].customerId) {
+        const total = parseFloat(txData[0].totalAmount);
+        const pointsEarned = Math.floor(total / 1000); // 1 point per 1000 spent
+        const pointsRedeemed = parseInt(txData[0].pointsRedeemed || '0');
+        
+        await tx.update(transactions)
+          .set({ pointsEarned: pointsEarned.toString() })
+          .where(eq(transactions.id, transactionId));
+
+        // Update customer points
+        const customerData = await tx.select().from(customers).where(eq(customers.id, txData[0].customerId)).limit(1);
+        if (customerData.length > 0) {
+          const currentPoints = parseInt(customerData[0].points || '0');
+          const currentSpent = parseFloat(customerData[0].totalSpent || '0');
+          
+          await tx.update(customers).set({
+            points: (currentPoints + pointsEarned - pointsRedeemed).toString(),
+            totalSpent: (currentSpent + total).toString()
+          }).where(eq(customers.id, txData[0].customerId));
         }
       }
 

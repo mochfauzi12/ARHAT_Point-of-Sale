@@ -6,5 +6,8 @@ const analyticsRoutes = new Hono();
 
 analyticsRoutes.use('*', authMiddleware);
 analyticsRoutes.get('/dashboard', analyticsController.getDashboard);
+analyticsRoutes.get('/sales', analyticsController.getSales);
+analyticsRoutes.get('/products', analyticsController.getProducts);
+analyticsRoutes.get('/profit-loss', analyticsController.getProfitLoss);
 
 export default analyticsRoutes;

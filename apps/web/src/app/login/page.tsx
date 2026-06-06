@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { loginPin } from '@/lib/api';
-import { Delete } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Delete } from 'lucide-react';
+import { Logo } from '@/components/ui/Logo';
 
 export default function LoginPage() {
   const [pin, setPin] = useState('');
@@ -41,9 +42,9 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold tracking-tight mb-2">ARHAT POS</h1>
-          <p className="text-gray-500">Enter your PIN to access the system</p>
+        <div className="text-center mb-8 flex flex-col items-center">
+          <Logo width={64} height={64} showText={true} />
+          <p className="text-gray-500 mt-4">Enter your PIN to access the system</p>
         </div>
 
         <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-8">
@@ -79,14 +80,14 @@ export default function LoginPage() {
             <button
               onClick={() => handleNumber('0')}
               disabled={loading}
-              className="h-16 rounded-2xl bg-gray-50 hover:bg-gray-100 active:bg-gray-200 text-2xl font-semibold transition-colors disabled:opacity-50"
+              className="h-16 rounded-2xl bg-gray-50 hover:bg-teal-50 active:bg-teal-100 text-2xl font-semibold transition-colors disabled:opacity-50"
             >
               0
             </button>
             <button
               onClick={handleDelete}
               disabled={loading}
-              className="h-16 rounded-2xl bg-gray-50 hover:bg-gray-100 active:bg-gray-200 text-gray-500 flex items-center justify-center transition-colors disabled:opacity-50"
+              className="h-16 rounded-2xl bg-gray-50 hover:bg-red-50 active:bg-red-100 text-gray-500 hover:text-red-500 flex items-center justify-center transition-colors disabled:opacity-50"
             >
               <Delete size={24} />
             </button>

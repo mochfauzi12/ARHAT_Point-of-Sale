@@ -79,10 +79,24 @@ export const productStocks = pgTable('product_stocks', {
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 
+export const customers = pgTable('customers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
+  name: varchar('name', { length: 255 }).notNull(),
+  phone: varchar('phone', { length: 50 }),
+  email: varchar('email', { length: 255 }),
+  points: varchar('points', { length: 20 }).default('0'),
+  totalSpent: varchar('total_spent', { length: 20 }).default('0'),
+  notes: varchar('notes', { length: 1000 }),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
 export const transactions = pgTable('transactions', {
   id: uuid('id').primaryKey().defaultRandom(),
   tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   cashierId: uuid('cashier_id').references(() => users.id),
+  customerId: uuid('customer_id').references(() => customers.id),
   transactionNumber: varchar('transaction_number', { length: 50 }).unique().notNull(),
   status: varchar('status', { length: 50 }).notNull().default('pending'), // pending, completed, refunded, voided
   subtotal: varchar('subtotal', { length: 20 }).notNull(),
@@ -91,6 +105,8 @@ export const transactions = pgTable('transactions', {
   totalAmount: varchar('total_amount', { length: 20 }).notNull(),
   paymentMethod: varchar('payment_method', { length: 50 }),
   paymentStatus: varchar('payment_status', { length: 50 }), // pending, completed, failed
+  pointsEarned: varchar('points_earned', { length: 20 }).default('0'),
+  pointsRedeemed: varchar('points_redeemed', { length: 20 }).default('0'),
   notes: varchar('notes', { length: 1000 }),
   heldUntil: timestamp('held_until'),
   createdAt: timestamp('created_at').defaultNow(),

@@ -1,24 +1,38 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCartStore } from '@/store/useCartStore';
-import { Trash2, Plus, Minus, CreditCard, Wallet, Banknote, PauseCircle, ListTodo } from 'lucide-react';
+import { Trash2, Plus, Minus, CreditCard, Wallet, Banknote, PauseCircle, ListTodo, User, X } from 'lucide-react';
 import { HeldTransactionsModal } from './HeldTransactionsModal';
-import { checkoutTransaction, holdTransaction as apiHoldTransaction } from '@/lib/api';
+import { checkoutTransaction, holdTransaction as apiHoldTransaction, getCustomers } from '@/lib/api';
 import { PrintReceiptPortal } from './ReceiptTemplate';
 
 export function CartPanel() {
   const { items, removeItem, updateQuantity, updateDiscount, clearCart, getSubtotal, getTotalDiscount, holdTransaction, heldTransactions, globalDiscount, setGlobalDiscount, isTaxEnabled, setTaxEnabled } = useCartStore();
-  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [paymentMethod, setPaymentMethod] = useState('Cash');
   const [isCheckout, setIsCheckout] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [showHeldModal, setShowHeldModal] = useState(false);
   const [printTx, setPrintTx] = useState<any>(null);
 
+  // Customer & Points
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const [pointsToRedeem, setPointsToRedeem] = useState<number>(0);
+  const [showCustomerSelect, setShowCustomerSelect] = useState(false);
+
+  useEffect(() => {
+    getCustomers().then(data => setCustomers(data)).catch(console.error);
+  }, []);
+
   const subtotal = getSubtotal();
   const totalDiscount = getTotalDiscount();
   const subtotalAfterDiscount = subtotal - totalDiscount;
   const tax = isTaxEnabled ? subtotalAfterDiscount * 0.11 : 0;
-  const total = subtotalAfterDiscount + tax;
+  let total = subtotalAfterDiscount + tax;
+
+  // 1 point = Rp 10 discount
+  const pointsDiscount = pointsToRedeem * 10;
+  total = Math.max(0, total - pointsDiscount);
 
   const handleCheckout = async () => {
     setIsCheckout(true);
@@ -26,10 +40,12 @@ export function CartPanel() {
       const res = await checkoutTransaction({
         tenantId: '00000000-0000-0000-0000-000000000000',
         cashierId: '11111111-1111-1111-1111-111111111111',
+        customerId: selectedCustomer?.id,
+        pointsRedeemed: pointsToRedeem,
         paymentMethod,
         subtotal: subtotal,
         taxAmount: tax,
-        discountAmount: totalDiscount,
+        discountAmount: totalDiscount + pointsDiscount,
         totalAmount: total,
         items: items.map(i => ({
           productId: i.id,
@@ -44,7 +60,7 @@ export function CartPanel() {
         createdAt: new Date(),
         subtotal,
         taxAmount: tax,
-        discountAmount: totalDiscount,
+        discountAmount: totalDiscount + pointsDiscount,
         totalAmount: total,
         paymentMethod,
         items: items.map(i => ({
@@ -63,6 +79,8 @@ export function CartPanel() {
             setPrintTx(null);
             setIsSuccess(false);
             clearCart();
+            setSelectedCustomer(null);
+            setPointsToRedeem(0);
           }, 500);
         }, 100);
       } else {
@@ -70,6 +88,8 @@ export function CartPanel() {
         setTimeout(() => {
           setIsSuccess(false);
           clearCart();
+          setSelectedCustomer(null);
+          setPointsToRedeem(0);
         }, 2000);
       }
     } catch (err) {
@@ -102,6 +122,8 @@ export function CartPanel() {
         });
         clearCart();
         setGlobalDiscount(0);
+        setSelectedCustomer(null);
+        setPointsToRedeem(0);
         alert('Transaction held successfully!');
       } catch (err) {
         console.error(err);
@@ -145,6 +167,84 @@ export function CartPanel() {
             Clear All
           </button>
         </div>
+      </div>
+
+      {/* Customer Selection */}
+      <div className="px-5 py-3 border-b border-gray-100 bg-gray-50/50">
+        {!selectedCustomer ? (
+          <div>
+            {!showCustomerSelect ? (
+              <button 
+                onClick={() => setShowCustomerSelect(true)}
+                className="flex items-center gap-2 text-sm text-blue-600 font-medium hover:underline"
+              >
+                <User size={16} />
+                <span>+ Tambah Pelanggan</span>
+              </button>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Pilih Pelanggan:</span>
+                  <button onClick={() => setShowCustomerSelect(false)}><X size={16} className="text-gray-400"/></button>
+                </div>
+                <select 
+                  className="w-full border border-gray-200 rounded-md p-2 text-sm focus:outline-none focus:border-blue-500"
+                  onChange={(e) => {
+                    const c = customers.find(x => x.id === e.target.value);
+                    if (c) {
+                      setSelectedCustomer(c);
+                      setShowCustomerSelect(false);
+                    }
+                  }}
+                  defaultValue=""
+                >
+                  <option value="" disabled>-- Pilih dari database --</option>
+                  {customers.map(c => (
+                    <option key={c.id} value={c.id}>{c.name} ({c.phone || '-'})</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <div className="flex justify-between items-start">
+              <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
+                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+                  <User size={16} />
+                </div>
+                <div>
+                  <p>{selectedCustomer.name}</p>
+                  <p className="text-xs text-gray-500">{parseInt(selectedCustomer.points || '0')} Poin Tersedia</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => { setSelectedCustomer(null); setPointsToRedeem(0); }}
+                className="text-gray-400 hover:text-red-500"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            
+            {parseInt(selectedCustomer.points || '0') > 0 && (
+              <div className="mt-2 text-sm flex items-center gap-2 bg-yellow-50 p-2 rounded-lg border border-yellow-100">
+                <span className="text-yellow-700 font-medium">Pakai Poin:</span>
+                <input 
+                  type="number"
+                  min="0"
+                  max={parseInt(selectedCustomer.points || '0')}
+                  value={pointsToRedeem || ''}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value) || 0;
+                    setPointsToRedeem(Math.min(val, parseInt(selectedCustomer.points || '0')));
+                  }}
+                  className="w-16 p-1 text-center border rounded-md"
+                />
+                <span className="text-xs text-gray-500">(-Rp {(pointsToRedeem * 10).toLocaleString('id-ID')})</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Cart Items */}
@@ -227,8 +327,15 @@ export function CartPanel() {
 
           {totalDiscount > 0 && (
             <div className="flex justify-between text-sm text-green-500 font-medium">
-              <span>Total Discount</span>
+              <span>Total Item/Global Disc</span>
               <span>- Rp {totalDiscount.toLocaleString('id-ID')}</span>
+            </div>
+          )}
+
+          {pointsDiscount > 0 && (
+            <div className="flex justify-between text-sm text-yellow-600 font-medium">
+              <span>Loyalty Points Discount</span>
+              <span>- Rp {pointsDiscount.toLocaleString('id-ID')}</span>
             </div>
           )}
           
@@ -248,6 +355,12 @@ export function CartPanel() {
             <span>Total</span>
             <span>Rp {total.toLocaleString('id-ID')}</span>
           </div>
+          
+          {selectedCustomer && (
+            <div className="text-right text-xs text-blue-600 font-medium mt-1">
+              *Akan mendapat {Math.floor(total / 1000)} Poin
+            </div>
+          )}
         </div>
 
         {/* Payment Methods */}
