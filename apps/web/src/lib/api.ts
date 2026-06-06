@@ -345,6 +345,17 @@ export async function createCustomer(data: { name: string; phone?: string; email
   return json.data;
 }
 
+export async function updateCustomer(id: string, data: { name: string; phone?: string; email?: string; notes?: string }) {
+  const res = await fetchWithAuth(`${API_URL}/customers/${id}`, {
+    method: 'PUT',
+    headers: getHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error('Failed to update customer');
+  const json = await res.json();
+  return json.data;
+}
+
 // =======================
 // ANALYTICS & REPORTS
 // =======================
