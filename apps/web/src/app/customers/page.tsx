@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, Plus, Search, Mail, Phone, Edit, MessageCircle, Star } from 'lucide-react';
-import { getCustomers, createCustomer, updateCustomer } from '@/lib/api';
+import { Users, Plus, Search, Mail, Phone, Edit, MessageCircle, Star, Crown, History, X, ShoppingBag } from 'lucide-react';
+import { getCustomers, createCustomer, updateCustomer, getCustomerTransactions } from '@/lib/api';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 
 interface Customer {
@@ -13,6 +13,15 @@ interface Customer {
   points: string;
   totalSpent: string;
   notes: string;
+}
+
+interface Transaction {
+  id: string;
+  transactionNumber: string;
+  totalAmount: string;
+  pointsEarned: string;
+  pointsRedeemed: string;
+  createdAt: string;
 }
 
 export default function CustomersPage() {
@@ -29,6 +38,19 @@ export default function CustomersPage() {
     email: '',
     notes: ''
   });
+  
+  // History Modal
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [customerTx, setCustomerTx] = useState<Transaction[]>([]);
+  const [loadingTx, setLoadingTx] = useState(false);
+
+  const getTier = (spent: string | number) => {
+    const s = Number(spent);
+    if (s > 10000000) return { name: 'Platinum', color: 'bg-purple-100 text-purple-700 border-purple-200' };
+    if (s >= 1000000) return { name: 'Gold', color: 'bg-yellow-100 text-yellow-700 border-yellow-200' };
+    return { name: 'Silver', color: 'bg-slate-100 text-slate-700 border-slate-200' };
+  };
 
   const loadCustomers = async () => {
     setIsLoading(true);
@@ -74,6 +96,20 @@ export default function CustomersPage() {
       loadCustomers();
     } catch (error) {
       alert('Gagal menyimpan data pelanggan');
+    }
+  };
+
+  const openHistory = async (c: Customer) => {
+    setSelectedCustomer(c);
+    setShowHistoryModal(true);
+    setLoadingTx(true);
+    try {
+      const tx = await getCustomerTransactions(c.id);
+      setCustomerTx(tx);
+    } catch(e) {
+      console.error(e);
+    } finally {
+      setLoadingTx(false);
     }
   };
 
@@ -158,7 +194,12 @@ export default function CustomersPage() {
                           {c.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <div className="font-bold text-slate-900 text-base">{c.name}</div>
+                          <div className="font-bold text-slate-900 text-base flex items-center gap-2">
+                            {c.name}
+                            <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-md border ${getTier(c.totalSpent).color}`}>
+                              {getTier(c.totalSpent).name}
+                            </span>
+                          </div>
                           {c.notes && <div className="text-xs text-slate-400 font-medium mt-0.5 line-clamp-1 max-w-[200px]">{c.notes}</div>}
                         </div>
                       </div>
@@ -193,6 +234,13 @@ export default function CustomersPage() {
                     </td>
                     <td className="p-6 text-right">
                       <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                          onClick={() => openHistory(c)}
+                          className="p-2.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl transition-colors"
+                          title="Riwayat Belanja"
+                        >
+                          <History size={18} />
+                        </button>
                         <button 
                           onClick={() => handleEdit(c)}
                           className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors"
@@ -298,6 +346,62 @@ export default function CustomersPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Riwayat Belanja */}
+      {showHistoryModal && selectedCustomer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setShowHistoryModal(false)} />
+          <div className="relative bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center shrink-0">
+              <div className="flex items-center">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-100 to-blue-200 text-blue-700 flex items-center justify-center mr-4 shadow-sm">
+                  <ShoppingBag size={24} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    Riwayat Belanja
+                    <span className={`text-xs uppercase font-bold px-2 py-0.5 rounded-md border ${getTier(selectedCustomer.totalSpent).color}`}>
+                      {getTier(selectedCustomer.totalSpent).name}
+                    </span>
+                  </h3>
+                  <p className="text-sm font-medium text-slate-500">{selectedCustomer.name}</p>
+                </div>
+              </div>
+              <button onClick={() => setShowHistoryModal(false)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto flex-1">
+              {loadingTx ? (
+                <div className="text-center py-12 text-slate-500 font-bold animate-pulse">Memuat riwayat...</div>
+              ) : customerTx.length === 0 ? (
+                <div className="text-center py-12 text-slate-500">Belum ada transaksi untuk pelanggan ini.</div>
+              ) : (
+                <div className="space-y-4">
+                  {customerTx.map((tx) => (
+                    <div key={tx.id} className="flex justify-between items-center p-4 border border-slate-100 rounded-2xl hover:border-slate-200 bg-white hover:bg-slate-50 transition-colors">
+                      <div>
+                        <div className="font-bold text-slate-900">{tx.transactionNumber}</div>
+                        <div className="text-sm text-slate-500 mt-1">{new Date(tx.createdAt).toLocaleString('id-ID')}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-slate-900 text-lg">{formatCurrency(tx.totalAmount)}</div>
+                        {(Number(tx.pointsEarned) > 0 || Number(tx.pointsRedeemed) > 0) && (
+                          <div className="text-xs font-medium flex items-center justify-end gap-2 mt-1">
+                            {Number(tx.pointsEarned) > 0 && <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">+{tx.pointsEarned} Poin</span>}
+                            {Number(tx.pointsRedeemed) > 0 && <span className="text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md">-{tx.pointsRedeemed} Terpakai</span>}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

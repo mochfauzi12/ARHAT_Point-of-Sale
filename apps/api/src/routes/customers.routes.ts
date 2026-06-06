@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { db } from '../lib/db';
-import { customers } from '../models';
-import { eq, desc, ilike, or } from 'drizzle-orm';
+import { customers, transactions } from '../models';
+import { eq, desc, ilike, or, and } from 'drizzle-orm';
 import { requireAuth, requireTenant } from '../middleware/auth';
 
 const router = new Hono();
@@ -84,6 +84,32 @@ router.put('/:id', async (c) => {
   }).where(eq(customers.id, id)).returning();
 
   return c.json({ success: true, data: updatedCustomer[0] });
+});
+
+// Get transactions for a customer
+router.get('/:id/transactions', async (c) => {
+  const id = c.req.param('id');
+  const tenantId = c.get('tenantId');
+
+  // Verify ownership
+  const customerResult = await db.select().from(customers).where(eq(customers.id, id));
+  if (customerResult.length === 0 || customerResult[0].tenantId !== tenantId) {
+    return c.json({ success: false, message: 'Customer not found' }, 404);
+  }
+
+  const txList = await db.select()
+    .from(transactions)
+    .where(
+      and(
+        eq(transactions.tenantId, tenantId),
+        eq(transactions.customerId, id),
+        eq(transactions.status, 'completed')
+      )
+    )
+    .orderBy(desc(transactions.createdAt))
+    .limit(50);
+
+  return c.json({ success: true, data: txList });
 });
 
 export default router;

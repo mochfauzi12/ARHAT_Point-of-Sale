@@ -167,21 +167,37 @@ export class TransactionService {
       const txData = await tx.select().from(transactions).where(eq(transactions.id, transactionId)).limit(1);
       if (txData.length && txData[0].customerId) {
         const total = parseFloat(txData[0].totalAmount);
-        const pointsEarned = Math.floor(total / 1000); // 1 point per 1000 spent
-        const pointsRedeemed = parseInt(txData[0].pointsRedeemed || '0');
+        let basePointsEarned = Math.floor(total / 1000); // 1 point per 1000 spent
         
-        await tx.update(transactions)
-          .set({ pointsEarned: pointsEarned.toString() })
-          .where(eq(transactions.id, transactionId));
-
-        // Update customer points
+        // Fetch customer to determine tier and apply bonus
         const customerData = await tx.select().from(customers).where(eq(customers.id, txData[0].customerId)).limit(1);
+        let finalPointsEarned = basePointsEarned;
+        
         if (customerData.length > 0) {
-          const currentPoints = parseInt(customerData[0].points || '0');
           const currentSpent = parseFloat(customerData[0].totalSpent || '0');
           
+          // Determine Tier Bonus (Silver: 1%, Gold: 2%, Platinum: 3%)
+          let bonusPercentage = 0;
+          if (currentSpent > 10000000) {
+            bonusPercentage = 0.03; // Platinum
+          } else if (currentSpent >= 1000000) {
+            bonusPercentage = 0.02; // Gold
+          } else {
+            bonusPercentage = 0.01; // Silver
+          }
+          
+          finalPointsEarned = Math.floor(basePointsEarned * (1 + bonusPercentage));
+          const pointsRedeemed = parseInt(txData[0].pointsRedeemed || '0');
+          
+          // Update transaction with actual points earned
+          await tx.update(transactions)
+            .set({ pointsEarned: finalPointsEarned.toString() })
+            .where(eq(transactions.id, transactionId));
+
+          const currentPoints = parseInt(customerData[0].points || '0');
+          
           await tx.update(customers).set({
-            points: (currentPoints + pointsEarned - pointsRedeemed).toString(),
+            points: (currentPoints + finalPointsEarned - pointsRedeemed).toString(),
             totalSpent: (currentSpent + total).toString()
           }).where(eq(customers.id, txData[0].customerId));
         }

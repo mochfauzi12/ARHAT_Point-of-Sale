@@ -356,6 +356,15 @@ export async function updateCustomer(id: string, data: { name: string; phone?: s
   return json.data;
 }
 
+export async function getCustomerTransactions(id: string) {
+  const res = await fetchWithAuth(`${API_URL}/customers/${id}/transactions`, {
+    headers: getHeaders()
+  });
+  if (!res.ok) return [];
+  const json = await res.json();
+  return json.data || [];
+}
+
 // =======================
 // ANALYTICS & REPORTS
 // =======================
