@@ -45,76 +45,76 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
-        <p className="text-gray-500 mt-1">Here's what's happening in your store today.</p>
+      <div className="mb-8 flex flex-col gap-1">
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Overview</h1>
+        <p className="text-slate-500 font-medium">Here's what's happening in your store today.</p>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+        <div className="bg-white p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/60 hover:-translate-y-1 transition-all duration-300">
           <div className="flex justify-between items-start mb-4">
-            <div className="p-3 bg-black text-white rounded-2xl">
+            <div className="p-3 bg-teal-50 text-teal-600 rounded-2xl">
               <TrendingUp size={24} />
             </div>
-            <span className="flex items-center text-sm font-medium text-green-600 bg-green-50 px-2 py-1 rounded-lg">
+            <span className="flex items-center text-sm font-medium text-teal-600 bg-teal-50/50 px-2.5 py-1 rounded-full">
               <ArrowUpRight size={16} className="mr-1" /> +12%
             </span>
           </div>
-          <h3 className="text-gray-500 text-sm font-medium mb-1">Today's Revenue</h3>
+          <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Today's Revenue</h3>
           <p className="text-3xl font-bold">Rp {data.todayRevenue.toLocaleString('id-ID')}</p>
         </div>
 
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+        <div className="bg-white p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/60 hover:-translate-y-1 transition-all duration-300">
           <div className="flex justify-between items-start mb-4">
             <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
               <CreditCard size={24} />
             </div>
           </div>
-          <h3 className="text-gray-500 text-sm font-medium mb-1">Today's Transactions</h3>
-          <p className="text-3xl font-bold">{data.todayTransactions}</p>
+          <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Today's Transactions</h3>
+          <p className="text-3xl font-bold text-slate-900">{data.todayTransactions}</p>
         </div>
 
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+        <div className="bg-white p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/60 hover:-translate-y-1 transition-all duration-300">
           <div className="flex justify-between items-start mb-4">
-            <div className="p-3 bg-orange-50 text-orange-600 rounded-2xl">
+            <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl">
               <Package size={24} />
             </div>
           </div>
-          <h3 className="text-gray-500 text-sm font-medium mb-1">Active Products</h3>
+          <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Active Products</h3>
           <p className="text-3xl font-bold">{data.activeProducts}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Chart */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-          <h2 className="text-lg font-bold mb-6">Revenue Last 7 Days</h2>
+        <div className="lg:col-span-2 bg-white p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/60">
+          <h2 className="text-lg font-bold mb-6 text-slate-900">Revenue Last 7 Days</h2>
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#000000" stopOpacity={0.1}/>
-                    <stop offset="95%" stopColor="#000000" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#0B5A63" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="#0B5A63" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} tickFormatter={(value) => `Rp ${value / 1000}k`} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} tickFormatter={(value) => `Rp ${value / 1000}k`} />
                 <Tooltip 
-                  contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 40px -10px rgb(0 0 0 / 0.1)', fontWeight: 'bold' }}
                   formatter={(value: any) => [`Rp ${Number(value).toLocaleString('id-ID')}`, 'Revenue']}
                 />
-                <Area type="monotone" dataKey="revenue" stroke="#000000" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
+                <Area type="monotone" dataKey="revenue" stroke="#0B5A63" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* Top Products */}
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-          <h2 className="text-lg font-bold mb-6">Top Products (Best Sellers)</h2>
+        <div className="bg-white p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/60">
+          <h2 className="text-lg font-bold mb-6 text-slate-900">Top Products (Best Sellers)</h2>
           <div className="space-y-6">
             {data.topProducts.map((p: any, i: number) => (
               <div key={p.id} className="flex items-center justify-between">

@@ -33,15 +33,15 @@ export function ProductGrid() {
   return (
     <div className="flex flex-col gap-6 h-full">
       {/* Category Pills */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1 p-1 bg-gray-100/80 backdrop-blur-sm rounded-full w-fit">
         {CATEGORIES.map(category => (
           <button
             key={category}
             onClick={() => setSelectedCategory(category)}
-            className={`text-sm font-semibold px-5 py-2.5 rounded-full transition-all duration-200 ${
+            className={`text-sm font-semibold px-5 py-2 rounded-full transition-all duration-300 ${
               selectedCategory === category
-                ? 'bg-teal-600 text-white shadow-md'
-                : 'bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-900'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'
             }`}
           >
             {category}
@@ -66,31 +66,31 @@ export function ProductGrid() {
                   addItem(product);
                 }
               }}
-              className="relative bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden group aspect-square flex flex-col"
+              className="relative bg-gray-50 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-400 hover:-translate-y-1.5 cursor-pointer overflow-hidden group aspect-[4/5] flex flex-col"
             >
-              <div className="absolute inset-0 bg-gray-50 flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center">
                 {product.imageUrl ? (
                   <img 
-                    src={product.imageUrl.startsWith('http') ? product.imageUrl : `http://localhost:8787${product.imageUrl}`} 
+                    src={product.imageUrl.startsWith('http') || product.imageUrl.startsWith('data:') ? product.imageUrl : `http://localhost:8787${product.imageUrl}`}
                     alt={product.name} 
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out" 
                   />
                 ) : (
-                  <span className="text-5xl opacity-30">☕</span>
+                  <span className="text-5xl opacity-20 group-hover:scale-110 transition-transform duration-700 ease-out">☕</span>
                 )}
               </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-90 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-300"></div>
               
-              <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
-                <p className="font-bold text-sm leading-tight line-clamp-2 mb-1">
+              <div className="absolute bottom-2 left-2 right-2 p-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl flex flex-col gap-1 transition-all duration-300 group-hover:bg-white/20 group-hover:border-white/30 group-hover:translate-y-0">
+                <p className="font-semibold text-sm leading-tight line-clamp-2 text-white drop-shadow-md">
                   {product.name}
                 </p>
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-teal-300">
+                <div className="flex items-center justify-between mt-1">
+                  <span className="font-bold text-white drop-shadow-md text-sm">
                     Rp {parseFloat(product.sellingPrice as string).toLocaleString('id-ID')}
                   </span>
                   {product.stockQuantity !== undefined && (
-                    <span className="text-xs font-medium px-1.5 py-0.5 bg-black/40 rounded text-gray-200">
+                    <span className="text-[10px] font-bold px-2 py-0.5 bg-white/20 text-white rounded-full backdrop-blur-md shadow-sm">
                       {product.stockQuantity}
                     </span>
                   )}

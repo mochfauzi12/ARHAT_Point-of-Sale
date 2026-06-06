@@ -16,7 +16,7 @@ export default function ProductsPage() {
     setLoading(true);
     try {
       const data = await fetchProducts('');
-      setProducts(data.data || []);
+      setProducts(data || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -38,8 +38,8 @@ export default function ProductsPage() {
       setIsModalOpen(false);
       setEditingProduct(null);
       loadProducts();
-    } catch (error) {
-      alert('Failed to save product');
+    } catch (error: any) {
+      alert(`Failed to save product: ${error.message}`);
     }
   };
 
@@ -66,22 +66,22 @@ export default function ProductsPage() {
   return (
     <DashboardLayout>
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Products</h1>
-          <p className="text-gray-500 mt-1">Manage your store inventory and pricing.</p>
+        <div className="flex flex-col gap-1">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Products</h1>
+          <p className="text-slate-500 font-medium">Manage your store inventory and pricing.</p>
         </div>
         <button 
           onClick={openAddModal}
-          className="bg-black text-white px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 hover:bg-gray-800 transition-colors"
+          className="bg-slate-900 text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2 hover:bg-black hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300"
         >
           <Plus size={20} />
           Add Product
         </button>
       </div>
 
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+      <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/60">
         {loading ? (
-          <div className="text-center py-10 text-gray-500">Loading products...</div>
+          <div className="text-center py-10 text-slate-500 font-medium animate-pulse">Loading products...</div>
         ) : (
           <ProductTable 
             products={products} 

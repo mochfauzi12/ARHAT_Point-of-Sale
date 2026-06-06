@@ -33,6 +33,9 @@ export const productController = {
       });
       return c.json({ message: 'Product created', data: product }, 201);
     } catch (error: any) {
+      if (error.message?.includes('duplicate key') && error.message?.includes('sku')) {
+        return c.json({ error: 'SKU sudah digunakan oleh produk lain. Silakan gunakan SKU yang berbeda atau kosongkan SKU.' }, 400);
+      }
       return c.json({ error: error.message }, 400);
     }
   },
@@ -47,6 +50,9 @@ export const productController = {
       if (!product) return c.json({ error: 'Product not found' }, 404);
       return c.json({ message: 'Product updated', data: product });
     } catch (error: any) {
+      if (error.message?.includes('duplicate key') && error.message?.includes('sku')) {
+        return c.json({ error: 'SKU sudah digunakan oleh produk lain. Silakan gunakan SKU yang berbeda atau kosongkan SKU.' }, 400);
+      }
       return c.json({ error: error.message }, 400);
     }
   },

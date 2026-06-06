@@ -147,7 +147,10 @@ export async function createProduct(payload: any) {
     headers: getHeaders(isFormData ? {} : { 'Content-Type': 'application/json' }),
     body: isFormData ? payload : JSON.stringify(payload)
   });
-  if (!res.ok) throw new Error('Failed to create product');
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to create product');
+  }
   const json = await res.json();
   return json.data;
 }
@@ -159,7 +162,10 @@ export async function updateProduct(id: string, payload: any) {
     headers: getHeaders(isFormData ? {} : { 'Content-Type': 'application/json' }),
     body: isFormData ? payload : JSON.stringify(payload)
   });
-  if (!res.ok) throw new Error('Failed to update product');
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to update product');
+  }
   const json = await res.json();
   return json.data;
 }

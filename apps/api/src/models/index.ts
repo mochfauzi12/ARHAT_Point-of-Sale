@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, timestamp, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, timestamp, boolean } from 'drizzle-orm/pg-core';
 
 export const tenants = pgTable('tenants', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -60,7 +60,7 @@ export const products = pgTable('products', {
   name: varchar('name', { length: 255 }).notNull(),
   sku: varchar('sku', { length: 100 }).unique(),
   barcode: varchar('barcode', { length: 100 }),
-  imageUrl: varchar('image_url', { length: 255 }),
+  imageUrl: text('image_url'),
   categoryId: uuid('category_id'), // To be implemented
   description: varchar('description', { length: 1000 }),
   purchasePrice: varchar('purchase_price', { length: 20 }), // Use varchar/numeric for decimals
@@ -68,6 +68,7 @@ export const products = pgTable('products', {
   stockQuantity: varchar('stock_quantity', { length: 10 }).default('0'), // Legacy: total stock or simple mode stock
   minStockLevel: varchar('min_stock_level', { length: 10 }).default('0'), // Legacy: min stock for simple mode
   isActive: boolean('is_active').default(true),
+  isService: boolean('is_service').default(false),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });

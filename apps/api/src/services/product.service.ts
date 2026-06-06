@@ -7,7 +7,17 @@ export class ProductService {
    * Create a new product
    */
   static async createProduct(data: any) {
-    const { variants, modifiers, ...productData } = data;
+    const { variants, modifiers, price, cost, stock, category, ...restData } = data;
+    
+    // Map frontend fields to DB schema
+    const productData = {
+      ...restData,
+      sku: restData.sku === '' ? null : restData.sku,
+      sellingPrice: price !== undefined ? price.toString() : '0',
+      purchasePrice: cost !== undefined ? cost.toString() : '0',
+      stockQuantity: stock !== undefined ? stock.toString() : '0'
+    };
+
     const result = await db.insert(products).values(productData).returning();
     const product = result[0];
 
@@ -76,13 +86,23 @@ export class ProductService {
    * Update product
    */
   static async updateProduct(tenantId: string, productId: string, data: any) {
-    const { variants, modifiers, ...productData } = data;
-    const result = await db.update(products).set({ ...productData, updatedAt: new Date() }).where(
-      and(
-        eq(products.id, productId),
-        eq(products.tenantId, tenantId)
+    const { variants, modifiers, price, cost, stock, category, ...restData } = data;
+
+    const productData: any = { ...restData };
+    if (restData.sku === '') productData.sku = null;
+    if (price !== undefined) productData.sellingPrice = price.toString();
+    if (cost !== undefined) productData.purchasePrice = cost.toString();
+    if (stock !== undefined) productData.stockQuantity = stock.toString();
+
+    const result = await db.update(products)
+      .set({ ...productData, updatedAt: new Date() })
+      .where(
+        and(
+          eq(products.id, productId),
+          eq(products.tenantId, tenantId)
+        )
       )
-    ).returning();
+      .returning();
 
     if (!result[0]) return null;
 

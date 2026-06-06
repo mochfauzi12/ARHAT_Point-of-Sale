@@ -25,9 +25,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const userRole = user?.role || 'cashier';
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-slate-50 flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-100 flex flex-col hidden md:flex z-10 shadow-sm">
+      <aside className="w-64 bg-white border-r border-slate-200/60 flex flex-col hidden md:flex z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
         <div className="h-16 flex items-center px-6 border-b border-gray-100">
           <div className="flex items-center gap-3 px-2">
             <Logo width={28} height={28} />
@@ -42,10 +42,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <Link 
                 key={item.name} 
                 href={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 group ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 group ${
                   isActive 
-                    ? 'bg-teal-50/80 text-[#0B5A63]' 
-                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-[#0B5A63]/10 text-[#0B5A63] shadow-sm' 
+                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
               >
                 <div className={`transition-transform duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}>
@@ -57,10 +57,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="p-4 border-t border-gray-100">
+        <div className="p-4 border-t border-slate-100">
           <button 
             onClick={logout}
-            className="flex items-center gap-3 px-4 py-3 w-full rounded-lg font-medium text-gray-500 hover:bg-red-50 hover:text-red-600 transition-all duration-200 group"
+            className="flex items-center gap-3 px-4 py-3 w-full rounded-xl font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 transition-all duration-300 group"
           >
             <div className="transition-transform duration-200 group-hover:scale-110">
               <LogOut size={20} />
@@ -72,7 +72,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-h-screen max-w-full overflow-hidden">
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 md:hidden">
+        <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200/60 flex items-center justify-between px-6 md:hidden sticky top-0 z-20">
           <div className="flex items-center gap-2">
             <Logo width={28} height={28} />
             <span className="font-bold text-lg text-[#0B5A63]">TRANSAKSI KITA</span>

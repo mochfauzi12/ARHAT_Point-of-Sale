@@ -30,12 +30,12 @@ export default function POSPage() {
           
           {/* Left Side: Product Grid */}
           <div className="flex-1 flex flex-col p-4 sm:p-6 overflow-y-auto">
-            <div className="mb-6">
-              <p className="text-3xl sm:text-4xl font-medium leading-tight text-black drop-shadow-sm">
-                Select products <br />
-                <span style={{ fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', fontWeight: 400 }} className="text-gray-500">
-                  for checkout
-                </span>
+            <div className="mb-6 flex flex-col gap-1">
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900">
+                Menu
+              </h1>
+              <p className="text-gray-500 font-medium">
+                Select products to add to cart
               </p>
             </div>
             

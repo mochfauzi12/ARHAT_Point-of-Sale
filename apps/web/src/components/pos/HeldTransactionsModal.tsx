@@ -32,12 +32,15 @@ export function HeldTransactionsModal({ onClose }: { onClose: () => void }) {
       if (tx) {
         clearCart();
         tx.items.forEach((item: any) => {
+          const selectedVariant = item.variantId ? { id: item.variantId, name: item.variantName, price: item.unitPrice } : undefined;
+          const selectedModifiers = typeof item.modifiers === 'string' ? JSON.parse(item.modifiers) : (item.modifiers || []);
+          
           addItem({
             id: item.productId,
             name: item.productName || 'Unknown Product',
-            sellingPrice: item.unitPrice,
+            sellingPrice: item.unitPrice, // fallback
             image: item.productImage
-          }, parseInt(item.quantity));
+          }, parseInt(item.quantity), selectedVariant, selectedModifiers);
         });
       }
       onClose();
@@ -78,8 +81,8 @@ export function HeldTransactionsModal({ onClose }: { onClose: () => void }) {
               <div key={tx.id} className="border border-gray-100 rounded-2xl p-4 flex flex-col gap-3">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="font-semibold">{tx.note || 'No Note'}</h3>
-                    <p className="text-sm text-gray-500">{new Date(tx.timestamp).toLocaleTimeString()}</p>
+                    <h3 className="font-semibold">{tx.notes || 'No Note'}</h3>
+                    <p className="text-sm text-gray-500">{new Date(tx.createdAt).toLocaleString()}</p>
                   </div>
                   <span className="bg-gray-100 text-gray-800 text-xs font-semibold px-2 py-1 rounded">
                     {tx.items.length} items

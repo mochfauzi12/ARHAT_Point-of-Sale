@@ -128,23 +128,25 @@ export class TransactionService {
         // Fetch current stock
         const prod = await tx.select().from(products).where(eq(products.id, item.productId)).limit(1);
         if (prod.length > 0) {
-          const currentStock = parseInt(prod[0].stockQuantity || '0');
-          const soldQty = parseInt(item.quantity);
-          const newStock = currentStock - soldQty;
-          
-          // Update product stock
-          await tx.update(products).set({ stockQuantity: newStock.toString() }).where(eq(products.id, item.productId));
-          
-          // Record stock movement
-          await tx.insert(stockMovements).values({
-            tenantId,
-            productId: item.productId,
-            movementType: 'out',
-            referenceType: 'transaction',
-            referenceId: transactionId,
-            quantity: soldQty.toString(),
-            reason: 'POS Sale'
-          });
+          if (!prod[0].isService) {
+            const currentStock = parseInt(prod[0].stockQuantity || '0');
+            const soldQty = parseInt(item.quantity);
+            const newStock = currentStock - soldQty;
+            
+            // Update product stock
+            await tx.update(products).set({ stockQuantity: newStock.toString() }).where(eq(products.id, item.productId));
+            
+            // Record stock movement
+            await tx.insert(stockMovements).values({
+              tenantId,
+              productId: item.productId,
+              movementType: 'out',
+              referenceType: 'transaction',
+              referenceId: transactionId,
+              quantity: soldQty.toString(),
+              reason: 'POS Sale'
+            });
+          }
         }
       }
 

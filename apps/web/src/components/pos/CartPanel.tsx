@@ -115,7 +115,7 @@ export function CartPanel() {
   };
 
   const handleHold = async () => {
-    const note = prompt('Enter a note for this held transaction (e.g. Table 5):');
+    const note = prompt('Enter Table Number, License Plate, or Note for this Open Bill:');
     if (note !== null) {
       try {
         await apiHoldTransaction({
@@ -128,11 +128,14 @@ export function CartPanel() {
           totalAmount: total,
           items: items.map(i => ({
             productId: i.id,
+            variantId: i.selectedVariant?.id,
+            variantName: i.selectedVariant?.name,
+            modifiers: i.selectedModifiers ? i.selectedModifiers.map(m => ({ id: m.id, name: m.name, price: m.price })) : [],
             quantity: i.quantity,
-            unitPrice: typeof i.sellingPrice === 'string' ? parseFloat(i.sellingPrice) : i.sellingPrice,
+            unitPrice: i.finalUnitPrice,
             discount: i.discount || 0,
-            tax: isTaxEnabled ? ((typeof i.sellingPrice === 'string' ? parseFloat(i.sellingPrice) : i.sellingPrice) - (i.discount || 0)) * 0.11 : 0,
-            subtotal: (typeof i.sellingPrice === 'string' ? parseFloat(i.sellingPrice) : i.sellingPrice) * i.quantity - i.discount * i.quantity
+            tax: isTaxEnabled ? (i.finalUnitPrice - (i.discount || 0)) * 0.11 : 0,
+            subtotal: i.finalUnitPrice * i.quantity - i.discount * i.quantity
           }))
         });
         clearCart();
@@ -263,9 +266,12 @@ export function CartPanel() {
       {/* Cart Items */}
       <div className="flex-1 overflow-y-auto px-5 py-2 flex flex-col">
         {items.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-3">
-            <span className="text-4xl">🛒</span>
-            <p className="text-sm font-medium">Cart is empty</p>
+          <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-4 opacity-70">
+            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-2">
+              <span className="text-4xl opacity-50">🛒</span>
+            </div>
+            <p className="text-sm font-semibold text-gray-500">Cart is empty</p>
+            <p className="text-xs text-gray-400">Add products to start a new order</p>
           </div>
         ) : (
           items.map(item => {
@@ -359,7 +365,7 @@ export function CartPanel() {
             </div>
           )}
           
-          <div className="flex justify-between items-center text-sm text-gray-500 font-medium">
+          <div className="flex justify-between items-center text-sm text-gray-500 font-medium border-t border-dashed border-gray-200 pt-3 mt-1">
             <label className="flex items-center gap-2 cursor-pointer">
               <input 
                 type="checkbox" 
@@ -371,7 +377,7 @@ export function CartPanel() {
             </label>
             <span className="text-gray-900">Rp {tax.toLocaleString('id-ID')}</span>
           </div>
-          <div className="flex justify-between text-xl font-bold text-black mt-2 pt-2 border-t border-gray-200/60">
+          <div className="flex justify-between text-xl font-bold text-gray-900 mt-2 pt-3 border-t border-dashed border-gray-200">
             <span>Total</span>
             <span>Rp {total.toLocaleString('id-ID')}</span>
           </div>
@@ -384,7 +390,7 @@ export function CartPanel() {
         </div>
 
         {/* Payment Methods */}
-        <div className="mb-4 flex gap-2">
+        <div className="mb-4 flex gap-1 p-1 bg-gray-100/80 rounded-xl">
           {[
             { id: 'Cash', icon: <Banknote size={16} /> },
             { id: 'QRIS', icon: <Wallet size={16} /> },
@@ -393,14 +399,14 @@ export function CartPanel() {
             <button
               key={method.id}
               onClick={() => setPaymentMethod(method.id)}
-              className={`flex-1 flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl border transition-all duration-200 ${
+              className={`flex-1 flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-lg transition-all duration-300 ${
                 paymentMethod === method.id 
-                  ? 'bg-slate-900 text-white border-slate-900 shadow-md scale-105' 
-                  : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400 hover:text-gray-900 hover:shadow-sm'
+                  ? 'bg-white text-gray-900 shadow-sm font-semibold' 
+                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50 font-medium'
               }`}
             >
-              {method.icon}
-              <span className="text-xs font-semibold">{method.id}</span>
+              <div className={paymentMethod === method.id ? 'text-gray-900' : ''}>{method.icon}</div>
+              <span className="text-xs">{method.id}</span>
             </button>
           ))}
         </div>
@@ -449,7 +455,7 @@ export function CartPanel() {
           <button 
             onClick={handleCheckout}
             disabled={items.length === 0 || isCheckout || (paymentMethod === 'Cash' && cashTendered > 0 && cashTendered < total)}
-            className="flex-1 py-4 bg-teal-600 text-white rounded-xl font-bold text-xl hover:bg-teal-700 hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:hover:shadow-none flex items-center justify-center gap-2 uppercase tracking-wide"
+            className="flex-1 py-4 bg-gray-900 text-white rounded-xl font-bold text-xl hover:bg-black hover:-translate-y-0.5 hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:hover:shadow-none disabled:hover:translate-y-0 flex items-center justify-center gap-2 tracking-wide"
           >
             {isCheckout ? 'Processing...' : `Charge Rp ${total.toLocaleString('id-ID')}`}
           </button>
