@@ -97,6 +97,15 @@ export default function LoginPage() {
         <p className="text-center text-gray-400 text-sm mt-8">
           Tip: Use PIN 1234 for Cashier
         </p>
+        
+        <div className="text-center mt-6">
+          <button 
+            onClick={() => router.push('/auth/login')}
+            className="text-[#0B5A63] hover:text-[#0E8A94] text-sm font-medium transition-colors"
+          >
+            Login dengan Email (Admin / Supervisor)
+          </button>
+        </div>
       </div>
     </div>
   );

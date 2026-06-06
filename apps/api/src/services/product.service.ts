@@ -1,30 +1,30 @@
-import { eq, or, ilike, and } from 'drizzle-orm';
+import { eq, or, ilike, and, inArray } from 'drizzle-orm';
 import { db } from '../lib/db';
-import { products } from '../models';
+import { products, productVariants, productModifiers } from '../models';
 
 export class ProductService {
   /**
    * Create a new product
    */
-  static async createProduct(data: {
-    tenantId: string;
-    name: string;
-    sku?: string;
-    barcode?: string;
-    sellingPrice: string;
-    purchasePrice?: string;
-    stockQuantity?: string;
-    description?: string;
-  }) {
-    const result = await db.insert(products).values(data).returning();
-    return result[0];
+  static async createProduct(data: any) {
+    const { variants, modifiers, ...productData } = data;
+    const result = await db.insert(products).values(productData).returning();
+    const product = result[0];
+
+    if (variants && variants.length > 0) {
+      await db.insert(productVariants).values(variants.map((v: any) => ({ ...v, productId: product.id })));
+    }
+    if (modifiers && modifiers.length > 0) {
+      await db.insert(productModifiers).values(modifiers.map((m: any) => ({ ...m, productId: product.id })));
+    }
+    return product;
   }
 
   /**
    * Search products by name, sku, or barcode
    */
   static async searchProducts(tenantId: string, query: string) {
-    return await db.select().from(products).where(
+    const prods = await db.select().from(products).where(
       and(
         eq(products.tenantId, tenantId),
         eq(products.isActive, true),
@@ -35,6 +35,18 @@ export class ProductService {
         )
       )
     );
+
+    if (prods.length === 0) return prods;
+    
+    const productIds = prods.map(p => p.id);
+    const variants = await db.select().from(productVariants).where(inArray(productVariants.productId, productIds));
+    const modifiers = await db.select().from(productModifiers).where(inArray(productModifiers.productId, productIds));
+    
+    return prods.map(p => ({
+      ...p,
+      variants: variants.filter(v => v.productId === p.id),
+      modifiers: modifiers.filter(m => m.productId === p.id)
+    }));
   }
 
   /**
@@ -48,19 +60,46 @@ export class ProductService {
       )
     ).limit(1);
     
-    return result[0] || null;
+    if (!result[0]) return null;
+    
+    const variants = await db.select().from(productVariants).where(eq(productVariants.productId, productId));
+    const modifiers = await db.select().from(productModifiers).where(eq(productModifiers.productId, productId));
+    
+    return {
+      ...result[0],
+      variants,
+      modifiers
+    };
   }
 
   /**
    * Update product
    */
   static async updateProduct(tenantId: string, productId: string, data: any) {
-    const result = await db.update(products).set({ ...data, updatedAt: new Date() }).where(
+    const { variants, modifiers, ...productData } = data;
+    const result = await db.update(products).set({ ...productData, updatedAt: new Date() }).where(
       and(
         eq(products.id, productId),
         eq(products.tenantId, tenantId)
       )
     ).returning();
+
+    if (!result[0]) return null;
+
+    if (variants !== undefined) {
+      await db.delete(productVariants).where(eq(productVariants.productId, productId));
+      if (variants.length > 0) {
+        await db.insert(productVariants).values(variants.map((v: any) => ({ ...v, id: undefined, productId })));
+      }
+    }
+    
+    if (modifiers !== undefined) {
+      await db.delete(productModifiers).where(eq(productModifiers.productId, productId));
+      if (modifiers.length > 0) {
+        await db.insert(productModifiers).values(modifiers.map((m: any) => ({ ...m, id: undefined, productId })));
+      }
+    }
+
     return result[0];
   }
 

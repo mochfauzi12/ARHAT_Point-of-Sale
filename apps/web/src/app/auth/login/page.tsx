@@ -27,9 +27,9 @@ export default function LoginPage() {
       const data = await response.json();
       
       if (response.ok && data?.data?.accessToken) {
-        localStorage.setItem('accessToken', data.data.accessToken);
+        document.cookie = `token=${data.data.accessToken}; path=/; max-age=86400`;
         // Redirect to dashboard
-        router.push('/');
+        router.push('/dashboard');
       } else {
         throw new Error(data.error || 'Failed to login');
       }
@@ -101,6 +101,12 @@ export default function LoginPage() {
             </button>
           </div>
         </form>
+        
+        <div className="text-center mt-4">
+          <Link href="/login" className="text-sm font-medium text-gray-500 hover:text-[#0B5A63]">
+            ← Kembali ke Login Kasir (PIN)
+          </Link>
+        </div>
       </div>
     </div>
   );

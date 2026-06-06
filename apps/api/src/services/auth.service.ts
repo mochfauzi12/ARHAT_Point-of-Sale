@@ -38,7 +38,7 @@ export class AuthService {
         fullName: data.fullName,
         tenantId: data.tenantId,
         status: 'active',
-        emailVerified: false,
+        emailVerified: true, // Auto verify for development
       })
       .returning();
 

@@ -31,7 +31,15 @@ export class TransactionService {
     payload: {
       customerId?: string;
       pointsRedeemed?: number;
-      items: Array<{ productId: string, quantity: number, unitPrice: number, subtotal: number }>;
+      items: Array<{ 
+        productId: string, 
+        quantity: number, 
+        unitPrice: number, 
+        subtotal: number,
+        variantId?: string,
+        variantName?: string,
+        modifiers?: any
+      }>;
       subtotal: number;
       taxAmount: number;
       discountAmount: number;
@@ -64,6 +72,9 @@ export class TransactionService {
         const itemsToInsert = payload.items.map(item => ({
           transactionId,
           productId: item.productId,
+          variantId: item.variantId,
+          variantName: item.variantName,
+          modifiers: item.modifiers ? JSON.stringify(item.modifiers) : null,
           quantity: item.quantity.toString(),
           unitPrice: item.unitPrice.toString(),
           subtotal: item.subtotal.toString()
@@ -173,7 +184,17 @@ export class TransactionService {
     cashierId: string, 
     payload: {
       notes: string;
-      items: Array<{ productId: string, quantity: number, unitPrice: number, subtotal: number, discount: number, tax: number }>;
+      items: Array<{ 
+        productId: string, 
+        quantity: number, 
+        unitPrice: number, 
+        subtotal: number, 
+        discount: number, 
+        tax: number,
+        variantId?: string,
+        variantName?: string,
+        modifiers?: any
+      }>;
       subtotal: number;
       taxAmount: number;
       discountAmount: number;
@@ -201,6 +222,9 @@ export class TransactionService {
         const itemsToInsert = payload.items.map(item => ({
           transactionId,
           productId: item.productId,
+          variantId: item.variantId,
+          variantName: item.variantName,
+          modifiers: item.modifiers ? JSON.stringify(item.modifiers) : null,
           quantity: item.quantity.toString(),
           unitPrice: item.unitPrice.toString(),
           discount: (item.discount || 0).toString(),
@@ -234,6 +258,9 @@ export class TransactionService {
         unitPrice: transactionItems.unitPrice,
         discount: transactionItems.discount,
         subtotal: transactionItems.subtotal,
+        variantId: transactionItems.variantId,
+        variantName: transactionItems.variantName,
+        modifiers: transactionItems.modifiers,
         productName: products.name,
         productImage: products.imageUrl
       }).from(transactionItems)

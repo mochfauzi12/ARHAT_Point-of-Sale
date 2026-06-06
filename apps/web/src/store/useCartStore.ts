@@ -1,5 +1,17 @@
 import { create } from 'zustand';
 
+export interface ProductVariant {
+  id: string;
+  name: string;
+  price: number | string;
+}
+
+export interface ProductModifier {
+  id: string;
+  name: string;
+  price: number | string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -8,11 +20,17 @@ export interface Product {
   image?: string;
   imageUrl?: string;
   category?: string;
+  variants?: ProductVariant[];
+  modifiers?: ProductModifier[];
 }
 
-export interface CartItem extends Product {
+export interface CartItem extends Omit<Product, 'variants' | 'modifiers'> {
+  cartItemId: string;
   quantity: number;
-  discount: number; // Support discount per item
+  discount: number;
+  selectedVariant?: ProductVariant;
+  selectedModifiers?: ProductModifier[];
+  finalUnitPrice: number;
 }
 
 export interface HeldTransaction {
@@ -29,10 +47,10 @@ interface CartState {
   isTaxEnabled: boolean;
   
   // Actions
-  addItem: (product: Product, quantity?: number) => void;
-  removeItem: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
-  updateDiscount: (productId: string, discount: number) => void;
+  addItem: (product: Product, quantity?: number, selectedVariant?: ProductVariant, selectedModifiers?: ProductModifier[]) => void;
+  removeItem: (cartItemId: string) => void;
+  updateQuantity: (cartItemId: string, quantity: number) => void;
+  updateDiscount: (cartItemId: string, discount: number) => void;
   clearCart: () => void;
   
   // Hold & Resume
@@ -55,40 +73,62 @@ export const useCartStore = create<CartState>((set, get) => ({
   globalDiscount: 0,
   isTaxEnabled: true,
   
-  addItem: (product, quantity = 1) => {
+  addItem: (product, quantity = 1, selectedVariant, selectedModifiers = []) => {
     set((state) => {
-      const existingItem = state.items.find((item) => item.id === product.id);
+      const modifierIds = selectedModifiers.map(m => m.id).sort().join(',');
+      const cartItemId = `${product.id}-${selectedVariant?.id || 'base'}-${modifierIds}`;
+      
+      const existingItem = state.items.find((item) => item.cartItemId === cartItemId);
       if (existingItem) {
         return {
           items: state.items.map((item) =>
-            item.id === product.id
+            item.cartItemId === cartItemId
               ? { ...item, quantity: item.quantity + quantity }
               : item
           ),
         };
       }
-      return { items: [...state.items, { ...product, quantity, discount: 0 }] };
+      
+      let finalUnitPrice = parseFloat(product.sellingPrice as string);
+      if (selectedVariant) finalUnitPrice = parseFloat(selectedVariant.price as string);
+      selectedModifiers.forEach(m => {
+        finalUnitPrice += parseFloat(m.price as string);
+      });
+
+      const { variants, modifiers, ...baseProduct } = product;
+      
+      return { 
+        items: [...state.items, { 
+          ...baseProduct, 
+          cartItemId,
+          quantity, 
+          discount: 0,
+          selectedVariant,
+          selectedModifiers,
+          finalUnitPrice
+        }] 
+      };
     });
   },
   
-  removeItem: (productId) => {
+  removeItem: (cartItemId) => {
     set((state) => ({
-      items: state.items.filter((item) => item.id !== productId),
+      items: state.items.filter((item) => item.cartItemId !== cartItemId),
     }));
   },
   
-  updateQuantity: (productId, quantity) => {
+  updateQuantity: (cartItemId, quantity) => {
     set((state) => ({
       items: state.items.map((item) =>
-        item.id === productId ? { ...item, quantity } : item
+        item.cartItemId === cartItemId ? { ...item, quantity } : item
       ),
     }));
   },
 
-  updateDiscount: (productId, discount) => {
+  updateDiscount: (cartItemId, discount) => {
     set((state) => ({
       items: state.items.map((item) =>
-        item.id === productId ? { ...item, discount } : item
+        item.cartItemId === cartItemId ? { ...item, discount } : item
       ),
     }));
   },
@@ -127,8 +167,7 @@ export const useCartStore = create<CartState>((set, get) => ({
   
   getSubtotal: () => {
     return get().items.reduce((total, item) => {
-      const price = typeof item.sellingPrice === 'string' ? parseFloat(item.sellingPrice) : item.sellingPrice;
-      return total + (price * item.quantity);
+      return total + (item.finalUnitPrice * item.quantity);
     }, 0);
   },
 

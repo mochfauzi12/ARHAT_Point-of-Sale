@@ -121,6 +121,12 @@ export default function RegisterPage() {
             </button>
           </div>
         </form>
+
+        <div className="text-center mt-4">
+          <Link href="/login" className="text-sm font-medium text-gray-500 hover:text-[#0B5A63]">
+            ← Kembali ke Login Kasir (PIN)
+          </Link>
+        </div>
       </div>
     </div>
   );

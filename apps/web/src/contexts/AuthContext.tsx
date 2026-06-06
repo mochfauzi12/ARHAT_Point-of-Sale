@@ -2,34 +2,64 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 
+interface User {
+  id: string;
+  email: string;
+  fullName: string;
+  role: string;
+  tenantId?: string;
+}
+
 interface AuthContextType {
   isAuthenticated: boolean;
+  user: User | null;
   login: (pass: string) => boolean;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
+  user: null,
   login: () => false,
   logout: () => {},
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
     setIsMounted(true);
-    const hasToken = document.cookie.includes('token=');
-    if (hasToken) {
-      setIsAuthenticated(true);
-    } else {
-      if (pathname !== '/login' && pathname !== '/pos') {
-        router.push('/login');
+    const checkAuth = async () => {
+      const hasToken = document.cookie.includes('token=');
+      if (hasToken) {
+        setIsAuthenticated(true);
+        try {
+          const token = document.cookie.replace(/(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+          const res = await fetch('http://localhost:8787/api/auth/me', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setUser(data.data);
+          } else {
+            // Token invalid
+            logout();
+          }
+        } catch (err) {
+          console.error('Failed to fetch user', err);
+        }
+      } else {
+        if (pathname !== '/login' && pathname !== '/pos' && !pathname.startsWith('/auth/')) {
+          router.push('/login');
+        }
       }
-    }
+    };
+    
+    checkAuth();
   }, [pathname, router]);
 
   const login = (pass: string) => {
@@ -47,7 +77,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   if (!isMounted) return null;
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

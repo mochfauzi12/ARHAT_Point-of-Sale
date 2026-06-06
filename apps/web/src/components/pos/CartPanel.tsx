@@ -55,9 +55,12 @@ export function CartPanel() {
         totalAmount: total,
         items: items.map(i => ({
           productId: i.id,
+          variantId: i.selectedVariant?.id,
+          variantName: i.selectedVariant?.name,
+          modifiers: i.selectedModifiers ? i.selectedModifiers.map(m => ({ id: m.id, name: m.name, price: m.price })) : [],
           quantity: i.quantity,
-          unitPrice: typeof i.sellingPrice === 'string' ? parseFloat(i.sellingPrice) : i.sellingPrice,
-          subtotal: (typeof i.sellingPrice === 'string' ? parseFloat(i.sellingPrice) : i.sellingPrice) * i.quantity - i.discount * i.quantity
+          unitPrice: i.finalUnitPrice,
+          subtotal: i.finalUnitPrice * i.quantity - i.discount * i.quantity
         }))
       });
       
@@ -258,7 +261,7 @@ export function CartPanel() {
       </div>
 
       {/* Cart Items */}
-      <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
+      <div className="flex-1 overflow-y-auto px-5 py-2 flex flex-col">
         {items.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-3">
             <span className="text-4xl">🛒</span>
@@ -266,49 +269,56 @@ export function CartPanel() {
           </div>
         ) : (
           items.map(item => {
-            const price = typeof item.sellingPrice === 'string' ? parseFloat(item.sellingPrice) : item.sellingPrice;
+            const price = item.finalUnitPrice;
             return (
-            <div key={item.id} className="flex flex-col gap-3 p-4 rounded-2xl border border-gray-100 bg-gray-50/50 relative group">
-              <div className="flex gap-4">
+            <div key={item.cartItemId} className="flex flex-col py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors relative group">
+              <div className="flex gap-3">
+                <div className="flex flex-col items-center justify-center w-10">
+                  <span className="font-bold text-gray-900">{item.quantity}</span>
+                  <span className="text-[10px] text-gray-400">x</span>
+                </div>
                 <div className="flex-1">
-                  <p className="font-semibold text-gray-900">{item.name}</p>
-                  <p className="text-sm text-gray-500 mt-1">Rp {price.toLocaleString('id-ID')}</p>
+                  <p className="font-medium text-gray-900 leading-tight">{item.name}</p>
+                  
+                  {item.selectedVariant && (
+                    <p className="text-xs text-teal-600 mt-0.5 font-medium">{item.selectedVariant.name}</p>
+                  )}
+                  {item.selectedModifiers && item.selectedModifiers.length > 0 && (
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      + {item.selectedModifiers.map(m => m.name).join(', ')}
+                    </p>
+                  )}
+
+                  {item.discount > 0 && (
+                     <p className="text-xs text-amber-500 mt-0.5">Disc: Rp {item.discount.toLocaleString('id-ID')}</p>
+                  )}
                 </div>
                 
-                <div className="flex flex-col items-end justify-between">
-                  <button 
-                    onClick={() => removeItem(item.id)}
-                    className="text-gray-300 hover:text-red-500 transition-colors absolute top-4 right-4"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                  
-                  <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-xl px-2 py-1 mt-6">
+                <div className="flex flex-col items-end gap-1">
+                  <span className="font-semibold text-gray-900">
+                    Rp {(price * item.quantity).toLocaleString('id-ID')}
+                  </span>
+                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button 
-                      onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
-                      className="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-black transition-colors"
+                      onClick={() => updateQuantity(item.cartItemId, Math.max(1, item.quantity - 1))}
+                      className="p-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600"
                     >
                       <Minus size={14} />
                     </button>
-                    <span className="font-medium text-sm w-4 text-center">{item.quantity}</span>
                     <button 
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-black transition-colors"
+                      onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)}
+                      className="p-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600"
                     >
                       <Plus size={14} />
                     </button>
+                    <button 
+                      onClick={() => removeItem(item.cartItemId)}
+                      className="p-1 rounded-full bg-red-50 hover:bg-red-100 text-red-500 ml-1"
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-200">
-                <span className="text-xs font-medium text-gray-500">Disc/Item (Rp)</span>
-                <input 
-                  type="number" 
-                  value={item.discount || ''}
-                  onChange={(e) => updateDiscount(item.id, parseFloat(e.target.value) || 0)}
-                  className="bg-white border border-gray-200 rounded-lg text-sm px-2 py-1 w-24 focus:outline-none focus:border-black"
-                  placeholder="0"
-                />
               </div>
             </div>
             );
@@ -383,10 +393,10 @@ export function CartPanel() {
             <button
               key={method.id}
               onClick={() => setPaymentMethod(method.id)}
-              className={`flex-1 flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl border transition-all ${
+              className={`flex-1 flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl border transition-all duration-200 ${
                 paymentMethod === method.id 
-                  ? 'bg-black text-white border-black' 
-                  : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
+                  ? 'bg-slate-900 text-white border-slate-900 shadow-md scale-105' 
+                  : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400 hover:text-gray-900 hover:shadow-sm'
               }`}
             >
               {method.icon}
@@ -439,7 +449,7 @@ export function CartPanel() {
           <button 
             onClick={handleCheckout}
             disabled={items.length === 0 || isCheckout || (paymentMethod === 'Cash' && cashTendered > 0 && cashTendered < total)}
-            className="flex-1 py-4 bg-black text-white rounded-2xl font-semibold text-lg hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex-1 py-4 bg-teal-600 text-white rounded-xl font-bold text-xl hover:bg-teal-700 hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:hover:shadow-none flex items-center justify-center gap-2 uppercase tracking-wide"
           >
             {isCheckout ? 'Processing...' : `Charge Rp ${total.toLocaleString('id-ID')}`}
           </button>

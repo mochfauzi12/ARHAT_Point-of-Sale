@@ -4,6 +4,7 @@ import { ProductGrid } from '@/components/pos/ProductGrid';
 import { Logo } from '@/components/ui/Logo';
 import { CartPanel } from '@/components/pos/CartPanel';
 import { Store, UserCircle, Settings } from 'lucide-react';
+import { POSHeaderActions } from '@/components/pos/POSHeaderActions';
 
 export default function POSPage() {
   return (
@@ -21,14 +22,7 @@ export default function POSPage() {
             <ProductSearch />
           </div>
 
-          <div className="flex items-center gap-3">
-            <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors">
-              <Settings size={20} />
-            </button>
-            <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors">
-              <UserCircle size={20} />
-            </button>
-          </div>
+          <POSHeaderActions />
         </div>
 
         {/* Content Layer */}

@@ -11,6 +11,9 @@ export const outlets = pgTable('outlets', {
   tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   name: varchar('name', { length: 255 }).notNull(),
   address: varchar('address', { length: 500 }),
+  phone: varchar('phone', { length: 50 }),
+  taxRate: varchar('tax_rate', { length: 10 }).default('0'),
+  receiptFooter: varchar('receipt_footer', { length: 500 }),
   createdAt: timestamp('created_at').defaultNow(),
 });
 
@@ -69,6 +72,24 @@ export const products = pgTable('products', {
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 
+export const productVariants = pgTable('product_variants', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  productId: uuid('product_id').notNull().references(() => products.id),
+  name: varchar('name', { length: 255 }).notNull(),
+  sku: varchar('sku', { length: 100 }),
+  price: varchar('price', { length: 20 }).notNull(),
+  stockQuantity: varchar('stock_quantity', { length: 10 }).default('0'),
+  isActive: boolean('is_active').default(true),
+});
+
+export const productModifiers = pgTable('product_modifiers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  productId: uuid('product_id').notNull().references(() => products.id),
+  name: varchar('name', { length: 255 }).notNull(),
+  price: varchar('price', { length: 20 }).default('0'),
+  isActive: boolean('is_active').default(true),
+});
+
 export const productStocks = pgTable('product_stocks', {
   id: uuid('id').primaryKey().defaultRandom(),
   productId: uuid('product_id').notNull().references(() => products.id),
@@ -117,6 +138,9 @@ export const transactionItems = pgTable('transaction_items', {
   id: uuid('id').primaryKey().defaultRandom(),
   transactionId: uuid('transaction_id').notNull().references(() => transactions.id),
   productId: uuid('product_id').notNull().references(() => products.id),
+  variantId: uuid('variant_id').references(() => productVariants.id),
+  variantName: varchar('variant_name', { length: 255 }),
+  modifiers: varchar('modifiers', { length: 1000 }), // JSON array of selected modifiers
   quantity: varchar('quantity', { length: 10 }).notNull(), // or int
   unitPrice: varchar('unit_price', { length: 20 }).notNull(),
   discount: varchar('discount', { length: 20 }).default('0'),
