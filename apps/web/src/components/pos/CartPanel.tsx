@@ -169,80 +169,50 @@ export function CartPanel() {
         </div>
       </div>
 
-      {/* Customer Selection */}
-      <div className="px-5 py-3 border-b border-gray-100 bg-gray-50/50">
-        {!selectedCustomer ? (
-          <div>
-            {!showCustomerSelect ? (
-              <button 
-                onClick={() => setShowCustomerSelect(true)}
-                className="flex items-center gap-2 text-sm text-blue-600 font-medium hover:underline"
-              >
-                <User size={16} />
-                <span>+ Tambah Pelanggan</span>
-              </button>
-            ) : (
-              <div className="flex flex-col gap-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Pilih Pelanggan:</span>
-                  <button onClick={() => setShowCustomerSelect(false)}><X size={16} className="text-gray-400"/></button>
-                </div>
-                <select 
-                  className="w-full border border-gray-200 rounded-md p-2 text-sm focus:outline-none focus:border-blue-500"
-                  onChange={(e) => {
-                    const c = customers.find(x => x.id === e.target.value);
-                    if (c) {
-                      setSelectedCustomer(c);
-                      setShowCustomerSelect(false);
-                    }
-                  }}
-                  defaultValue=""
-                >
-                  <option value="" disabled>-- Pilih dari database --</option>
-                  {customers.map(c => (
-                    <option key={c.id} value={c.id}>{c.name} ({c.phone || '-'})</option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2">
-            <div className="flex justify-between items-start">
-              <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
-                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
-                  <User size={16} />
-                </div>
-                <div>
-                  <p>{selectedCustomer.name}</p>
-                  <p className="text-xs text-gray-500">{parseInt(selectedCustomer.points || '0')} Poin Tersedia</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => { setSelectedCustomer(null); setPointsToRedeem(0); }}
-                className="text-gray-400 hover:text-red-500"
-              >
-                <X size={16} />
-              </button>
+      {/* Customer Input (Sleek) */}
+      <div className="px-5 py-3 border-b border-gray-100 bg-white">
+        <div className="flex items-center gap-3 bg-gray-50 px-3 py-2 rounded-xl border border-gray-200 focus-within:border-[#0B5A63] focus-within:ring-1 focus-within:ring-[#0B5A63] transition-all">
+          <User size={18} className="text-gray-400" />
+          <input 
+            type="text"
+            list="customer-list"
+            placeholder="Nama Pelanggan (Opsional)..."
+            className="w-full bg-transparent border-none focus:outline-none text-sm text-gray-700"
+            onChange={(e) => {
+              const c = customers.find(x => x.name === e.target.value);
+              setSelectedCustomer(c || null);
+              if (!c) setPointsToRedeem(0);
+            }}
+          />
+          <datalist id="customer-list">
+            {customers.map(c => (
+              <option key={c.id} value={c.name} />
+            ))}
+          </datalist>
+        </div>
+        
+        {/* If customer selected and has points */}
+        {selectedCustomer && parseInt(selectedCustomer.points || '0') > 0 && (
+          <div className="mt-3 text-sm flex items-center justify-between bg-teal-50 px-3 py-2 rounded-xl border border-teal-100">
+            <div>
+              <span className="text-teal-800 font-medium block">Poin Tersedia: {parseInt(selectedCustomer.points || '0')}</span>
+              <span className="text-teal-600 text-xs">-Rp {(pointsToRedeem * 10).toLocaleString('id-ID')}</span>
             </div>
-            
-            {parseInt(selectedCustomer.points || '0') > 0 && (
-              <div className="mt-2 text-sm flex items-center gap-2 bg-yellow-50 p-2 rounded-lg border border-yellow-100">
-                <span className="text-yellow-700 font-medium">Pakai Poin:</span>
-                <input 
-                  type="number"
-                  min="0"
-                  max={parseInt(selectedCustomer.points || '0')}
-                  value={pointsToRedeem || ''}
-                  onChange={(e) => {
-                    const val = parseInt(e.target.value) || 0;
-                    setPointsToRedeem(Math.min(val, parseInt(selectedCustomer.points || '0')));
-                  }}
-                  className="w-16 p-1 text-center border rounded-md"
-                />
-                <span className="text-xs text-gray-500">(-Rp {(pointsToRedeem * 10).toLocaleString('id-ID')})</span>
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              <span className="text-teal-800 font-medium text-xs">Pakai:</span>
+              <input 
+                type="number"
+                min="0"
+                max={parseInt(selectedCustomer.points || '0')}
+                value={pointsToRedeem === 0 ? '' : pointsToRedeem}
+                placeholder="0"
+                onChange={(e) => {
+                  const val = parseInt(e.target.value) || 0;
+                  setPointsToRedeem(Math.min(val, parseInt(selectedCustomer.points || '0')));
+                }}
+                className="w-16 p-1 text-center border border-teal-200 rounded-lg bg-white text-teal-900 focus:outline-none"
+              />
+            </div>
           </div>
         )}
       </div>

@@ -58,7 +58,11 @@ export function ProductGrid() {
             >
               <div className="w-full aspect-square bg-gray-50 rounded-xl flex items-center justify-center overflow-hidden">
                 {product.imageUrl ? (
-                  <img src={`http://localhost:8787${product.imageUrl}`} alt={product.name} className="w-full h-full object-cover" />
+                  <img 
+                    src={product.imageUrl.startsWith('http') ? product.imageUrl : `http://localhost:8787${product.imageUrl}`} 
+                    alt={product.name} 
+                    className="w-full h-full object-cover" 
+                  />
                 ) : (
                   <span className="text-4xl">☕</span>
                 )}
