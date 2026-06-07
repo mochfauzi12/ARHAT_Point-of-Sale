@@ -39,7 +39,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setIsAuthenticated(true);
         try {
           const token = document.cookie.replace(/(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/, "$1");
-          const res = await fetch('http://localhost:8787/api/auth/me', {
+          const { API_URL } = await import('@/lib/api');
+          const res = await fetch(`${API_URL}/auth/me`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           if (res.ok) {
