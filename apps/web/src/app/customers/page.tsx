@@ -275,22 +275,24 @@ export default function CustomersPage() {
                           <Edit size={18} />
                         </button>
                         {c.phone && (
-                          <a 
-                            href={`https://wa.me/${c.phone.replace(/[^0-9]/g, '')}`} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="p-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded-xl transition-colors"
-                            title="Chat WhatsApp Manual"
-                          >
-                            <MessageCircle size={18} />
-                          </a>
-                          <button
-                            onClick={() => openNotify(c)}
-                            className="p-2.5 bg-teal-50 hover:bg-teal-100 text-teal-600 rounded-xl transition-colors"
-                            title="Kirim Pesan Sistem"
-                          >
-                            <Mail size={18} />
-                          </button>
+                          <>
+                            <a 
+                              href={`https://wa.me/${c.phone.replace(/[^0-9]/g, '')}`} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="p-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded-xl transition-colors"
+                              title="Chat WhatsApp Manual"
+                            >
+                              <MessageCircle size={18} />
+                            </a>
+                            <button
+                              onClick={() => openNotify(c)}
+                              className="p-2.5 bg-teal-50 hover:bg-teal-100 text-teal-600 rounded-xl transition-colors"
+                              title="Kirim Pesan Sistem"
+                            >
+                              <Mail size={18} />
+                            </button>
+                          </>
                         )}
                       </div>
                     </td>
