@@ -4,6 +4,7 @@ import { authMiddleware } from '../middleware/auth';
 
 const authRoutes = new Hono();
 
+authRoutes.post('/register-tenant', authController.registerTenant);
 authRoutes.post('/register', authController.register);
 authRoutes.post('/login', authController.login);
 authRoutes.post('/login-pin', authController.loginPin);

@@ -3,10 +3,85 @@ import { sign, verify } from 'jsonwebtoken';
 import { eq, and } from 'drizzle-orm';
 import { AppError } from '../lib/errors';
 import { db } from '../lib/db';
-import { users, emailVerificationTokens, sessions, passwordResetTokens } from '../models';
+import { users, emailVerificationTokens, sessions, passwordResetTokens, tenants, outlets } from '../models';
 import { emailService } from './email.service';
 
 export class AuthService {
+  async registerTenant(data: {
+    tenantName: string;
+    email: string;
+    password: string;
+    fullName: string;
+  }) {
+    if (!data.tenantName || !data.email || !data.password || !data.fullName) {
+      throw new AppError('Missing required fields', 400);
+    }
+
+    // Check if email already exists
+    const existingUser = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, data.email))
+      .limit(1);
+
+    if (existingUser.length > 0) {
+      throw new AppError('Email already registered', 409);
+    }
+
+    this.validatePassword(data.password);
+    const passwordHash = await bcrypt.hash(data.password, 10);
+
+    // Use a transaction to ensure all or nothing
+    return await db.transaction(async (tx) => {
+      // 1. Create Tenant
+      const newTenant = await tx
+        .insert(tenants)
+        .values({
+          name: data.tenantName,
+          email: data.email, // using owner email for tenant contact
+        })
+        .returning();
+
+      const tenantId = newTenant[0].id;
+
+      // 2. Create HQ Outlet
+      const newOutlet = await tx
+        .insert(outlets)
+        .values({
+          tenantId,
+          name: 'Pusat (HQ)',
+          address: 'Alamat Toko',
+          phone: '-',
+        })
+        .returning();
+
+      // 3. Create Admin User
+      const newUser = await tx
+        .insert(users)
+        .values({
+          email: data.email,
+          passwordHash,
+          fullName: data.fullName,
+          tenantId,
+          role: 'admin',
+          status: 'active',
+          emailVerified: true, // Auto verify for now
+        })
+        .returning();
+
+      return {
+        tenant: newTenant[0],
+        outlet: newOutlet[0],
+        user: {
+          id: newUser[0].id,
+          email: newUser[0].email,
+          fullName: newUser[0].fullName,
+          role: newUser[0].role,
+        }
+      };
+    });
+  }
+
   async register(data: {
     email: string;
     password: string;
