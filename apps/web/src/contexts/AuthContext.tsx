@@ -27,12 +27,10 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    setIsMounted(true);
     const checkAuth = async () => {
       const hasToken = document.cookie.includes('token=');
       if (hasToken) {
@@ -74,8 +72,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setIsAuthenticated(false);
     router.push('/login');
   };
-
-  if (!isMounted) return null;
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
