@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useCartStore, Product } from '@/store/useCartStore';
 import { fetchProducts } from '@/lib/api';
 import { ProductVariant, ProductModifier } from '@/store/useCartStore';
+import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
 
 import { Plus } from 'lucide-react';
 
@@ -27,6 +28,22 @@ export function ProductGrid() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | undefined>(undefined);
   const [selectedModifiers, setSelectedModifiers] = useState<ProductModifier[]>([]);
+
+  // Global Barcode Scanner Listener
+  useBarcodeScanner((barcode) => {
+    const foundProduct = products.find(p => p.sku === barcode || p.barcode === barcode || p.id === barcode);
+    if (foundProduct) {
+      if ((foundProduct.variants && foundProduct.variants.length > 0) || (foundProduct.modifiers && foundProduct.modifiers.length > 0)) {
+        // If product has variants, open modal
+        setSelectedProduct(foundProduct);
+        setSelectedVariant(foundProduct.variants?.[0]);
+        setSelectedModifiers([]);
+      } else {
+        // Direct add to cart
+        addItem(foundProduct);
+      }
+    }
+  });
 
   useEffect(() => {
     async function loadProducts() {
@@ -55,9 +72,9 @@ export function ProductGrid() {
 
   return (
     <div className="flex flex-col h-full relative">
-      {/* Category Pills (Sticky) */}
-      <div className="sticky top-0 z-10 -mx-2 px-2 pb-6 pt-2 bg-slate-50/80 backdrop-blur-xl">
-        <div className="flex flex-wrap gap-2.5 p-2 bg-white/60 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] border border-slate-200/50 backdrop-blur-md rounded-2xl w-fit">
+      {/* Category Pills (Sticky - Touch Optimized) */}
+      <div className="sticky top-0 z-10 -mx-6 px-6 pb-6 pt-2 bg-slate-50/80 backdrop-blur-xl overflow-x-auto hide-scrollbar scroll-smooth">
+        <div className="flex flex-nowrap gap-3 p-2 bg-white/60 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] border border-slate-200/50 backdrop-blur-md rounded-[1.25rem] w-max">
           {CATEGORIES.map(category => (
             <button
               key={category}

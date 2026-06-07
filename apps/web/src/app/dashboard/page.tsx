@@ -49,6 +49,23 @@ export default function DashboardPage() {
           <div className="flex h-64 items-center justify-center bg-red-50 rounded-3xl border border-red-100">
             <p className="text-red-500 font-medium">Failed to load analytics data.</p>
           </div>
+        ) : data.activeProducts === 0 && data.todayTransactions === 0 ? (
+          <div className="bg-gradient-to-br from-teal-50 to-white p-8 md:p-12 rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-teal-100/50 flex flex-col items-center justify-center text-center max-w-4xl mx-auto my-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+            <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-6 shadow-xl shadow-teal-900/5 border border-teal-50">
+              <Package size={48} className="text-teal-500" />
+            </div>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight mb-4">
+              Selamat Datang di Toko Baru Anda! 🎉
+            </h2>
+            <p className="text-slate-500 text-lg max-w-2xl mb-10 leading-relaxed">
+              Toko Anda sudah siap digunakan, tapi sistem kami melihat Anda belum memiliki produk apapun untuk dijual. Mari tambahkan produk pertama Anda agar kasir bisa mulai melayani pembeli.
+            </p>
+            <a href="/products" className="group relative flex justify-center items-center gap-3 rounded-2xl bg-[#0B5A63] px-8 py-5 text-base font-bold text-white hover:bg-[#0E8A94] transition-all shadow-lg shadow-teal-900/20 hover:shadow-xl hover:shadow-teal-900/30 hover:-translate-y-1">
+              <Package size={20} />
+              <span>Tambah Produk Pertama Anda</span>
+              <ArrowUpRight size={20} className="opacity-70 group-hover:opacity-100 transition-opacity" />
+            </a>
+          </div>
         ) : (
           <>
 
