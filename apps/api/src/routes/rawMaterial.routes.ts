@@ -1,0 +1,17 @@
+import { Hono } from 'hono';
+import { authMiddleware } from '../middleware/auth';
+import * as RawMaterialController from '../controllers/rawMaterial.controller';
+
+const router = new Hono();
+
+router.use('*', authMiddleware);
+
+router.get('/', RawMaterialController.getRawMaterials);
+router.post('/', RawMaterialController.createRawMaterial);
+router.put('/:id', RawMaterialController.updateRawMaterial);
+router.delete('/:id', RawMaterialController.deleteRawMaterial);
+
+router.get('/boms/:productId', RawMaterialController.getProductBoms);
+router.post('/boms/:productId', RawMaterialController.updateProductBom);
+
+export default router;

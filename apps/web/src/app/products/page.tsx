@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ProductTable } from '@/components/products/ProductTable';
 import { ProductFormModal } from '@/components/products/ProductFormModal';
+import { ProductBomModal } from '@/components/products/ProductBomModal';
 import { fetchProducts, createProduct, updateProduct, deleteProduct } from '@/lib/api';
 import { Plus } from 'lucide-react';
 
@@ -10,7 +11,9 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBomModalOpen, setIsBomModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [bomProduct, setBomProduct] = useState<any>(null);
 
   const loadProducts = async () => {
     setLoading(true);
@@ -63,6 +66,11 @@ export default function ProductsPage() {
     setIsModalOpen(true);
   };
 
+  const openBomModal = (product: any) => {
+    setBomProduct(product);
+    setIsBomModalOpen(true);
+  };
+
   return (
     <DashboardLayout>
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
@@ -87,6 +95,7 @@ export default function ProductsPage() {
             products={products} 
             onEdit={openEditModal}
             onDelete={handleDelete}
+            onManageBom={openBomModal}
           />
         )}
       </div>
@@ -96,6 +105,12 @@ export default function ProductsPage() {
         onClose={() => setIsModalOpen(false)}
         onSave={handleSave}
         initialData={editingProduct}
+      />
+      
+      <ProductBomModal
+        isOpen={isBomModalOpen}
+        onClose={() => setIsBomModalOpen(false)}
+        product={bomProduct}
       />
     </DashboardLayout>
   );

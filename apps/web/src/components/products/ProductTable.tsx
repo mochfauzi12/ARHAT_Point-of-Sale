@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Edit2, Trash2, Search } from 'lucide-react';
+import { Edit2, Trash2, Search, PackageOpen } from 'lucide-react';
 
 interface ProductTableProps {
   products: any[];
   onEdit: (product: any) => void;
   onDelete: (id: string) => void;
+  onManageBom?: (product: any) => void;
 }
 
-export function ProductTable({ products, onEdit, onDelete }: ProductTableProps) {
+export function ProductTable({ products, onEdit, onDelete, onManageBom }: ProductTableProps) {
   const [search, setSearch] = useState('');
 
   const filteredProducts = products.filter(p => 
@@ -74,6 +75,15 @@ export function ProductTable({ products, onEdit, onDelete }: ProductTableProps) 
                 </td>
                 <td className="py-4 text-right pr-2">
                   <div className="flex items-center justify-end gap-2">
+                    {onManageBom && !p.isService && (
+                      <button 
+                        onClick={() => onManageBom(p)}
+                        className="p-2 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors border border-teal-100 bg-white shadow-sm"
+                        title="Komposisi / Bahan Baku"
+                      >
+                        <PackageOpen size={16} />
+                      </button>
+                    )}
                     <button 
                       onClick={() => onEdit(p)}
                       className="p-2 text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg transition-colors"

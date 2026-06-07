@@ -251,6 +251,67 @@ export async function fetchOutlets() {
   return json.data || [];
 }
 
+// ==========================================
+// RAW MATERIALS (BOM)
+// ==========================================
+
+export async function fetchRawMaterials() {
+  const res = await fetchWithAuth(`${API_URL}/raw-materials`, { headers: getHeaders() });
+  if (!res.ok) throw new Error('Failed to fetch raw materials');
+  const json = await res.json();
+  return json.data || [];
+}
+
+export async function createRawMaterial(payload: any) {
+  const res = await fetchWithAuth(`${API_URL}/raw-materials`, {
+    method: 'POST',
+    headers: getHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) throw new Error('Failed to create raw material');
+  const json = await res.json();
+  return json.data;
+}
+
+export async function updateRawMaterial(id: string, payload: any) {
+  const res = await fetchWithAuth(`${API_URL}/raw-materials/${id}`, {
+    method: 'PUT',
+    headers: getHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) throw new Error('Failed to update raw material');
+  const json = await res.json();
+  return json.data;
+}
+
+export async function deleteRawMaterial(id: string) {
+  const res = await fetchWithAuth(`${API_URL}/raw-materials/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders()
+  });
+  if (!res.ok) throw new Error('Failed to delete raw material');
+  const json = await res.json();
+  return json.success;
+}
+
+export async function fetchProductBoms(productId: string) {
+  const res = await fetchWithAuth(`${API_URL}/raw-materials/boms/${productId}`, { headers: getHeaders() });
+  if (!res.ok) return [];
+  const json = await res.json();
+  return json.data || [];
+}
+
+export async function updateProductBoms(productId: string, boms: any[]) {
+  const res = await fetchWithAuth(`${API_URL}/raw-materials/boms/${productId}`, {
+    method: 'POST',
+    headers: getHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(boms)
+  });
+  if (!res.ok) throw new Error('Failed to update product BOM');
+  const json = await res.json();
+  return json.success;
+}
+
 export async function createOutlet(name: string, address: string = '') {
   const res = await fetchWithAuth(`${API_URL}/inventory/outlets`, {
     method: 'POST',

@@ -273,3 +273,34 @@ export const whatsappMessages = pgTable('whatsapp_messages', {
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
+
+export const rawMaterials = pgTable('raw_materials', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
+  name: varchar('name', { length: 255 }).notNull(),
+  sku: varchar('sku', { length: 100 }),
+  unit: varchar('unit', { length: 50 }).notNull(), // e.g., gram, ml, pcs, cm
+  costPerUnit: varchar('cost_per_unit', { length: 20 }).default('0'),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+export const rawMaterialStocks = pgTable('raw_material_stocks', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  rawMaterialId: uuid('raw_material_id').notNull().references(() => rawMaterials.id),
+  outletId: uuid('outlet_id').notNull().references(() => outlets.id),
+  stockQuantity: varchar('stock_quantity', { length: 20 }).default('0'), // Can go negative
+  minStockLevel: varchar('min_stock_level', { length: 20 }).default('0'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+export const boms = pgTable('boms', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  productId: uuid('product_id').notNull().references(() => products.id),
+  rawMaterialId: uuid('raw_material_id').notNull().references(() => rawMaterials.id),
+  quantity: varchar('quantity', { length: 20 }).notNull(), // amount needed per product
+  createdAt: timestamp('created_at').defaultNow(),
+});
+

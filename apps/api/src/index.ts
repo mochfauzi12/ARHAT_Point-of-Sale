@@ -13,6 +13,7 @@ import settingsRoutes from './routes/settings.routes';
 import usersRoutes from './routes/users.routes';
 import shiftsRoutes from './routes/shifts.routes';
 import whatsappRoutes from './routes/whatsapp.routes';
+import rawMaterialRoutes from './routes/rawMaterial.routes';
 import { serveStatic } from '@hono/node-server/serve-static';
 
 const app = new Hono();
@@ -79,6 +80,7 @@ app.route('/api/inventory', inventoryRoutes);
 app.route('/api/customers', customersRoutes);
 app.route('/api/shifts', shiftsRoutes);
 app.route('/api/whatsapp', whatsappRoutes);
+app.route('/api/raw-materials', rawMaterialRoutes);
 
 // Error handling
 app.onError(errorHandler);

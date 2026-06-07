@@ -7,7 +7,9 @@ import {
   stockMovements, 
   products,
   customers,
-  shifts
+  shifts,
+  boms,
+  rawMaterialStocks
 } from '../models';
 
 export class TransactionService {
@@ -142,23 +144,47 @@ export class TransactionService {
         const prod = await tx.select().from(products).where(eq(products.id, item.productId)).limit(1);
         if (prod.length > 0) {
           if (!prod[0].isService) {
-            const currentStock = parseInt(prod[0].stockQuantity || '0');
             const soldQty = parseInt(item.quantity);
-            const newStock = currentStock - soldQty;
             
-            // Update product stock
-            await tx.update(products).set({ stockQuantity: newStock.toString() }).where(eq(products.id, item.productId));
+            // Check BOM
+            const productBoms = await tx.select().from(boms).where(eq(boms.productId, item.productId));
             
-            // Record stock movement
-            await tx.insert(stockMovements).values({
-              tenantId,
-              productId: item.productId,
-              movementType: 'out',
-              referenceType: 'transaction',
-              referenceId: transactionId,
-              quantity: soldQty.toString(),
-              reason: 'POS Sale'
-            });
+            if (productBoms.length > 0) {
+              // Deduct Raw Materials instead of the finished product
+              for (const bomItem of productBoms) {
+                const requiredQty = parseFloat(bomItem.quantity) * soldQty;
+                
+                // Get raw material stock
+                const rmStocks = await tx.select().from(rawMaterialStocks).where(eq(rawMaterialStocks.rawMaterialId, bomItem.rawMaterialId)).limit(1);
+                
+                if (rmStocks.length > 0) {
+                  const currentRmStock = parseFloat(rmStocks[0].stockQuantity || '0');
+                  const newRmStock = currentRmStock - requiredQty;
+                  
+                  await tx.update(rawMaterialStocks)
+                    .set({ stockQuantity: newRmStock.toString() })
+                    .where(eq(rawMaterialStocks.id, rmStocks[0].id));
+                }
+              }
+            } else {
+              // Standard Product deduction
+              const currentStock = parseInt(prod[0].stockQuantity || '0');
+              const newStock = currentStock - soldQty;
+              
+              // Update product stock
+              await tx.update(products).set({ stockQuantity: newStock.toString() }).where(eq(products.id, item.productId));
+              
+              // Record stock movement
+              await tx.insert(stockMovements).values({
+                tenantId,
+                productId: item.productId,
+                movementType: 'out',
+                referenceType: 'transaction',
+                referenceId: transactionId,
+                quantity: soldQty.toString(),
+                reason: 'POS Sale'
+              });
+            }
           }
         }
       }
