@@ -89,10 +89,11 @@ app.onError(errorHandler);
 
 // Run with Node.js if not in Cloudflare Workers and not in Vercel
 if (typeof process !== 'undefined' && process.release?.name === 'node' && !process.env.VERCEL) {
-  const { serve } = require('@hono/node-server');
-  const port = process.env.PORT ? parseInt(process.env.PORT) : 8787;
-  console.log(`Starting Node server on port ${port}...`);
-  serve({ fetch: app.fetch, port });
+  import('@hono/node-server').then(({ serve }) => {
+    const port = process.env.PORT ? parseInt(process.env.PORT) : 8787;
+    console.log(`Starting Node server on port ${port}...`);
+    serve({ fetch: app.fetch, port });
+  }).catch(err => console.error(err));
 }
 
 export default app;
