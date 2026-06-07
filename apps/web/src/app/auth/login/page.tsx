@@ -34,7 +34,7 @@ export default function LoginPage() {
         throw new Error(data.error || 'Email atau password salah');
       }
     } catch (err: any) {
-      setError(err.message || 'Gagal untuk login');
+      setError(`${err.message || 'Gagal untuk login'} (API: ${API_URL})`);
     } finally {
       setIsLoading(false);
     }
