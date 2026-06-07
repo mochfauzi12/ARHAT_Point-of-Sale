@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { PwaRegister } from "@/components/PwaRegister";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,6 +17,23 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "TRANSAKSI KITA",
   description: "Seamless Payments. Effortless Management.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Transaksi Kita",
+  },
+  icons: {
+    apple: "/icons/icon-192x192.png",
+  },
+};
+
+export const viewport = {
+  themeColor: "#0f766e",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
@@ -30,6 +48,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans">
         <AuthProvider>
+          <PwaRegister />
           {children}
         </AuthProvider>
       </body>

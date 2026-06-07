@@ -86,8 +86,8 @@ export function CartPanel() {
           items: items.map(i => ({
             productName: i.name,
             quantity: i.quantity,
-            unitPrice: i.sellingPrice,
-            subtotal: (i.sellingPrice * i.quantity) - (i.discount || 0)
+            unitPrice: i.finalUnitPrice,
+            subtotal: (i.finalUnitPrice * i.quantity) - (i.discount || 0)
           }))
         },
         changeAmount: change,
@@ -143,20 +143,20 @@ export function CartPanel() {
   return (
     <div className="flex flex-col h-full bg-transparent relative">
       {/* Header */}
-      <div className="px-6 py-5 flex items-center justify-between border-b border-slate-100/60 bg-white/50 backdrop-blur-md z-10">
-        <h2 className="text-2xl font-extrabold tracking-tight text-slate-800">Pesanan</h2>
-        <div className="flex gap-3">
+      <div className="px-5 py-3 flex items-center justify-between border-b border-slate-100/60 bg-white/50 backdrop-blur-md z-10">
+        <h2 className="text-xl font-extrabold tracking-tight text-slate-800">Pesanan</h2>
+        <div className="flex gap-2">
           <button 
             onClick={() => setShowHeldModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-bold transition-transform active:scale-95"
+            className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-bold transition-transform active:scale-95"
           >
-            <ListTodo size={18} />
+            <ListTodo size={16} />
             <span>Simpan</span>
           </button>
           <button 
             onClick={clearCart}
             disabled={items.length === 0}
-            className="flex items-center gap-2 px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-sm font-bold disabled:opacity-50 transition-transform active:scale-95"
+            className="flex items-center gap-2 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-sm font-bold disabled:opacity-50 transition-transform active:scale-95"
           >
             <Trash2 size={16} />
             <span>Hapus</span>
@@ -165,8 +165,8 @@ export function CartPanel() {
       </div>
 
       {/* Customer Input (Sleek) */}
-      <div className="px-6 py-4 bg-white/50 backdrop-blur-sm">
-        <div className="flex items-center gap-3 bg-white px-4 py-3.5 rounded-2xl border border-slate-200/80 shadow-sm focus-within:border-teal-500 focus-within:ring-4 focus-within:ring-teal-50 transition-all">
+      <div className="px-5 py-3 bg-white/50 backdrop-blur-sm">
+        <div className="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-slate-200/80 shadow-sm focus-within:border-teal-500 focus-within:ring-4 focus-within:ring-teal-50 transition-all">
           <User size={20} className="text-slate-400" />
           <input 
             type="text"
@@ -187,11 +187,11 @@ export function CartPanel() {
         </div>
 
         {/* WhatsApp Checkbox (Interactive iOS-style Switch) */}
-        <div className="mt-4 px-1 flex items-center justify-between cursor-pointer group" onClick={() => setSendWhatsapp(!sendWhatsapp)}>
+        <div className="mt-3 px-1 flex items-center justify-between cursor-pointer group" onClick={() => setSendWhatsapp(!sendWhatsapp)}>
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-xl transition-colors ${sendWhatsapp ? 'bg-teal-100 text-teal-600' : 'bg-slate-100 text-slate-400'}`}>
-              <MessageSquare size={18} className="fill-current opacity-20 absolute" />
-              <MessageSquare size={18} className="relative z-10" />
+            <div className={`p-1.5 rounded-xl transition-colors ${sendWhatsapp ? 'bg-teal-100 text-teal-600' : 'bg-slate-100 text-slate-400'}`}>
+              <MessageSquare size={16} className="fill-current opacity-20 absolute" />
+              <MessageSquare size={16} className="relative z-10" />
             </div>
             <div>
               <p className="font-bold text-slate-700 text-sm">Struk WhatsApp</p>
@@ -205,14 +205,14 @@ export function CartPanel() {
         </div>
         
         {sendWhatsapp && (
-          <div className="mt-3 flex items-center gap-3 bg-white px-4 py-3 rounded-2xl border border-slate-200 shadow-sm focus-within:border-teal-500 focus-within:ring-4 focus-within:ring-teal-50 transition-all animate-in slide-in-from-top-2 fade-in">
-             <span className="text-slate-400 text-base font-bold">+62</span>
+          <div className="mt-2 flex items-center gap-3 bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm focus-within:border-teal-500 focus-within:ring-4 focus-within:ring-teal-50 transition-all animate-in slide-in-from-top-2 fade-in">
+             <span className="text-slate-400 text-sm font-bold">+62</span>
              <input 
                type="text"
                placeholder="81234567890"
                value={customerWhatsapp}
                onChange={(e) => setCustomerWhatsapp(e.target.value.replace(/\D/g, ''))}
-               className="w-full bg-transparent border-none focus:outline-none text-base font-bold text-slate-800"
+               className="w-full bg-transparent border-none focus:outline-none text-sm font-bold text-slate-800"
              />
           </div>
         )}
@@ -220,7 +220,7 @@ export function CartPanel() {
         
         {/* If customer selected and has points */}
         {selectedCustomer && parseInt(selectedCustomer.points || '0') > 0 && (
-          <div className="mt-4 flex items-center justify-between bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-3.5 rounded-2xl border border-amber-200/50 shadow-sm animate-in zoom-in-95 fade-in">
+          <div className="mt-3 flex items-center justify-between bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-2.5 rounded-xl border border-amber-200/50 shadow-sm animate-in zoom-in-95 fade-in">
             <div>
               <span className="text-amber-900 font-extrabold text-sm block">Poin Belanja: {parseInt(selectedCustomer.points || '0')}</span>
               <span className="text-amber-600 font-bold text-xs">-Rp {(pointsToRedeem * 10).toLocaleString('id-ID')}</span>
@@ -245,30 +245,30 @@ export function CartPanel() {
       </div>
 
       {/* Cart Items */}
-      <div className="flex-1 overflow-y-auto px-6 py-2 flex flex-col hide-scrollbar relative">
+      <div className="flex-1 overflow-y-auto px-5 py-2 flex flex-col hide-scrollbar relative">
         <div className="absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-white/50 to-transparent z-10 pointer-events-none"></div>
         {items.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-slate-400 gap-4 opacity-80">
-            <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mb-2 border-4 border-white shadow-sm">
-              <span className="text-5xl opacity-40 grayscale">🛒</span>
+          <div className="flex-1 flex flex-col items-center justify-center text-slate-400 gap-3 opacity-80">
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-1 border-4 border-white shadow-sm">
+              <span className="text-3xl opacity-40 grayscale">🛒</span>
             </div>
             <div className="text-center">
-              <p className="text-lg font-extrabold text-slate-600 mb-1">Keranjang Kosong</p>
-              <p className="text-sm font-medium text-slate-400">Pilih menu untuk memulai transaksi</p>
+              <p className="text-base font-extrabold text-slate-600 mb-0.5">Keranjang Kosong</p>
+              <p className="text-xs font-medium text-slate-400">Pilih menu untuk memulai transaksi</p>
             </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-3 pb-4">
+          <div className="flex flex-col gap-2 pb-2">
             {items.map(item => {
               const price = item.finalUnitPrice;
               return (
-              <div key={item.cartItemId} className="flex flex-col p-4 bg-white rounded-2xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] border border-slate-100 transition-all hover:shadow-[0_8px_30px_-15px_rgba(0,0,0,0.1)] relative animate-in slide-in-from-right-4 fade-in duration-300">
-                <div className="flex gap-4">
-                  <div className="flex flex-col items-center justify-center w-10 h-10 bg-teal-50/50 rounded-xl border border-teal-100/50">
-                    <span className="font-extrabold text-teal-800 text-base">{item.quantity}</span>
+              <div key={item.cartItemId} className="flex flex-col p-3 bg-white rounded-xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] border border-slate-100 transition-all hover:shadow-[0_8px_30px_-15px_rgba(0,0,0,0.1)] relative animate-in slide-in-from-right-4 fade-in duration-300">
+                <div className="flex gap-3">
+                  <div className="flex flex-col items-center justify-center w-8 h-8 bg-teal-50/50 rounded-lg border border-teal-100/50">
+                    <span className="font-extrabold text-teal-800 text-sm">{item.quantity}</span>
                   </div>
-                  <div className="flex-1 pt-0.5">
-                    <p className="font-bold text-slate-900 text-base leading-tight">{item.name}</p>
+                  <div className="flex-1 pt-0">
+                    <p className="font-bold text-slate-900 text-sm leading-tight">{item.name}</p>
                     
                     {item.selectedVariant && (
                       <p className="text-xs text-teal-700 mt-1.5 font-bold bg-teal-50 px-2 py-0.5 rounded-md w-fit border border-teal-100">{item.selectedVariant.name}</p>
@@ -285,27 +285,27 @@ export function CartPanel() {
                   </div>
                   
                   <div className="flex flex-col items-end justify-between">
-                    <span className="font-extrabold text-slate-900 text-base pt-0.5">
+                    <span className="font-extrabold text-slate-900 text-sm pt-0">
                       Rp {(price * item.quantity).toLocaleString('id-ID')}
                     </span>
-                    <div className="flex items-center gap-2 mt-2">
+                    <div className="flex items-center gap-1.5 mt-2">
                       <button 
                         onClick={() => updateQuantity(item.cartItemId, Math.max(1, item.quantity - 1))}
-                        className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 active:scale-90 transition-all shadow-sm"
+                        className="w-7 h-7 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 active:scale-90 transition-all shadow-sm"
                       >
-                        <Minus size={16} strokeWidth={3} />
+                        <Minus size={14} strokeWidth={3} />
                       </button>
                       <button 
                         onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)}
-                        className="w-8 h-8 flex items-center justify-center rounded-full bg-teal-100 hover:bg-teal-200 text-teal-700 active:scale-90 transition-all shadow-sm"
+                        className="w-7 h-7 flex items-center justify-center rounded-full bg-teal-100 hover:bg-teal-200 text-teal-700 active:scale-90 transition-all shadow-sm"
                       >
-                        <Plus size={16} strokeWidth={3} />
+                        <Plus size={14} strokeWidth={3} />
                       </button>
                       <button 
                         onClick={() => removeItem(item.cartItemId)}
-                        className="w-8 h-8 flex items-center justify-center rounded-full bg-rose-50 hover:bg-rose-100 text-rose-500 ml-2 active:scale-90 transition-all shadow-sm"
+                        className="w-7 h-7 flex items-center justify-center rounded-full bg-rose-50 hover:bg-rose-100 text-rose-500 ml-1.5 active:scale-90 transition-all shadow-sm"
                       >
-                        <Trash2 size={16} strokeWidth={2.5} />
+                        <Trash2 size={14} strokeWidth={2.5} />
                       </button>
                     </div>
                   </div>
@@ -319,8 +319,8 @@ export function CartPanel() {
       </div>
 
       {/* Summary & Checkout */}
-      <div className="p-6 bg-white border-t border-slate-100 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] rounded-t-3xl relative z-20">
-        <div className="flex flex-col gap-3 mb-5">
+      <div className="p-4 bg-white border-t border-slate-100 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] rounded-t-2xl relative z-20">
+        <div className="flex flex-col gap-2 mb-3">
           <div className="flex justify-between items-center text-sm font-bold text-slate-500 cursor-pointer hover:text-slate-800 transition-colors" onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}>
             <span>Subtotal ({items.length} item)</span>
             <div className="flex items-center gap-2">
@@ -332,14 +332,14 @@ export function CartPanel() {
           </div>
 
           {showAdvancedOptions && (
-            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col gap-3 animate-in slide-in-from-top-2 fade-in">
-              <div className="flex justify-between items-center text-sm font-bold text-slate-600">
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex flex-col gap-2 animate-in slide-in-from-top-2 fade-in">
+              <div className="flex justify-between items-center text-xs font-bold text-slate-600">
                 <span>Diskon Nota (Rp)</span>
                 <input 
                   type="number" 
                   value={globalDiscount || ''}
                   onChange={(e) => setGlobalDiscount(parseFloat(e.target.value) || 0)}
-                  className="bg-white border-2 border-slate-200 rounded-xl px-3 py-2 w-32 text-right focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100 text-slate-900 font-bold transition-all"
+                  className="bg-white border-2 border-slate-200 rounded-lg px-2 py-1 w-24 text-right focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100 text-slate-900 font-bold transition-all"
                   placeholder="0"
                 />
               </div>
@@ -381,9 +381,9 @@ export function CartPanel() {
             </div>
           )}
           
-          <div className="flex justify-between items-end mt-2 pt-3 border-t-2 border-slate-100">
-            <span className="text-sm font-bold text-slate-500 mb-1">TOTAL BAYAR</span>
-            <span className="text-4xl font-black text-teal-600 tracking-tight">Rp {total.toLocaleString('id-ID')}</span>
+          <div className="flex justify-between items-end mt-1 pt-2 border-t-2 border-slate-100">
+            <span className="text-xs font-bold text-slate-500 mb-1">TOTAL BAYAR</span>
+            <span className="text-3xl font-black text-teal-600 tracking-tight">Rp {total.toLocaleString('id-ID')}</span>
           </div>
           
           {selectedCustomer && (
@@ -394,48 +394,48 @@ export function CartPanel() {
         </div>
 
         {/* Payment Methods */}
-        <div className="mb-5 flex gap-2 p-1.5 bg-slate-100/80 rounded-2xl">
+        <div className="mb-3 flex gap-2 p-1 bg-slate-100/80 rounded-xl">
           {[
-            { id: 'Cash', label: 'Tunai', icon: <Banknote size={20} /> },
-            { id: 'QRIS', label: 'QRIS', icon: <Wallet size={20} /> },
-            { id: 'Card', label: 'Kartu', icon: <CreditCard size={20} /> }
+            { id: 'Cash', label: 'Tunai', icon: <Banknote size={16} /> },
+            { id: 'QRIS', label: 'QRIS', icon: <Wallet size={16} /> },
+            { id: 'Card', label: 'Kartu', icon: <CreditCard size={16} /> }
           ].map(method => (
             <button
               key={method.id}
               onClick={() => setPaymentMethod(method.id)}
-              className={`flex-1 flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl transition-all duration-300 ${
+              className={`flex-1 flex flex-col items-center justify-center gap-1 py-2 rounded-lg transition-all duration-300 ${
                 paymentMethod === method.id 
-                  ? 'bg-white text-slate-900 shadow-md font-extrabold scale-[1.02] border border-slate-100' 
+                  ? 'bg-white text-slate-900 shadow-sm font-extrabold scale-[1.02] border border-slate-100' 
                   : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 font-bold'
               }`}
             >
               <div className={paymentMethod === method.id ? 'text-teal-600' : ''}>{method.icon}</div>
-              <span className="text-sm">{method.label}</span>
+              <span className="text-xs">{method.label}</span>
             </button>
           ))}
         </div>
 
         {paymentMethod === 'Cash' && (
-          <div className="mb-5 bg-slate-50 p-4 rounded-2xl border-2 border-slate-200/60 animate-in slide-in-from-bottom-2 fade-in">
-             <div className="flex justify-between items-center text-sm font-bold mb-3">
-               <span className="text-slate-600 text-base">Uang Diterima</span>
+          <div className="mb-4 bg-slate-50 p-3 rounded-xl border-2 border-slate-200/60 animate-in slide-in-from-bottom-2 fade-in">
+             <div className="flex justify-between items-center text-sm font-bold mb-2">
+               <span className="text-slate-600 text-sm">Uang Diterima</span>
                <div className="relative">
                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-extrabold text-lg">Rp</span>
                  <input 
                    type="text"
                    value={cashTendered === 0 ? '' : cashTendered.toLocaleString('id-ID')}
                    onChange={(e) => setCashTendered(parseInt(e.target.value.replace(/\D/g, '')) || 0)}
-                   className="bg-white border-2 border-slate-200 rounded-xl text-lg pl-12 pr-4 py-3 w-48 text-right focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-100 font-black text-slate-900 transition-all shadow-sm"
+                   className="bg-white border-2 border-slate-200 rounded-lg text-base pl-10 pr-3 py-2 w-40 text-right focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-100 font-black text-slate-900 transition-all shadow-sm"
                    placeholder="0"
                  />
                </div>
              </div>
              
              {/* UMKM Friendly Quick cash buttons - Chunky and clickable */}
-             <div className="flex gap-2 mb-4">
-               <button onClick={() => setCashTendered(total)} className="flex-1 py-3 bg-white border border-slate-200 rounded-xl text-sm font-extrabold text-teal-600 shadow-sm active:scale-95 transition-all">Uang Pas</button>
-               <button onClick={() => setCashTendered(50000)} className="flex-1 py-3 bg-white border border-slate-200 rounded-xl text-sm font-extrabold text-slate-700 shadow-sm active:scale-95 transition-all">50 Ribu</button>
-               <button onClick={() => setCashTendered(100000)} className="flex-1 py-3 bg-white border border-slate-200 rounded-xl text-sm font-extrabold text-slate-700 shadow-sm active:scale-95 transition-all">100 Ribu</button>
+             <div className="flex gap-2 mb-3">
+               <button onClick={() => setCashTendered(total)} className="flex-1 py-2 bg-white border border-slate-200 rounded-lg text-xs font-extrabold text-teal-600 shadow-sm active:scale-95 transition-all">Uang Pas</button>
+               <button onClick={() => setCashTendered(50000)} className="flex-1 py-2 bg-white border border-slate-200 rounded-lg text-xs font-extrabold text-slate-700 shadow-sm active:scale-95 transition-all">50 Ribu</button>
+               <button onClick={() => setCashTendered(100000)} className="flex-1 py-2 bg-white border border-slate-200 rounded-lg text-xs font-extrabold text-slate-700 shadow-sm active:scale-95 transition-all">100 Ribu</button>
              </div>
 
              {cashTendered > 0 && (
@@ -450,7 +450,7 @@ export function CartPanel() {
         <button 
           onClick={initiateCheckout}
           disabled={items.length === 0 || isCheckout || (paymentMethod === 'Cash' && cashTendered > 0 && cashTendered < total)}
-          className="w-full py-5 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-2xl font-black text-2xl hover:from-teal-600 hover:to-emerald-600 active:scale-[0.98] shadow-[0_10px_25px_-5px_rgba(16,185,129,0.4)] hover:shadow-[0_15px_30px_-5px_rgba(16,185,129,0.5)] transition-all duration-300 disabled:opacity-50 disabled:active:scale-100 disabled:shadow-none disabled:from-slate-300 disabled:to-slate-400 flex items-center justify-center gap-3 tracking-wide"
+          className="w-full py-3.5 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-xl font-black text-xl hover:from-teal-600 hover:to-emerald-600 active:scale-[0.98] shadow-[0_10px_25px_-5px_rgba(16,185,129,0.4)] hover:shadow-[0_15px_30px_-5px_rgba(16,185,129,0.5)] transition-all duration-300 disabled:opacity-50 disabled:active:scale-100 disabled:shadow-none disabled:from-slate-300 disabled:to-slate-400 flex items-center justify-center gap-2 tracking-wide"
         >
           {isCheckout ? 'Memproses...' : `BAYAR SEKARANG`}
         </button>
