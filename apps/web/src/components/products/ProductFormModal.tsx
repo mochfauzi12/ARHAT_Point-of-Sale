@@ -65,7 +65,7 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData }: Produ
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, imageUrl: reader.result as string }));
+        setFormData((prev: any) => ({ ...prev, imageUrl: reader.result as string }));
       };
       reader.readAsDataURL(file);
     }
