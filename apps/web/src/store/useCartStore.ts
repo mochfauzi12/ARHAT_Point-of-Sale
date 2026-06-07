@@ -20,6 +20,8 @@ export interface Product {
   image?: string;
   imageUrl?: string;
   category?: string;
+  sku?: string;
+  barcode?: string;
   variants?: ProductVariant[];
   modifiers?: ProductModifier[];
 }
