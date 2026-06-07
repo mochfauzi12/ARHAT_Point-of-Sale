@@ -1,4 +1,5 @@
 export const API_URL = 'http://localhost:8787/api';
+import { offlineDB } from './indexeddb';
 
 function getToken() {
   if (typeof document === 'undefined') return '';
@@ -43,12 +44,22 @@ export async function fetchProducts(query: string = '') {
     const res = await fetchWithAuth(`${API_URL}/products/search?q=${encodeURIComponent(query)}`, {
       headers: getHeaders()
     });
-    if (!res.ok) return [];
+    if (!res.ok) throw new Error('Failed to fetch from server');
     const json = await res.json();
+    
+    if (!query && json.data) {
+      await offlineDB.saveCache('products_cache', json.data);
+    }
+    
     return json.data || [];
   } catch (err) {
-    console.error('Failed to fetch products:', err);
-    return [];
+    console.log('Fetching products failed, falling back to cache');
+    const cachedProducts = await offlineDB.getCache('products_cache');
+    if (query && cachedProducts.length > 0) {
+       const lowerQ = query.toLowerCase();
+       return cachedProducts.filter((p: any) => p.name.toLowerCase().includes(lowerQ) || (p.sku && p.sku.toLowerCase().includes(lowerQ)));
+    }
+    return cachedProducts;
   }
 }
 
@@ -84,7 +95,24 @@ export async function checkoutTransaction(payload: any) {
     
     if (!checkoutRes.ok) throw new Error('Failed to process payment');
     return await checkoutRes.json();
-  } catch (err) {
+  } catch (err: any) {
+    // If network error or failed to fetch, fallback to offline sync queue
+    if (!window.navigator.onLine || err.message === 'Failed to fetch' || err.message.includes('NetworkError') || err.message === 'Failed to create transaction') {
+      console.log('Network error detected. Queuing transaction offline.');
+      await offlineDB.enqueueSync(`${API_URL}/transactions/offline-sync`, 'POST', payload);
+      
+      // Return a simulated success response
+      return {
+        success: true,
+        data: {
+          id: 'offline-' + Date.now(),
+          transactionNumber: 'OFF-' + Math.floor(Math.random() * 10000),
+          ...payload,
+          status: 'completed'
+        },
+        offline: true
+      };
+    }
     console.error('Checkout error:', err);
     throw err;
   }
@@ -327,11 +355,25 @@ export async function receiveTransfer(id: string) {
 // ==========================================
 
 export async function getCustomers(search?: string) {
-  const url = search ? `${API_URL}/customers?q=${encodeURIComponent(search)}` : `${API_URL}/customers`;
-  const res = await fetchWithAuth(url, { headers: getHeaders() });
-  if (!res.ok) return [];
-  const json = await res.json();
-  return json.data || [];
+  try {
+    const url = search ? `${API_URL}/customers?q=${encodeURIComponent(search)}` : `${API_URL}/customers`;
+    const res = await fetchWithAuth(url, { headers: getHeaders() });
+    if (!res.ok) throw new Error('Failed to fetch from server');
+    const json = await res.json();
+    
+    if (!search && json.data) {
+      await offlineDB.saveCache('customers_cache', json.data);
+    }
+    return json.data || [];
+  } catch (err) {
+    console.log('Fetching customers failed, falling back to cache');
+    const cached = await offlineDB.getCache('customers_cache');
+    if (search && cached.length > 0) {
+      const lowerQ = search.toLowerCase();
+      return cached.filter((c: any) => c.name.toLowerCase().includes(lowerQ) || (c.phone && c.phone.includes(search)));
+    }
+    return cached;
+  }
 }
 
 export async function createCustomer(data: { name: string; phone?: string; email?: string; notes?: string }) {
@@ -365,6 +407,17 @@ export async function getCustomerTransactions(id: string) {
   return json.data || [];
 }
 
+export async function sendCustomerNotification(phone: string, message: string) {
+  const res = await fetchWithAuth(`${API_URL}/whatsapp/notify`, {
+    method: 'POST',
+    headers: getHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ phone, message })
+  });
+  if (!res.ok) throw new Error('Failed to send notification');
+  const json = await res.json();
+  return json;
+}
+
 // =======================
 // ANALYTICS & REPORTS
 // =======================
@@ -392,6 +445,15 @@ export async function getProfitLoss() {
     headers: getHeaders()
   });
   if (!res.ok) throw new Error('Failed to fetch profit and loss analytics');
+  const json = await res.json();
+  return json.data;
+}
+
+export async function getCustomerAnalytics() {
+  const res = await fetchWithAuth(`${API_URL}/analytics/customers`, {
+    headers: getHeaders()
+  });
+  if (!res.ok) throw new Error('Failed to fetch customer analytics');
   const json = await res.json();
   return json.data;
 }

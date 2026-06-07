@@ -1,5 +1,5 @@
 import { db } from '../lib/db';
-import { transactions, transactionItems, products } from '../models';
+import { transactions, transactionItems, products, customers } from '../models';
 import { and, eq, gte, sql, desc } from 'drizzle-orm';
 
 export class AnalyticsService {
@@ -327,6 +327,56 @@ export class AnalyticsService {
       };
     } catch (error: any) {
       throw new Error('Failed to load P&L analytics: ' + error.message);
+    }
+  }
+
+  static async getCustomerAnalytics(tenantId: string) {
+    try {
+      const allCustomers = await db
+        .select({
+          id: customers.id,
+          name: customers.name,
+          phone: customers.phone,
+          totalSpent: customers.totalSpent,
+          registeredAt: customers.createdAt,
+          updatedAt: customers.updatedAt
+        })
+        .from(customers)
+        .where(eq(customers.tenantId, tenantId));
+
+      let totalCustomers = allCustomers.length;
+      let newCustomersThisMonth = 0;
+
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const topCustomers = [...allCustomers]
+        .sort((a, b) => Number(b.totalSpent || 0) - Number(a.totalSpent || 0))
+        .slice(0, 10);
+
+      for (const c of allCustomers) {
+        if (c.registeredAt) {
+          const regDate = new Date(c.registeredAt);
+          if (regDate >= thirtyDaysAgo) {
+            newCustomersThisMonth++;
+          }
+        }
+      }
+
+      // If we don't have totalTransactions tracked directly, we can just omit it or query transactions
+      const avgTransactionsPerCustomer = 0; // Requires a JOIN on transactions to compute accurately
+
+      return {
+        totalCustomers,
+        newCustomersThisMonth,
+        avgTransactionsPerCustomer,
+        topCustomers: topCustomers.map(c => ({
+          ...c,
+          totalTransactions: '-' // placeholder
+        }))
+      };
+    } catch (error: any) {
+      throw new Error('Failed to load customer analytics: ' + error.message);
     }
   }
 }

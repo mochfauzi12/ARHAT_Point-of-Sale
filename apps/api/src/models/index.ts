@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, text, timestamp, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, timestamp, boolean, index, decimal } from 'drizzle-orm/pg-core';
 
 export const tenants = pgTable('tenants', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -112,7 +112,9 @@ export const customers = pgTable('customers', {
   notes: varchar('notes', { length: 1000 }),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
-});
+}, (table) => ({
+  phoneIdx: index('idx_customers_phone').on(table.phone)
+}));
 
 export const transactions = pgTable('transactions', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -134,7 +136,10 @@ export const transactions = pgTable('transactions', {
   heldUntil: timestamp('held_until'),
   createdAt: timestamp('created_at').defaultNow(),
   completedAt: timestamp('completed_at'),
-});
+}, (table) => ({
+  transactionNumberIdx: index('idx_transactions_number').on(table.transactionNumber),
+  createdAtIdx: index('idx_transactions_created_at').on(table.createdAt)
+}));
 
 export const transactionItems = pgTable('transaction_items', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -250,4 +255,21 @@ export const shifts = pgTable('shifts', {
   expectedEndingCash: varchar('expected_ending_cash', { length: 20 }),
   status: varchar('status', { length: 50 }).notNull().default('open'), // open, closed
   notes: varchar('notes', { length: 1000 }),
+});
+
+export const whatsappMessages = pgTable('whatsapp_messages', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
+  transactionId: uuid('transaction_id').references(() => transactions.id),
+  customerId: uuid('customer_id').references(() => customers.id),
+  recipientPhone: varchar('recipient_phone', { length: 50 }).notNull(),
+  messageType: varchar('message_type', { length: 50 }).notNull(), // 'receipt', 'notification'
+  content: text('content'),
+  status: varchar('status', { length: 50 }).notNull().default('pending'), // 'pending', 'sent', 'delivered', 'read', 'failed'
+  providerMessageId: varchar('provider_message_id', { length: 255 }),
+  errorMessage: text('error_message'),
+  scheduledAt: timestamp('scheduled_at'),
+  sentAt: timestamp('sent_at'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
 });

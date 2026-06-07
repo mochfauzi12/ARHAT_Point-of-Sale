@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Users, Plus, Search, Mail, Phone, Edit, MessageCircle, Star, Crown, History, X, ShoppingBag } from 'lucide-react';
-import { getCustomers, createCustomer, updateCustomer, getCustomerTransactions } from '@/lib/api';
+import { getCustomers, createCustomer, updateCustomer, getCustomerTransactions, sendCustomerNotification } from '@/lib/api';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 
 interface Customer {
@@ -44,6 +44,32 @@ export default function CustomersPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [customerTx, setCustomerTx] = useState<Transaction[]>([]);
   const [loadingTx, setLoadingTx] = useState(false);
+
+  // Notify Modal
+  const [showNotifyModal, setShowNotifyModal] = useState(false);
+  const [notifyMessage, setNotifyMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
+
+  const openNotify = (c: Customer) => {
+    setSelectedCustomer(c);
+    setNotifyMessage('');
+    setShowNotifyModal(true);
+  };
+
+  const handleSendNotify = async () => {
+    if (!selectedCustomer?.phone || !notifyMessage) return;
+    setIsSending(true);
+    try {
+      await sendCustomerNotification(selectedCustomer.phone, notifyMessage);
+      alert('Pesan berhasil masuk antrean pengiriman!');
+      setShowNotifyModal(false);
+    } catch (e) {
+      console.error(e);
+      alert('Gagal mengirim pesan');
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   const getTier = (spent: string | number) => {
     const s = Number(spent);
@@ -254,10 +280,17 @@ export default function CustomersPage() {
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="p-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded-xl transition-colors"
-                            title="Chat WhatsApp"
+                            title="Chat WhatsApp Manual"
                           >
                             <MessageCircle size={18} />
                           </a>
+                          <button
+                            onClick={() => openNotify(c)}
+                            className="p-2.5 bg-teal-50 hover:bg-teal-100 text-teal-600 rounded-xl transition-colors"
+                            title="Kirim Pesan Sistem"
+                          >
+                            <Mail size={18} />
+                          </button>
                         )}
                       </div>
                     </td>
@@ -401,6 +434,58 @@ export default function CustomersPage() {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal Kirim Pesan */}
+      {showNotifyModal && selectedCustomer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setShowNotifyModal(false)} />
+          <div className="relative bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-slate-100 bg-slate-50/50">
+              <h3 className="text-xl font-bold text-slate-900 flex items-center">
+                <MessageCircle size={24} className="mr-3 text-teal-600" />
+                Kirim Notifikasi WhatsApp
+              </h3>
+            </div>
+            
+            <div className="p-6">
+              <div className="mb-4">
+                <label className="block text-sm font-bold text-slate-700 mb-2">Penerima</label>
+                <div className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl flex justify-between items-center">
+                  <span className="font-bold text-slate-900">{selectedCustomer.name}</span>
+                  <span className="text-sm text-slate-500">{selectedCustomer.phone || 'Belum ada nomor'}</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Isi Pesan</label>
+                <textarea 
+                  value={notifyMessage}
+                  onChange={(e) => setNotifyMessage(e.target.value)}
+                  rows={4}
+                  className="w-full px-4 py-3 bg-slate-50 border-slate-200 rounded-2xl focus:bg-white focus:border-slate-400 focus:ring-4 focus:ring-slate-100 transition-all outline-none font-medium resize-none" 
+                  placeholder="Ketik pesan yang ingin dikirimkan..."
+                />
+              </div>
+
+              <div className="mt-8 flex justify-end gap-3 pt-6 border-t border-slate-100">
+                <button 
+                  type="button" 
+                  onClick={() => setShowNotifyModal(false)}
+                  className="px-6 py-3.5 text-slate-500 font-bold hover:bg-slate-50 rounded-2xl transition-colors"
+                >
+                  Batal
+                </button>
+                <button 
+                  onClick={handleSendNotify}
+                  disabled={!selectedCustomer.phone || !notifyMessage || isSending}
+                  className="px-8 py-3.5 bg-teal-600 text-white font-bold rounded-2xl hover:bg-teal-700 transition-all hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-50 flex items-center"
+                >
+                  {isSending ? 'Mengirim...' : 'Kirim Pesan'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

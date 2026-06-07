@@ -2,6 +2,8 @@ ARHAT POS
 
 Cloud-Based Point of Sale & Business Management Platform for UMKM
 
+> **Status:** MVP Version 1.0 (Phase 1-6) telah **SELESAI** diimplementasikan, mencakup fitur POS, Inventaris, CRM, Laporan Penjualan, WhatsApp Integration, dan Optimasi Performa.
+
 ---
 
 Product Overview

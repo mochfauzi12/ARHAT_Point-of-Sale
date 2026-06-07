@@ -8,6 +8,20 @@
       "when": 1780640578615,
       "tag": "0000_wide_runaways",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1780800050049,
+      "tag": "0001_damp_sunfire",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780800838176,
+      "tag": "0002_light_katie_power",
+      "breakpoints": true
     }
   ]
 }

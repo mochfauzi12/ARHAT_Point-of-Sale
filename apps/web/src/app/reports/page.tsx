@@ -6,19 +6,20 @@ import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell 
 } from 'recharts';
 import { 
-  BarChart3, Download, TrendingUp, DollarSign, Package, AlertTriangle, ArrowUpRight, ArrowDownRight, RefreshCcw
+  BarChart3, Download, TrendingUp, DollarSign, Package, AlertTriangle, ArrowUpRight, ArrowDownRight, RefreshCcw, Users
 } from 'lucide-react';
-import { getSalesAnalytics, getProductAnalytics, getProfitLoss } from '@/lib/api';
+import { getSalesAnalytics, getProductAnalytics, getProfitLoss, getCustomerAnalytics } from '@/lib/api';
 
 const COLORS = ['#0d9488', '#0ea5e9', '#f59e0b', '#ef4444', '#8b5cf6', '#10b981'];
 
 export default function ReportsPage() {
-  const [activeTab, setActiveTab] = useState<'ringkasan' | 'penjualan' | 'labaRugi' | 'produk'>('ringkasan');
+  const [activeTab, setActiveTab] = useState<'ringkasan' | 'penjualan' | 'labaRugi' | 'produk' | 'pelanggan'>('ringkasan');
   const [isLoading, setIsLoading] = useState(true);
   
   const [salesData, setSalesData] = useState<any>(null);
   const [productData, setProductData] = useState<any>(null);
   const [plData, setPlData] = useState<any>(null);
+  const [customerData, setCustomerData] = useState<any>(null);
 
   useEffect(() => {
     fetchData();
@@ -27,14 +28,16 @@ export default function ReportsPage() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [sales, products, pl] = await Promise.all([
+      const [sales, products, pl, customers] = await Promise.all([
         getSalesAnalytics(),
         getProductAnalytics(),
-        getProfitLoss()
+        getProfitLoss(),
+        getCustomerAnalytics()
       ]);
       setSalesData(sales);
       setProductData(products);
       setPlData(pl);
+      setCustomerData(customers);
     } catch (error) {
       console.error('Failed to load reports', error);
     } finally {
@@ -51,7 +54,35 @@ export default function ReportsPage() {
   };
 
   const handleExport = () => {
-    alert("Fitur Export PDF akan segera hadir!");
+    let csvContent = "data:text/csv;charset=utf-8,";
+    
+    if (activeTab === 'penjualan' && salesData) {
+      csvContent += "Tanggal,Pendapatan\\n";
+      salesData.chartData.forEach((row: any) => {
+        csvContent += `${row.date},${row.revenue}\\n`;
+      });
+    } else if (activeTab === 'produk' && productData) {
+      csvContent += "Nama Produk,Kuantitas Terjual,Total Pendapatan\\n";
+      productData.topProductsByQty.forEach((row: any) => {
+        csvContent += `${row.name},${row.totalQuantity},${row.totalRevenue}\\n`;
+      });
+    } else if (activeTab === 'pelanggan' && customerData) {
+      csvContent += "Nama Pelanggan,Telepon,Total Transaksi,Total Belanja\\n";
+      customerData.topCustomers.forEach((row: any) => {
+        csvContent += `${row.name},${row.phone},${row.totalTransactions},${row.totalSpent}\\n`;
+      });
+    } else {
+      alert("Format ekspor untuk tab ini belum tersedia.");
+      return;
+    }
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `laporan_${activeTab}_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -87,6 +118,7 @@ export default function ReportsPage() {
             { id: 'penjualan', label: 'Penjualan' },
             { id: 'labaRugi', label: 'Laba Rugi' },
             { id: 'produk', label: 'Performa Produk' },
+            { id: 'pelanggan', label: 'Pelanggan' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -308,6 +340,67 @@ export default function ReportsPage() {
                     ))}
                     {productData.slowMoving.length === 0 && (
                       <p className="text-gray-500 text-center py-4">Semua produk terjual dengan baik!</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB: PELANGGAN */}
+            {activeTab === 'pelanggan' && customerData && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-1 space-y-6">
+                  <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm text-center">
+                    <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+                      <Users size={24} />
+                    </div>
+                    <p className="text-sm font-medium text-gray-500 mb-1">Total Pelanggan Aktif</p>
+                    <h3 className="text-3xl font-bold text-gray-900">{customerData.totalCustomers}</h3>
+                  </div>
+
+                  <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm text-center">
+                    <p className="text-sm font-medium text-gray-500 mb-1">Pelanggan Baru (30 Hari)</p>
+                    <h3 className="text-3xl font-bold text-teal-600">+{customerData.newCustomersThisMonth}</h3>
+                  </div>
+
+                  <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm text-center">
+                    <p className="text-sm font-medium text-gray-500 mb-1">Rata-Rata Transaksi / Pelanggan</p>
+                    <h3 className="text-3xl font-bold text-gray-900">{customerData.avgTransactionsPerCustomer.toFixed(1)} <span className="text-sm font-normal text-gray-500">kali</span></h3>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                  <h3 className="text-lg font-bold text-gray-900 mb-6">Top 10 Pelanggan (Berdasarkan Pendapatan)</h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr>
+                          <th className="border-b-2 border-gray-100 p-3 text-sm font-semibold text-gray-500">Nama</th>
+                          <th className="border-b-2 border-gray-100 p-3 text-sm font-semibold text-gray-500">No. HP</th>
+                          <th className="border-b-2 border-gray-100 p-3 text-sm font-semibold text-gray-500 text-center">Total TRX</th>
+                          <th className="border-b-2 border-gray-100 p-3 text-sm font-semibold text-gray-500 text-right">Total Belanja</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {customerData.topCustomers.map((c: any, i: number) => (
+                          <tr key={c.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                            <td className="p-3">
+                              <div className="flex items-center gap-3">
+                                <span className="text-xs font-bold text-gray-400 w-4">{i + 1}.</span>
+                                <span className="font-medium text-gray-900">{c.name}</span>
+                              </div>
+                            </td>
+                            <td className="p-3 text-sm text-gray-600">{c.phone || '-'}</td>
+                            <td className="p-3 text-sm text-gray-600 text-center">{c.totalTransactions}</td>
+                            <td className="p-3 text-sm font-bold text-teal-600 text-right">
+                              {formatCurrency(Number(c.totalSpent))}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {customerData.topCustomers.length === 0 && (
+                      <p className="text-center text-gray-500 py-6">Belum ada data pelanggan.</p>
                     )}
                   </div>
                 </div>

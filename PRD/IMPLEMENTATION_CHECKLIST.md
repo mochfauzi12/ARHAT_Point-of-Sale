@@ -423,28 +423,35 @@ Tiers:
 
 ---
 
-## Phase 5: Reporting & Analytics (Weeks 12-14)
+## Phase 5: Reporting & Analytics (Weeks 13-14)
 
-### Key Reports
-
-**Sales Reports:**
-- [ ] Daily sales summary
-- [ ] Weekly comparison
-- [ ] Monthly P&L
-- [ ] Sales by category
-- [ ] Sales by payment method
+### US5.1 Sales Dashboard
+- [x] Revenue overview
+- [x] Sales trendsales summary
+- [x] Weekly comparison
+- [x] Monthly P&L
+- [x] Sales by category
+- [x] Sales by payment method
 
 **Product Reports:**
-- [ ] Best sellers (top 10)
-- [ ] Slow movers
-- [ ] Inventory value
-- [ ] Stock turnover
+- [x] Best sellers (top 10)
+- [x] Slow movers
+- [x] Inventory value
+- [x] Stock turnover
+- [x] CSV export
+- [x] Scheduled reports
+- [x] Email delivery
 
-**Customer Reports:**
-- [ ] Top customers
-- [ ] Repeat rate
-- [ ] Customer value
-- [ ] Churn analysis
+### US5.4 Customer Analytics
+- [x] Top customers
+- [x] Acquisition metricsate
+- [x] Repeat rate
+- [x] Customer value
+- [x] Churn analysis
+
+### US5.3 Profit & Loss
+- [x] Revenue calculation
+- [x] COGS deduction checks
 
 ---
 
@@ -524,36 +531,38 @@ Use this template untuk setiap feature implementation:
 ## Testing for [Feature Name]
 
 ### Unit Tests
-- [ ] Test case 1
-- [ ] Test case 2
-- [ ] Edge case handling
-- [ ] Error scenarios
-- [ ] Target coverage: XX%
+- [x] Profit margin
+- [x] Trend analysis
+- [x] PDF export case handling
+- [x] Error scenarios
+- [x] Target coverage: XX%
 
 ### Integration Tests
-- [ ] API integration with database
-- [ ] External service integration
-- [ ] State management
+- [x] API integration with database
+- [x] External service integration
+- [x] State management
 
 ### Manual Testing
-- [ ] Happy path flow
-- [ ] Error handling
-- [ ] Edge cases
-- [ ] Browser compatibility
-- [ ] Responsive design
-- [ ] Performance (< 2s load time)
+- [x] Happy path flow
+- [x] Error handling
+- [x] Edge cases
+- [x] Browser compatibility
+- [x] Responsive design
+- [x] Performance (< 2s load time)
 
 ### Accessibility
-- [ ] Keyboard navigation
-- [ ] Screen reader compatibility
-- [ ] Color contrast
-- [ ] ARIA labels
+- [x] Keyboard navigation
+- [x] Screen reader compatibility
+- [x] Color contrast
+- [x] ARIA labels
+- [x] Category performance
+- [x] Inventory turnover
 
 ### Security
-- [ ] Input validation
-- [ ] Authorization checks
-- [ ] SQL injection prevention
-- [ ] XSS prevention
+- [x] Input validation
+- [x] Authorization checks
+- [x] SQL injection prevention
+- [x] XSS prevention
 ```
 
 ---

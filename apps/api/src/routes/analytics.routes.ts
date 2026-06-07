@@ -9,5 +9,6 @@ analyticsRoutes.get('/dashboard', analyticsController.getDashboard);
 analyticsRoutes.get('/sales', analyticsController.getSales);
 analyticsRoutes.get('/products', analyticsController.getProducts);
 analyticsRoutes.get('/profit-loss', analyticsController.getProfitLoss);
+analyticsRoutes.get('/customers', analyticsController.getCustomers);
 
 export default analyticsRoutes;

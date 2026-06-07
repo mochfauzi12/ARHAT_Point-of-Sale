@@ -18,6 +18,7 @@ const MENU_ITEMS = [
 ];
 
 import { Logo } from '@/components/ui/Logo';
+import { SyncManager } from '@/components/SyncManager';
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -83,6 +84,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           {children}
         </div>
       </main>
+      <SyncManager />
     </div>
   );
 }

@@ -1,0 +1,57 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "ARHAT POS API",
+    "version": "1.0.0",
+    "description": "API documentation for ARHAT Point of Sale system."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8787",
+      "description": "Local server"
+    }
+  ],
+  "paths": {
+    "/api/auth/login": {
+      "post": {
+        "summary": "Login",
+        "description": "Authenticates a user and returns a token.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Successful login" }
+        }
+      }
+    },
+    "/api/products": {
+      "get": {
+        "summary": "Get Products",
+        "description": "Returns a list of products.",
+        "responses": {
+          "200": { "description": "Successful operation" }
+        }
+      }
+    },
+    "/api/transactions": {
+      "post": {
+        "summary": "Create Transaction",
+        "description": "Creates a new POS transaction.",
+        "responses": {
+          "201": { "description": "Transaction created successfully" }
+        }
+      }
+    }
+  }
+}

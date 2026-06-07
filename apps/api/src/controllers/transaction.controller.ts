@@ -27,7 +27,7 @@ export const transactionController = {
       // WhatsApp Receipt Trigger (Mock)
       if (body.customerPhone) {
         // Send asynchronously so it doesn't block the API response
-        WhatsAppService.sendReceipt(body.customerPhone, transaction).catch(console.error);
+        WhatsAppService.sendReceipt(user.tenantId, body.customerPhone, transaction).catch(console.error);
       }
       
       return c.json({ message: 'Transaction created successfully', data: transaction }, 201);
@@ -49,6 +49,37 @@ export const transactionController = {
         body.amount
       );
       return c.json({ message: 'Checkout successful', data: transaction });
+    } catch (error: any) {
+      return c.json({ error: error.message }, 400);
+    }
+  },
+
+  async offlineSync(c: Context) {
+    const user = c.get('user');
+    const body = await c.req.json();
+    
+    try {
+      // Create transaction
+      const transaction = await TransactionService.createTransaction(
+        user.tenantId,
+        user.id,
+        body
+      );
+      
+      // Immediately checkout
+      const completedTransaction = await TransactionService.checkout(
+        user.tenantId,
+        transaction.id,
+        body.paymentMethod,
+        body.totalAmount
+      );
+
+      // WhatsApp Receipt Trigger (Mock)
+      if (body.customerPhone) {
+        WhatsAppService.sendReceipt(user.tenantId, body.customerPhone, completedTransaction).catch(console.error);
+      }
+      
+      return c.json({ message: 'Offline sync successful', data: completedTransaction }, 201);
     } catch (error: any) {
       return c.json({ error: error.message }, 400);
     }

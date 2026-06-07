@@ -44,7 +44,7 @@ const createUserSchema = z.object({
 
 // Create new user
 usersRoutes.post('/', authMiddleware, async (c) => {
-  const user = c.get('user');
+  const user = c.get('user' as any);
   if (!user || !user.tenantId) {
     throw new AppError('Unauthorized', 401);
   }
@@ -94,7 +94,7 @@ const updateUserSchema = z.object({
 
 // Update user
 usersRoutes.put('/:id', authMiddleware, async (c) => {
-  const user = c.get('user') as any;
+  const user = c.get('user' as any);
   if (!user || user.role !== 'admin') {
     throw new AppError('Forbidden: Only admins can manage users', 403);
   }
@@ -111,7 +111,7 @@ usersRoutes.put('/:id', authMiddleware, async (c) => {
   
   const updatedUser = await db.update(users)
     .set(updateData)
-    .where(eq(users.id, id))
+    .where(eq(users.id, id as string))
     .returning();
     
   if (updatedUser.length === 0) {
@@ -123,7 +123,7 @@ usersRoutes.put('/:id', authMiddleware, async (c) => {
 
 // Delete user
 usersRoutes.delete('/:id', authMiddleware, async (c) => {
-  const user = c.get('user') as any;
+  const user = c.get('user' as any);
   if (!user || user.role !== 'admin') {
     throw new AppError('Forbidden: Only admins can manage users', 403);
   }
@@ -133,7 +133,7 @@ usersRoutes.delete('/:id', authMiddleware, async (c) => {
     throw new AppError('Cannot delete yourself', 400);
   }
 
-  const deletedUser = await db.delete(users).where(eq(users.id, id)).returning();
+  const deletedUser = await db.delete(users).where(eq(users.id, id as string)).returning();
   if (deletedUser.length === 0) {
     throw new AppError('User not found', 404);
   }

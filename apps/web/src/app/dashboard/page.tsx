@@ -5,6 +5,8 @@ import { getDashboardAnalytics } from '@/lib/api';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp, CreditCard, Package, ArrowUpRight } from 'lucide-react';
 
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+
 export default function DashboardPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -23,32 +25,32 @@ export default function DashboardPage() {
     load();
   }, []);
 
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="flex h-64 items-center justify-center">
-          <p className="text-gray-500">Loading analytics...</p>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  if (!data) {
-    return (
-      <DashboardLayout>
-        <div className="flex h-64 items-center justify-center">
-          <p className="text-red-500">Failed to load analytics.</p>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
   return (
     <DashboardLayout>
-      <div className="mb-8 flex flex-col gap-1">
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Overview</h1>
-        <p className="text-slate-500 font-medium">Here's what's happening in your store today.</p>
-      </div>
+      <ErrorBoundary>
+        <div className="mb-8 flex flex-col gap-1">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Overview</h1>
+          <p className="text-slate-500 font-medium">Here's what's happening in your store today.</p>
+        </div>
+
+        {loading ? (
+          <div className="animate-pulse">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="bg-slate-50 h-32 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/60"></div>
+              ))}
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2 bg-slate-50 h-96 rounded-3xl border border-slate-100/60"></div>
+              <div className="bg-slate-50 h-96 rounded-3xl border border-slate-100/60"></div>
+            </div>
+          </div>
+        ) : !data ? (
+          <div className="flex h-64 items-center justify-center bg-red-50 rounded-3xl border border-red-100">
+            <p className="text-red-500 font-medium">Failed to load analytics data.</p>
+          </div>
+        ) : (
+          <>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -138,6 +140,9 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+          </>
+        )}
+      </ErrorBoundary>
     </DashboardLayout>
   );
 }

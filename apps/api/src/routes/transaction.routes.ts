@@ -9,6 +9,7 @@ transactionRoutes.use('*', authMiddleware);
 
 transactionRoutes.get('/', transactionController.list);
 transactionRoutes.post('/', transactionController.create);
+transactionRoutes.post('/offline-sync', transactionController.offlineSync);
 transactionRoutes.post('/:id/checkout', transactionController.checkout);
 
 transactionRoutes.post('/hold', transactionController.hold);

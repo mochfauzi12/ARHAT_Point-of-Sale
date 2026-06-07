@@ -16,8 +16,7 @@ async function seed() {
     await db.insert(tenants).values({
       id: tenantId,
       name: 'ARHAT POS Default Tenant',
-      email: 'admin@arhatpos.com',
-      plan: 'starter'
+      email: 'admin@arhatpos.com'
     }).onConflictDoNothing();
     
     console.log('✅ Tenant ensured.');
