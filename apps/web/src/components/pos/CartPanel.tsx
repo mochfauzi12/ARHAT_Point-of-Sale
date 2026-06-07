@@ -6,6 +6,7 @@ import { HeldTransactionsModal } from './HeldTransactionsModal';
 import { checkoutTransaction, holdTransaction as apiHoldTransaction, getCustomers } from '@/lib/api';
 import { PrintReceiptPortal } from './ReceiptTemplate';
 import { CheckoutSuccessModal } from './CheckoutSuccessModal';
+import { NonCashPaymentModal } from './NonCashPaymentModal';
 import { Toast, ToastType } from '../ui/Toast';
 
 export function CartPanel() {
@@ -14,6 +15,7 @@ export function CartPanel() {
   const [isCheckout, setIsCheckout] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [showHeldModal, setShowHeldModal] = useState(false);
+  const [showNonCashModal, setShowNonCashModal] = useState(false);
   const [printTx, setPrintTx] = useState<any>(null);
   const [successModalData, setSuccessModalData] = useState<{ transaction: any, changeAmount: number, customer: any } | null>(null);
 
@@ -41,8 +43,17 @@ export function CartPanel() {
   const pointsDiscount = pointsToRedeem * 10;
   total = Math.max(0, total - pointsDiscount);
 
-  const handleCheckout = async () => {
+  const initiateCheckout = () => {
+    if (paymentMethod !== 'Cash') {
+      setShowNonCashModal(true);
+    } else {
+      processCheckout();
+    }
+  };
+
+  const processCheckout = async () => {
     setIsCheckout(true);
+    setShowNonCashModal(false);
     try {
       const res = await checkoutTransaction({
         tenantId: '00000000-0000-0000-0000-000000000000',
@@ -127,38 +138,41 @@ export function CartPanel() {
     }
   };
 
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+
   return (
-    <div className="flex flex-col h-full bg-white relative">
+    <div className="flex flex-col h-full bg-transparent relative">
       {/* Header */}
-      <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-        <h2 className="text-xl font-semibold tracking-tight">Current Order</h2>
-        <div className="flex gap-2">
+      <div className="px-6 py-5 flex items-center justify-between border-b border-slate-100/60 bg-white/50 backdrop-blur-md z-10">
+        <h2 className="text-2xl font-extrabold tracking-tight text-slate-800">Pesanan</h2>
+        <div className="flex gap-3">
           <button 
             onClick={() => setShowHeldModal(true)}
-            className="flex items-center gap-1 text-sm font-medium text-gray-500 hover:text-black transition-colors relative"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-bold transition-transform active:scale-95"
           >
-            <ListTodo size={16} />
-            <span>Held</span>
+            <ListTodo size={18} />
+            <span>Simpan</span>
           </button>
           <button 
             onClick={clearCart}
             disabled={items.length === 0}
-            className="text-sm font-medium text-red-500 hover:text-red-600 disabled:opacity-50 transition-colors ml-4"
+            className="flex items-center gap-2 px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-sm font-bold disabled:opacity-50 transition-transform active:scale-95"
           >
-            Clear All
+            <Trash2 size={16} />
+            <span>Hapus</span>
           </button>
         </div>
       </div>
 
       {/* Customer Input (Sleek) */}
-      <div className="px-5 py-3 border-b border-gray-100 bg-white">
-        <div className="flex items-center gap-3 bg-gray-50 px-3 py-2 rounded-xl border border-gray-200 focus-within:border-[#0B5A63] focus-within:ring-1 focus-within:ring-[#0B5A63] transition-all">
-          <User size={18} className="text-gray-400" />
+      <div className="px-6 py-4 bg-white/50 backdrop-blur-sm">
+        <div className="flex items-center gap-3 bg-white px-4 py-3.5 rounded-2xl border border-slate-200/80 shadow-sm focus-within:border-teal-500 focus-within:ring-4 focus-within:ring-teal-50 transition-all">
+          <User size={20} className="text-slate-400" />
           <input 
             type="text"
             list="customer-list"
-            placeholder="Nama Pelanggan (Opsional)..."
-            className="w-full bg-transparent border-none focus:outline-none text-sm text-gray-700"
+            placeholder="Pilih Pelanggan (Opsional)..."
+            className="w-full bg-transparent border-none focus:outline-none text-base font-bold text-slate-800 placeholder:text-slate-400 placeholder:font-medium"
             onChange={(e) => {
               const c = customers.find(x => x.name === e.target.value);
               setSelectedCustomer(c || null);
@@ -172,29 +186,33 @@ export function CartPanel() {
           </datalist>
         </div>
 
-        {/* WhatsApp Checkbox & Input */}
-        <div className="mt-3 flex items-center gap-2">
-          <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-600">
-            <input 
-              type="checkbox" 
-              className="rounded text-[#0B5A63] focus:ring-[#0B5A63] h-4 w-4 border-gray-300"
-              checked={sendWhatsapp}
-              onChange={(e) => setSendWhatsapp(e.target.checked)}
-            />
-            <MessageSquare size={16} className={sendWhatsapp ? "text-[#0B5A63]" : "text-gray-400"} />
-            <span className="font-medium">Kirim struk via WhatsApp</span>
-          </label>
+        {/* WhatsApp Checkbox (Interactive iOS-style Switch) */}
+        <div className="mt-4 px-1 flex items-center justify-between cursor-pointer group" onClick={() => setSendWhatsapp(!sendWhatsapp)}>
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-xl transition-colors ${sendWhatsapp ? 'bg-teal-100 text-teal-600' : 'bg-slate-100 text-slate-400'}`}>
+              <MessageSquare size={18} className="fill-current opacity-20 absolute" />
+              <MessageSquare size={18} className="relative z-10" />
+            </div>
+            <div>
+              <p className="font-bold text-slate-700 text-sm">Struk WhatsApp</p>
+              <p className="text-xs text-slate-400 font-medium">Kirim nota digital ke pembeli</p>
+            </div>
+          </div>
+          {/* Switch */}
+          <div className={`w-12 h-6 rounded-full transition-colors relative flex items-center ${sendWhatsapp ? 'bg-teal-500' : 'bg-slate-200'}`}>
+            <div className={`w-4 h-4 bg-white rounded-full shadow-md absolute transition-all ${sendWhatsapp ? 'left-7' : 'left-1'}`}></div>
+          </div>
         </div>
         
         {sendWhatsapp && (
-          <div className="mt-2 flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-xl border border-gray-200 focus-within:border-[#0B5A63] focus-within:ring-1 focus-within:ring-[#0B5A63] transition-all">
-             <span className="text-gray-500 text-sm font-medium">+62</span>
+          <div className="mt-3 flex items-center gap-3 bg-white px-4 py-3 rounded-2xl border border-slate-200 shadow-sm focus-within:border-teal-500 focus-within:ring-4 focus-within:ring-teal-50 transition-all animate-in slide-in-from-top-2 fade-in">
+             <span className="text-slate-400 text-base font-bold">+62</span>
              <input 
                type="text"
                placeholder="81234567890"
                value={customerWhatsapp}
                onChange={(e) => setCustomerWhatsapp(e.target.value.replace(/\D/g, ''))}
-               className="w-full bg-transparent border-none focus:outline-none text-sm text-gray-700"
+               className="w-full bg-transparent border-none focus:outline-none text-base font-bold text-slate-800"
              />
           </div>
         )}
@@ -202,13 +220,13 @@ export function CartPanel() {
         
         {/* If customer selected and has points */}
         {selectedCustomer && parseInt(selectedCustomer.points || '0') > 0 && (
-          <div className="mt-3 text-sm flex items-center justify-between bg-teal-50 px-3 py-2 rounded-xl border border-teal-100">
+          <div className="mt-4 flex items-center justify-between bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-3.5 rounded-2xl border border-amber-200/50 shadow-sm animate-in zoom-in-95 fade-in">
             <div>
-              <span className="text-teal-800 font-medium block">Poin Tersedia: {parseInt(selectedCustomer.points || '0')}</span>
-              <span className="text-teal-600 text-xs">-Rp {(pointsToRedeem * 10).toLocaleString('id-ID')}</span>
+              <span className="text-amber-900 font-extrabold text-sm block">Poin Belanja: {parseInt(selectedCustomer.points || '0')}</span>
+              <span className="text-amber-600 font-bold text-xs">-Rp {(pointsToRedeem * 10).toLocaleString('id-ID')}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-teal-800 font-medium text-xs">Pakai:</span>
+              <span className="text-amber-800 font-bold text-xs uppercase tracking-wider">Tukar:</span>
               <input 
                 type="number"
                 min="0"
@@ -219,7 +237,7 @@ export function CartPanel() {
                   const val = parseInt(e.target.value) || 0;
                   setPointsToRedeem(Math.min(val, parseInt(selectedCustomer.points || '0')));
                 }}
-                className="w-16 p-1 text-center border border-teal-200 rounded-lg bg-white text-teal-900 focus:outline-none"
+                className="w-16 p-2 text-center border-2 border-amber-200 rounded-xl bg-white font-bold text-amber-900 focus:outline-none focus:border-amber-500"
               />
             </div>
           </div>
@@ -227,205 +245,227 @@ export function CartPanel() {
       </div>
 
       {/* Cart Items */}
-      <div className="flex-1 overflow-y-auto px-5 py-2 flex flex-col">
+      <div className="flex-1 overflow-y-auto px-6 py-2 flex flex-col hide-scrollbar relative">
+        <div className="absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-white/50 to-transparent z-10 pointer-events-none"></div>
         {items.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-4 opacity-70">
-            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-2">
-              <span className="text-4xl opacity-50">🛒</span>
+          <div className="flex-1 flex flex-col items-center justify-center text-slate-400 gap-4 opacity-80">
+            <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mb-2 border-4 border-white shadow-sm">
+              <span className="text-5xl opacity-40 grayscale">🛒</span>
             </div>
-            <p className="text-sm font-semibold text-gray-500">Cart is empty</p>
-            <p className="text-xs text-gray-400">Add products to start a new order</p>
+            <div className="text-center">
+              <p className="text-lg font-extrabold text-slate-600 mb-1">Keranjang Kosong</p>
+              <p className="text-sm font-medium text-slate-400">Pilih menu untuk memulai transaksi</p>
+            </div>
           </div>
         ) : (
-          items.map(item => {
-            const price = item.finalUnitPrice;
-            return (
-            <div key={item.cartItemId} className="flex flex-col py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors relative group">
-              <div className="flex gap-3">
-                <div className="flex flex-col items-center justify-center w-10">
-                  <span className="font-bold text-gray-900">{item.quantity}</span>
-                  <span className="text-[10px] text-gray-400">x</span>
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900 leading-tight">{item.name}</p>
-                  
-                  {item.selectedVariant && (
-                    <p className="text-xs text-teal-600 mt-0.5 font-medium">{item.selectedVariant.name}</p>
-                  )}
-                  {item.selectedModifiers && item.selectedModifiers.length > 0 && (
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      + {item.selectedModifiers.map(m => m.name).join(', ')}
-                    </p>
-                  )}
+          <div className="flex flex-col gap-3 pb-4">
+            {items.map(item => {
+              const price = item.finalUnitPrice;
+              return (
+              <div key={item.cartItemId} className="flex flex-col p-4 bg-white rounded-2xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] border border-slate-100 transition-all hover:shadow-[0_8px_30px_-15px_rgba(0,0,0,0.1)] relative animate-in slide-in-from-right-4 fade-in duration-300">
+                <div className="flex gap-4">
+                  <div className="flex flex-col items-center justify-center w-10 h-10 bg-teal-50/50 rounded-xl border border-teal-100/50">
+                    <span className="font-extrabold text-teal-800 text-base">{item.quantity}</span>
+                  </div>
+                  <div className="flex-1 pt-0.5">
+                    <p className="font-bold text-slate-900 text-base leading-tight">{item.name}</p>
+                    
+                    {item.selectedVariant && (
+                      <p className="text-xs text-teal-700 mt-1.5 font-bold bg-teal-50 px-2 py-0.5 rounded-md w-fit border border-teal-100">{item.selectedVariant.name}</p>
+                    )}
+                    {item.selectedModifiers && item.selectedModifiers.length > 0 && (
+                      <p className="text-xs text-slate-500 mt-1 font-medium bg-slate-50 px-2 py-0.5 rounded-md w-fit">
+                        + {item.selectedModifiers.map(m => m.name).join(', ')}
+                      </p>
+                    )}
 
-                  {item.discount > 0 && (
-                     <p className="text-xs text-amber-500 mt-0.5">Disc: Rp {item.discount.toLocaleString('id-ID')}</p>
-                  )}
-                </div>
-                
-                <div className="flex flex-col items-end gap-1">
-                  <span className="font-semibold text-gray-900">
-                    Rp {(price * item.quantity).toLocaleString('id-ID')}
-                  </span>
-                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button 
-                      onClick={() => updateQuantity(item.cartItemId, Math.max(1, item.quantity - 1))}
-                      className="p-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600"
-                    >
-                      <Minus size={14} />
-                    </button>
-                    <button 
-                      onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)}
-                      className="p-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600"
-                    >
-                      <Plus size={14} />
-                    </button>
-                    <button 
-                      onClick={() => removeItem(item.cartItemId)}
-                      className="p-1 rounded-full bg-red-50 hover:bg-red-100 text-red-500 ml-1"
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                    {item.discount > 0 && (
+                       <p className="text-xs text-rose-600 mt-1 font-bold bg-rose-50 px-2 py-0.5 rounded-md w-fit">Diskon: -Rp {item.discount.toLocaleString('id-ID')}</p>
+                    )}
+                  </div>
+                  
+                  <div className="flex flex-col items-end justify-between">
+                    <span className="font-extrabold text-slate-900 text-base pt-0.5">
+                      Rp {(price * item.quantity).toLocaleString('id-ID')}
+                    </span>
+                    <div className="flex items-center gap-2 mt-2">
+                      <button 
+                        onClick={() => updateQuantity(item.cartItemId, Math.max(1, item.quantity - 1))}
+                        className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 active:scale-90 transition-all shadow-sm"
+                      >
+                        <Minus size={16} strokeWidth={3} />
+                      </button>
+                      <button 
+                        onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)}
+                        className="w-8 h-8 flex items-center justify-center rounded-full bg-teal-100 hover:bg-teal-200 text-teal-700 active:scale-90 transition-all shadow-sm"
+                      >
+                        <Plus size={16} strokeWidth={3} />
+                      </button>
+                      <button 
+                        onClick={() => removeItem(item.cartItemId)}
+                        className="w-8 h-8 flex items-center justify-center rounded-full bg-rose-50 hover:bg-rose-100 text-rose-500 ml-2 active:scale-90 transition-all shadow-sm"
+                      >
+                        <Trash2 size={16} strokeWidth={2.5} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-            );
-          })
+              );
+            })}
+          </div>
         )}
+        <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-white/80 to-transparent z-10 pointer-events-none"></div>
       </div>
 
       {/* Summary & Checkout */}
-      <div className="p-5 border-t border-gray-100 bg-gray-50/30">
-        <div className="flex flex-col gap-3 mb-4">
-          <div className="flex justify-between items-center text-sm text-gray-500 font-medium">
-            <span>Subtotal</span>
-            <span className="text-gray-900">Rp {subtotal.toLocaleString('id-ID')}</span>
+      <div className="p-6 bg-white border-t border-slate-100 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] rounded-t-3xl relative z-20">
+        <div className="flex flex-col gap-3 mb-5">
+          <div className="flex justify-between items-center text-sm font-bold text-slate-500 cursor-pointer hover:text-slate-800 transition-colors" onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}>
+            <span>Subtotal ({items.length} item)</span>
+            <div className="flex items-center gap-2">
+              <span className="text-slate-800">Rp {subtotal.toLocaleString('id-ID')}</span>
+              <div className={`p-1 bg-slate-100 rounded-full transition-transform ${showAdvancedOptions ? 'rotate-180' : ''}`}>
+                <svg className="w-3 h-3 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+              </div>
+            </div>
           </div>
 
-          <div className="flex justify-between items-center text-sm font-medium">
-            <span className="text-gray-500">Global Discount (Rp)</span>
-            <input 
-              type="number" 
-              value={globalDiscount || ''}
-              onChange={(e) => setGlobalDiscount(parseFloat(e.target.value) || 0)}
-              className="bg-white border border-gray-200 rounded-lg text-sm px-2 py-1 w-28 text-right focus:outline-none focus:border-black text-gray-900"
-              placeholder="0"
-            />
-          </div>
+          {showAdvancedOptions && (
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col gap-3 animate-in slide-in-from-top-2 fade-in">
+              <div className="flex justify-between items-center text-sm font-bold text-slate-600">
+                <span>Diskon Nota (Rp)</span>
+                <input 
+                  type="number" 
+                  value={globalDiscount || ''}
+                  onChange={(e) => setGlobalDiscount(parseFloat(e.target.value) || 0)}
+                  className="bg-white border-2 border-slate-200 rounded-xl px-3 py-2 w-32 text-right focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100 text-slate-900 font-bold transition-all"
+                  placeholder="0"
+                />
+              </div>
 
-          {totalDiscount > 0 && (
-            <div className="flex justify-between text-sm text-green-500 font-medium">
-              <span>Total Item/Global Disc</span>
-              <span>- Rp {totalDiscount.toLocaleString('id-ID')}</span>
+              <div className="flex justify-between items-center text-sm font-bold text-slate-600">
+                <label className="flex items-center gap-2.5 cursor-pointer group">
+                  <div className="relative flex items-center">
+                    <input 
+                      type="checkbox" 
+                      checked={isTaxEnabled}
+                      onChange={(e) => setTaxEnabled(e.target.checked)}
+                      className="peer sr-only"
+                    />
+                    <div className="w-5 h-5 rounded border-2 border-slate-300 peer-checked:bg-slate-800 peer-checked:border-slate-800 transition-all flex items-center justify-center">
+                      <svg className="w-3 h-3 text-white scale-0 peer-checked:scale-100 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                    </div>
+                  </div>
+                  <span className="group-hover:text-slate-800 transition-colors">Terapkan PPN (11%)</span>
+                </label>
+                <span className="text-slate-800">Rp {tax.toLocaleString('id-ID')}</span>
+              </div>
             </div>
           )}
 
-          {pointsDiscount > 0 && (
-            <div className="flex justify-between text-sm text-yellow-600 font-medium">
-              <span>Loyalty Points Discount</span>
-              <span>- Rp {pointsDiscount.toLocaleString('id-ID')}</span>
+          {(totalDiscount > 0 || pointsDiscount > 0) && (
+            <div className="flex flex-col gap-1 border-t border-dashed border-slate-200 pt-2 mt-1">
+              {totalDiscount > 0 && (
+                <div className="flex justify-between text-sm font-bold text-rose-500">
+                  <span>Total Diskon</span>
+                  <span>- Rp {totalDiscount.toLocaleString('id-ID')}</span>
+                </div>
+              )}
+              {pointsDiscount > 0 && (
+                <div className="flex justify-between text-sm font-bold text-amber-500">
+                  <span>Tukar Poin</span>
+                  <span>- Rp {pointsDiscount.toLocaleString('id-ID')}</span>
+                </div>
+              )}
             </div>
           )}
           
-          <div className="flex justify-between items-center text-sm text-gray-500 font-medium border-t border-dashed border-gray-200 pt-3 mt-1">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input 
-                type="checkbox" 
-                checked={isTaxEnabled}
-                onChange={(e) => setTaxEnabled(e.target.checked)}
-                className="w-4 h-4 rounded text-black focus:ring-black border-gray-300"
-              />
-              <span>Tax (PPN 11%)</span>
-            </label>
-            <span className="text-gray-900">Rp {tax.toLocaleString('id-ID')}</span>
-          </div>
-          <div className="flex justify-between text-xl font-bold text-gray-900 mt-2 pt-3 border-t border-dashed border-gray-200">
-            <span>Total</span>
-            <span>Rp {total.toLocaleString('id-ID')}</span>
+          <div className="flex justify-between items-end mt-2 pt-3 border-t-2 border-slate-100">
+            <span className="text-sm font-bold text-slate-500 mb-1">TOTAL BAYAR</span>
+            <span className="text-4xl font-black text-teal-600 tracking-tight">Rp {total.toLocaleString('id-ID')}</span>
           </div>
           
           {selectedCustomer && (
-            <div className="text-right text-xs text-blue-600 font-medium mt-1">
-              *Akan mendapat {Math.floor(total / 1000)} Poin
+            <div className="text-right text-xs text-amber-600 font-bold bg-amber-50 px-3 py-1 rounded-lg w-fit ml-auto border border-amber-100">
+              +{Math.floor(total / 1000)} Poin didapat
             </div>
           )}
         </div>
 
         {/* Payment Methods */}
-        <div className="mb-4 flex gap-1 p-1 bg-gray-100/80 rounded-xl">
+        <div className="mb-5 flex gap-2 p-1.5 bg-slate-100/80 rounded-2xl">
           {[
-            { id: 'Cash', icon: <Banknote size={16} /> },
-            { id: 'QRIS', icon: <Wallet size={16} /> },
-            { id: 'Card', icon: <CreditCard size={16} /> }
+            { id: 'Cash', label: 'Tunai', icon: <Banknote size={20} /> },
+            { id: 'QRIS', label: 'QRIS', icon: <Wallet size={20} /> },
+            { id: 'Card', label: 'Kartu', icon: <CreditCard size={20} /> }
           ].map(method => (
             <button
               key={method.id}
               onClick={() => setPaymentMethod(method.id)}
-              className={`flex-1 flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-lg transition-all duration-300 ${
+              className={`flex-1 flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl transition-all duration-300 ${
                 paymentMethod === method.id 
-                  ? 'bg-white text-gray-900 shadow-sm font-semibold' 
-                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50 font-medium'
+                  ? 'bg-white text-slate-900 shadow-md font-extrabold scale-[1.02] border border-slate-100' 
+                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 font-bold'
               }`}
             >
-              <div className={paymentMethod === method.id ? 'text-gray-900' : ''}>{method.icon}</div>
-              <span className="text-xs">{method.id}</span>
+              <div className={paymentMethod === method.id ? 'text-teal-600' : ''}>{method.icon}</div>
+              <span className="text-sm">{method.label}</span>
             </button>
           ))}
         </div>
 
         {paymentMethod === 'Cash' && (
-          <div className="mb-4 bg-gray-50 p-3 rounded-xl border border-gray-200">
-             <div className="flex justify-between items-center text-sm font-medium mb-2">
-               <span className="text-gray-700">Nominal Uang</span>
+          <div className="mb-5 bg-slate-50 p-4 rounded-2xl border-2 border-slate-200/60 animate-in slide-in-from-bottom-2 fade-in">
+             <div className="flex justify-between items-center text-sm font-bold mb-3">
+               <span className="text-slate-600 text-base">Uang Diterima</span>
                <div className="relative">
-                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-normal">Rp</span>
+                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-extrabold text-lg">Rp</span>
                  <input 
                    type="text"
                    value={cashTendered === 0 ? '' : cashTendered.toLocaleString('id-ID')}
                    onChange={(e) => setCashTendered(parseInt(e.target.value.replace(/\D/g, '')) || 0)}
-                   className="bg-white border border-gray-300 rounded-lg text-sm pl-8 pr-3 py-2 w-36 text-right focus:outline-none focus:border-black font-bold text-gray-900"
+                   className="bg-white border-2 border-slate-200 rounded-xl text-lg pl-12 pr-4 py-3 w-48 text-right focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-100 font-black text-slate-900 transition-all shadow-sm"
                    placeholder="0"
                  />
                </div>
              </div>
              
-             {/* Quick cash buttons */}
-             <div className="flex gap-2 mb-3">
-               <button onClick={() => setCashTendered(total)} className="flex-1 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-600 hover:border-black hover:text-black transition-colors">Uang Pas</button>
-               <button onClick={() => setCashTendered(50000)} className="flex-1 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-600 hover:border-black hover:text-black transition-colors">50k</button>
-               <button onClick={() => setCashTendered(100000)} className="flex-1 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-600 hover:border-black hover:text-black transition-colors">100k</button>
+             {/* UMKM Friendly Quick cash buttons - Chunky and clickable */}
+             <div className="flex gap-2 mb-4">
+               <button onClick={() => setCashTendered(total)} className="flex-1 py-3 bg-white border border-slate-200 rounded-xl text-sm font-extrabold text-teal-600 shadow-sm active:scale-95 transition-all">Uang Pas</button>
+               <button onClick={() => setCashTendered(50000)} className="flex-1 py-3 bg-white border border-slate-200 rounded-xl text-sm font-extrabold text-slate-700 shadow-sm active:scale-95 transition-all">50 Ribu</button>
+               <button onClick={() => setCashTendered(100000)} className="flex-1 py-3 bg-white border border-slate-200 rounded-xl text-sm font-extrabold text-slate-700 shadow-sm active:scale-95 transition-all">100 Ribu</button>
              </div>
 
              {cashTendered > 0 && (
-               <div className={`flex justify-between items-center text-sm pt-2 border-t border-gray-200 border-dashed ${cashTendered >= total ? 'text-green-600 font-bold' : 'text-red-500 font-bold'}`}>
-                 <span>{cashTendered >= total ? 'Kembalian' : 'Kurang'}</span>
-                 <span className="text-lg">Rp {Math.abs(cashTendered - total).toLocaleString('id-ID')}</span>
+               <div className={`flex justify-between items-center pt-4 border-t-2 border-slate-200 border-dashed ${cashTendered >= total ? 'text-emerald-600' : 'text-rose-500'}`}>
+                 <span className="font-bold text-base">{cashTendered >= total ? 'KEMBALIAN' : 'KURANG BAYAR'}</span>
+                 <span className="text-2xl font-black">Rp {Math.abs(cashTendered - total).toLocaleString('id-ID')}</span>
                </div>
              )}
           </div>
         )}
 
-        <div className="flex gap-2">
-          <button 
-            onClick={handleHold}
-            disabled={items.length === 0}
-            className="flex items-center justify-center gap-2 px-4 py-4 bg-gray-100 text-gray-700 rounded-2xl font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50"
-            title="Hold Transaction"
-          >
-            <PauseCircle size={20} />
-          </button>
-          <button 
-            onClick={handleCheckout}
-            disabled={items.length === 0 || isCheckout || (paymentMethod === 'Cash' && cashTendered > 0 && cashTendered < total)}
-            className="flex-1 py-4 bg-gray-900 text-white rounded-xl font-bold text-xl hover:bg-black hover:-translate-y-0.5 hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:hover:shadow-none disabled:hover:translate-y-0 flex items-center justify-center gap-2 tracking-wide"
-          >
-            {isCheckout ? 'Processing...' : `Charge Rp ${total.toLocaleString('id-ID')}`}
-          </button>
-        </div>
+        <button 
+          onClick={initiateCheckout}
+          disabled={items.length === 0 || isCheckout || (paymentMethod === 'Cash' && cashTendered > 0 && cashTendered < total)}
+          className="w-full py-5 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-2xl font-black text-2xl hover:from-teal-600 hover:to-emerald-600 active:scale-[0.98] shadow-[0_10px_25px_-5px_rgba(16,185,129,0.4)] hover:shadow-[0_15px_30px_-5px_rgba(16,185,129,0.5)] transition-all duration-300 disabled:opacity-50 disabled:active:scale-100 disabled:shadow-none disabled:from-slate-300 disabled:to-slate-400 flex items-center justify-center gap-3 tracking-wide"
+        >
+          {isCheckout ? 'Memproses...' : `BAYAR SEKARANG`}
+        </button>
       </div>
 
       {showHeldModal && <HeldTransactionsModal onClose={() => setShowHeldModal(false)} />}
+      
+      {showNonCashModal && (
+        <NonCashPaymentModal 
+          method={paymentMethod as 'QRIS' | 'Card'}
+          total={total}
+          onConfirm={processCheckout}
+          onCancel={() => setShowNonCashModal(false)}
+        />
+      )}
       
       {/* Modals & Portals */}
       {printTx && <PrintReceiptPortal transaction={printTx} />}

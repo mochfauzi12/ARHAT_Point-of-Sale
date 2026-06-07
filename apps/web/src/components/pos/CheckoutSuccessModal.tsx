@@ -39,7 +39,7 @@ export function CheckoutSuccessModal({ transaction, changeAmount, customer, onPr
     }
 
     // Prepare Receipt Text
-    const storeName = "ARHAT POS"; // Should come from settings in real app
+    const storeName = "Transaksi Kita"; // Should come from settings in real app
     const date = new Date(transaction.createdAt).toLocaleString('id-ID');
     
     let text = `*${storeName}*\n`;

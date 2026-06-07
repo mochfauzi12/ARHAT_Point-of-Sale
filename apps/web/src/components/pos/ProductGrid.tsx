@@ -4,7 +4,20 @@ import { useCartStore, Product } from '@/store/useCartStore';
 import { fetchProducts } from '@/lib/api';
 import { ProductVariant, ProductModifier } from '@/store/useCartStore';
 
+import { Plus } from 'lucide-react';
+
 const CATEGORIES = ['All', 'Coffee', 'Non-Coffee', 'Tea', 'Pastry'];
+
+// Function to generate deterministic pastel gradient based on product name
+const generateGradient = (name: string) => {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const h1 = Math.abs(hash % 360);
+  const h2 = (h1 + 40) % 360;
+  return `linear-gradient(135deg, hsl(${h1}, 70%, 85%), hsl(${h2}, 70%, 80%))`;
+};
 
 export function ProductGrid() {
   const { addItem } = useCartStore();
@@ -26,34 +39,49 @@ export function ProductGrid() {
   }, []);
 
   const safeProducts = Array.isArray(products) ? products : [];
+  
+  // Temporary client-side categorization since backend categories aren't fully implemented yet
+  const getProductCategory = (name: string) => {
+    const lower = name.toLowerCase();
+    if (lower.includes('coffee') || lower.includes('kopi') || lower.includes('americano') || lower.includes('latte') || lower.includes('macchiato') || lower.includes('espresso')) return 'Coffee';
+    if (lower.includes('tea') || lower.includes('teh') || lower.includes('matcha')) return 'Tea';
+    if (lower.includes('croissant') || lower.includes('cake') || lower.includes('roti') || lower.includes('pastry')) return 'Pastry';
+    return 'Non-Coffee';
+  };
+
   const filteredProducts = selectedCategory === 'All' 
     ? safeProducts 
-    : safeProducts.filter(p => p.category === selectedCategory);
+    : safeProducts.filter(p => getProductCategory(p.name) === selectedCategory);
 
   return (
-    <div className="flex flex-col gap-6 h-full">
-      {/* Category Pills */}
-      <div className="flex flex-wrap gap-1 p-1 bg-gray-100/80 backdrop-blur-sm rounded-full w-fit">
-        {CATEGORIES.map(category => (
-          <button
-            key={category}
-            onClick={() => setSelectedCategory(category)}
-            className={`text-sm font-semibold px-5 py-2 rounded-full transition-all duration-300 ${
-              selectedCategory === category
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'
-            }`}
-          >
-            {category}
-          </button>
-        ))}
+    <div className="flex flex-col h-full relative">
+      {/* Category Pills (Sticky) */}
+      <div className="sticky top-0 z-10 -mx-2 px-2 pb-6 pt-2 bg-slate-50/80 backdrop-blur-xl">
+        <div className="flex flex-wrap gap-2.5 p-2 bg-white/60 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] border border-slate-200/50 backdrop-blur-md rounded-2xl w-fit">
+          {CATEGORIES.map(category => (
+            <button
+              key={category}
+              onClick={() => setSelectedCategory(category)}
+              className={`text-base font-bold px-6 py-3 rounded-xl transition-all duration-300 active:scale-95 ${
+                selectedCategory === category
+                  ? 'bg-slate-900 text-white shadow-md scale-105'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 bg-white border border-slate-100 shadow-sm'
+              }`}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Grid */}
       {isLoading ? (
-        <div className="flex items-center justify-center p-12 text-gray-400">Loading products...</div>
+        <div className="flex flex-col items-center justify-center p-20 text-slate-400">
+          <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="font-bold text-lg animate-pulse">Memuat Produk...</p>
+        </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 pb-10">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-6 pb-20">
           {filteredProducts.map(product => (
             <div 
               key={product.id}
@@ -66,7 +94,7 @@ export function ProductGrid() {
                   addItem(product);
                 }
               }}
-              className="relative bg-gray-50 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-400 hover:-translate-y-1.5 cursor-pointer overflow-hidden group aspect-[4/5] flex flex-col"
+              className="relative bg-white rounded-3xl shadow-[0_8px_30px_-15px_rgba(0,0,0,0.1)] hover:shadow-[0_20px_40px_-15px_rgba(11,90,99,0.2)] border border-slate-100/80 transition-all duration-500 hover:-translate-y-2 cursor-pointer overflow-hidden group aspect-[4/5] flex flex-col active:scale-95"
             >
               <div className="absolute inset-0 flex items-center justify-center">
                 {product.imageUrl ? (
@@ -76,25 +104,37 @@ export function ProductGrid() {
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out" 
                   />
                 ) : (
-                  <span className="text-5xl opacity-20 group-hover:scale-110 transition-transform duration-700 ease-out">☕</span>
+                  <div className="w-full h-full flex items-center justify-center" style={{ background: generateGradient(product.name) }}>
+                    <span className="text-6xl font-bold opacity-20 text-white group-hover:scale-125 transition-transform duration-700 ease-out">
+                      {product.name.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
                 )}
               </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-300"></div>
               
-              <div className="absolute bottom-2 left-2 right-2 p-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl flex flex-col gap-1 transition-all duration-300 group-hover:bg-white/20 group-hover:border-white/30 group-hover:translate-y-0">
-                <p className="font-semibold text-sm leading-tight line-clamp-2 text-white drop-shadow-md">
+              {/* Overlay Gradient */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-500"></div>
+              
+              {/* Product Info */}
+              <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5 flex flex-col gap-2 transition-transform duration-500 group-hover:-translate-y-1">
+                <p className="font-extrabold text-base md:text-xl leading-tight line-clamp-2 text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
                   {product.name}
                 </p>
                 <div className="flex items-center justify-between mt-1">
-                  <span className="font-bold text-white drop-shadow-md text-sm">
+                  <span className="font-black text-teal-300 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] text-base md:text-lg bg-black/30 px-2 py-0.5 rounded-lg backdrop-blur-sm">
                     Rp {parseFloat(product.sellingPrice as string).toLocaleString('id-ID')}
                   </span>
                   {product.stockQuantity !== undefined && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 bg-white/20 text-white rounded-full backdrop-blur-md shadow-sm">
-                      {product.stockQuantity}
+                    <span className={`text-xs font-bold px-3 py-1 rounded-full backdrop-blur-md border shadow-sm ${product.stockQuantity > 5 ? 'bg-white/20 text-white border-white/30' : 'bg-rose-500/80 text-white border-rose-400'}`}>
+                      Stok: {product.stockQuantity}
                     </span>
                   )}
                 </div>
+              </div>
+
+              {/* Floating Add Button */}
+              <div className="absolute top-4 right-4 w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/40 opacity-0 scale-50 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 shadow-xl">
+                <Plus size={24} strokeWidth={3} />
               </div>
             </div>
           ))}
