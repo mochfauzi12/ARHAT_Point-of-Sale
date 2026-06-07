@@ -1,12 +1,13 @@
 Add-Type -AssemblyName System.Drawing
 
-$src = "C:\Users\berni\.gemini\antigravity\brain\76349a7c-84cf-4cf5-84d2-621e63e0ab8a\media__1780805813510.png"
+$src = "C:\Users\berni\.gemini\antigravity\brain\76349a7c-84cf-4cf5-84d2-621e63e0ab8a\media__1780834086216.jpg"
 $img = [System.Drawing.Image]::FromFile($src)
 
 $width = $img.Width
 $height = $img.Height
 
-$cropHeight = [math]::Floor($height * 0.75)
+# The text in this new image is at the bottom, so crop out bottom 20%
+$cropHeight = [math]::Floor($height * 0.80)
 $size = [math]::Min($width, $cropHeight)
 $startX = [math]::Max(0, [math]::Floor(($width - $size) / 2))
 
@@ -29,4 +30,4 @@ $icon192.Dispose()
 $icon512.Dispose()
 $img.Dispose()
 
-Write-Host "Icons cropped successfully"
+Write-Host "Icons cropped and saved successfully"
