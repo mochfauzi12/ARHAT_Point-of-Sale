@@ -142,7 +142,7 @@ export function ProductGrid() {
                     Rp {parseFloat(product.sellingPrice as string).toLocaleString('id-ID')}
                   </span>
                   {product.stockQuantity !== undefined && (
-                    <span className={`text-xs font-bold px-3 py-1 rounded-full backdrop-blur-md border shadow-sm ${product.stockQuantity > 5 ? 'bg-white/20 text-white border-white/30' : 'bg-rose-500/80 text-white border-rose-400'}`}>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full backdrop-blur-md border shadow-sm ${Number(product.stockQuantity) > 5 ? 'bg-white/20 text-slate-700 border-white/40' : 'bg-red-50 text-red-600 border-red-200 shadow-red-500/10'}`}>
                       Stok: {product.stockQuantity}
                     </span>
                   )}
