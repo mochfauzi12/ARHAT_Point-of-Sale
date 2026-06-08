@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { AppError } from '../lib/errors';
 import fs from 'fs';
 import path from 'path';
-import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
 
 const uploadRoutes = new Hono();
 
@@ -16,7 +16,7 @@ uploadRoutes.post('/', async (c) => {
 
   // Create a unique filename
   const extension = file.name.split('.').pop() || 'png';
-  const filename = `${uuidv4()}.${extension}`;
+  const filename = `${crypto.randomUUID()}.${extension}`;
   
   // Save file locally (in production you would use S3/Supabase Storage)
   const uploadDir = path.join(process.cwd(), 'public', 'uploads');
