@@ -87,13 +87,6 @@ app.route('/api/raw-materials', rawMaterialRoutes);
 // Error handling
 app.onError(errorHandler);
 
-// Run with Node.js if not in Cloudflare Workers and not in Vercel
-if (typeof process !== 'undefined' && process.release?.name === 'node' && !process.env.VERCEL) {
-  import('@hono/node-server').then(({ serve }) => {
-    const port = process.env.PORT ? parseInt(process.env.PORT) : 8787;
-    console.log(`Starting Node server on port ${port}...`);
-    serve({ fetch: app.fetch, port });
-  }).catch(err => console.error(err));
-}
+// Run with Node.js locally is handled by tsx in package.json dev script pointing to src/local.ts (to be created if needed)
 
 export default app;

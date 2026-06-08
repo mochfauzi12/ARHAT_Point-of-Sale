@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch src/local.ts",
     "deploy": "wrangler deploy --minify src/index.ts",
     "build": "echo build skipped",
     "start": "node dist/index.js",

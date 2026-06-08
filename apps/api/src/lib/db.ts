@@ -3,7 +3,7 @@ import postgres from 'postgres';
 import * as schema from '../models';
 import 'dotenv/config';
 
-let client: postgres.Sql<{}>;
+let client: any;
 const DUMMY_URL = "postgresql://dummy:dummy@dummy/dummy";
 
 try {
@@ -14,10 +14,13 @@ try {
     connectionString = DUMMY_URL;
   }
   
-  client = postgres(connectionString, { prepare: false });
-} catch (err: any) {
-  console.error("CRITICAL ERROR: Failed to parse DATABASE_URL. Is the URL format correct?", err.message);
-  client = postgres(DUMMY_URL, { prepare: false });
+  // If esbuild imports postgres as an object with default, we need to handle it
+  const pgFn = typeof postgres === 'function' ? postgres : (postgres as any).default || postgres;
+  client = pgFn(connectionString, { prepare: false });
+} catch (e) {
+  console.error("Failed to initialize postgres client:", e);
+  // Do not try to initialize again to prevent a fatal crash
+  client = null;
 }
 
-export const db = drizzle(client, { schema });
+export const db = client ? drizzle(client, { schema }) : null as any;
