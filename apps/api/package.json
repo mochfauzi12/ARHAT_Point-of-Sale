@@ -1,7 +1,6 @@
 {
   "name": "@arhat-pos/api",
   "version": "1.0.0",
-  "type": "module",
   "private": true,
   "scripts": {
     "dev": "tsx watch src/index.ts",
