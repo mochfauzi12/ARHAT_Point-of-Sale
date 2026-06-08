@@ -5,9 +5,8 @@ import { cors } from 'hono/cors';
 let appToExport: any;
 
 try {
-  // Dynamically import to catch any top-level execution errors in src/index
-  const module = await import('../src/index');
-  appToExport = module.default;
+  // Synchronously require to catch any top-level execution errors in src/index
+  appToExport = require('../src/index').default;
 } catch (err: any) {
   console.error("FATAL INITIALIZATION ERROR:", err);
   const fallback = new Hono();
