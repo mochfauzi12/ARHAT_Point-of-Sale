@@ -1,5 +1,5 @@
 import { Context } from 'hono';
-import { db } from '../index';
+import { db } from '../lib/db';
 import { rawMaterials, rawMaterialStocks, boms } from '../models';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
