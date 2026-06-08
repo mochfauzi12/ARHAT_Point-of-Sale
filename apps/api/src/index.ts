@@ -14,8 +14,6 @@ import usersRoutes from './routes/users.routes';
 import shiftsRoutes from './routes/shifts.routes';
 import whatsappRoutes from './routes/whatsapp.routes';
 import rawMaterialRoutes from './routes/rawMaterial.routes';
-import { serveStatic } from '@hono/node-server/serve-static';
-
 const app = new Hono();
 
 // Middleware
@@ -27,8 +25,8 @@ app.use('*', cors({
 }));
 app.use('*', logger());
 
-// Static files for uploads
-app.use('/public/uploads/*', serveStatic({ root: './' }));
+// Static files for uploads (disabled on Vercel due to ephemeral filesystem)
+// app.use('/public/uploads/*', serveStatic({ root: './' }));
 
 // Health check
 app.get('/health', (ctx) => {
@@ -36,7 +34,6 @@ app.get('/health', (ctx) => {
 });
 
 // API Documentation
-app.get('/openapi.json', serveStatic({ path: './public/openapi.json' }));
 app.get('/api/docs', (c) => {
   return c.html(`
     <!DOCTYPE html>
