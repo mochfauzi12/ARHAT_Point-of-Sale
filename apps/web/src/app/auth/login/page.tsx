@@ -56,8 +56,8 @@ export default function LoginPage() {
           <div className="mb-6 transform hover:scale-105 transition-transform duration-500 cursor-default">
             <Logo width={72} height={72} showText={false} />
           </div>
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight mb-1">Admin Portal</h1>
-          <p className="text-slate-500 font-medium text-sm">Masuk untuk mengelola restoran Anda</p>
+          <h1 className="text-2xl font-bold text-slate-800 tracking-tight mb-1">Selamat Datang</h1>
+          <p className="text-slate-500 font-medium text-sm">Masuk untuk mengelola bisnis Anda</p>
         </div>
 
         <form className="space-y-5" onSubmit={handleSubmit}>
