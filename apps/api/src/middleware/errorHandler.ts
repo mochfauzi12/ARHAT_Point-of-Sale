@@ -5,6 +5,6 @@ export const errorHandler = (err: Error, ctx: Context) => {
   if (err instanceof AppError) {
     return ctx.json({ error: err.message }, err.statusCode as any);
   }
-  console.error("GLOBAL ERROR:", err);
-  return ctx.json({ error: 'Internal Server Error (API: ' + err.message + ')' }, 500);
+  console.error(err);
+  return ctx.json({ error: 'Internal Server Error' }, 500);
 };
