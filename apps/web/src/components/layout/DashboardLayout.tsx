@@ -37,7 +37,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        <nav className="flex-1 py-6 px-4 flex flex-col gap-1">
+        <nav className="flex-1 py-6 px-4 flex flex-col gap-1 overflow-y-auto">
           {MENU_ITEMS.filter(item => item.roles.includes(userRole)).map((item) => {
             const isActive = pathname.startsWith(item.href);
             return (
@@ -59,7 +59,18 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="p-4 border-t border-slate-100">
+        <div className="p-4 border-t border-slate-100 shrink-0">
+          {user && (
+            <div className="flex items-center gap-3 px-4 py-3 mb-2">
+              <div className="w-9 h-9 rounded-full bg-[#0B5A63] flex items-center justify-center text-white font-semibold text-sm shrink-0">
+                {user.fullName?.charAt(0)?.toUpperCase() || 'U'}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-slate-700 truncate">{user.fullName}</p>
+                <p className="text-xs text-slate-400 capitalize">{user.role}</p>
+              </div>
+            </div>
+          )}
           <button 
             onClick={logout}
             className="flex items-center gap-3 px-4 py-3 w-full rounded-xl font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 transition-all duration-300 group"
