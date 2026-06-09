@@ -6,6 +6,5 @@ export const errorHandler = (err: Error, ctx: Context) => {
     return ctx.json({ error: err.message }, err.statusCode as any);
   }
   console.error(err);
-  const code = (err as any).code || 'UNKNOWN';
-  return ctx.json({ error: 'Internal Server Error', debug: `${err.constructor.name}:${code}` }, 500);
+  return ctx.json({ error: 'Internal Server Error' }, 500);
 };
