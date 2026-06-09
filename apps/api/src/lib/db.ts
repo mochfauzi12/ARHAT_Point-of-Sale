@@ -16,7 +16,7 @@ try {
   
   // If esbuild imports postgres as an object with default, we need to handle it
   const pgFn = typeof postgres === 'function' ? postgres : (postgres as any).default || postgres;
-  client = pgFn(connectionString, { prepare: false });
+  client = pgFn(connectionString, { prepare: false, ssl: 'require' });
 } catch (e) {
   console.error("Failed to initialize postgres client:", e);
   // Do not try to initialize again to prevent a fatal crash

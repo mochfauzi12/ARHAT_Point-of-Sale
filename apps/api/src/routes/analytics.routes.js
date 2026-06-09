@@ -1,0 +1,11 @@
+import { Hono } from 'hono';
+import { analyticsController } from '../controllers/analytics.controller';
+import { authMiddleware } from '../middleware/auth';
+const analyticsRoutes = new Hono();
+analyticsRoutes.use('*', authMiddleware);
+analyticsRoutes.get('/dashboard', analyticsController.getDashboard);
+analyticsRoutes.get('/sales', analyticsController.getSales);
+analyticsRoutes.get('/products', analyticsController.getProducts);
+analyticsRoutes.get('/profit-loss', analyticsController.getProfitLoss);
+analyticsRoutes.get('/customers', analyticsController.getCustomers);
+export default analyticsRoutes;

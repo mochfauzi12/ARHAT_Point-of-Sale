@@ -1,0 +1,198 @@
+import * as bcrypt from 'bcryptjs';
+import { sign } from 'jsonwebtoken';
+import { eq } from 'drizzle-orm';
+import { AppError } from '../lib/errors';
+import { db } from '../lib/db';
+import { users, emailVerificationTokens, sessions, tenants, outlets } from '../models';
+import { emailService } from './email.service';
+export class AuthService {
+    async registerTenant(data) {
+        if (!data.tenantName || !data.email || !data.password || !data.fullName) {
+            throw new AppError('Missing required fields', 400);
+        }
+        // Check if email already exists
+        const existingUser = await db
+            .select()
+            .from(users)
+            .where(eq(users.email, data.email))
+            .limit(1);
+        if (existingUser.length > 0) {
+            throw new AppError('Email already registered', 409);
+        }
+        this.validatePassword(data.password);
+        const passwordHash = await bcrypt.hash(data.password, 10);
+        // Use a transaction to ensure all or nothing
+        return await db.transaction(async (tx) => {
+            // 1. Create Tenant
+            const newTenant = await tx
+                .insert(tenants)
+                .values({
+                name: data.tenantName,
+                email: data.email, // using owner email for tenant contact
+            })
+                .returning();
+            const tenantId = newTenant[0].id;
+            // 2. Create HQ Outlet
+            const newOutlet = await tx
+                .insert(outlets)
+                .values({
+                tenantId,
+                name: 'Pusat (HQ)',
+                address: 'Alamat Toko',
+                phone: '-',
+            })
+                .returning();
+            // 3. Create Admin User
+            const newUser = await tx
+                .insert(users)
+                .values({
+                email: data.email,
+                passwordHash,
+                fullName: data.fullName,
+                tenantId,
+                role: 'admin',
+                status: 'active',
+                emailVerified: true, // Auto verify for now
+            })
+                .returning();
+            return {
+                tenant: newTenant[0],
+                outlet: newOutlet[0],
+                user: {
+                    id: newUser[0].id,
+                    email: newUser[0].email,
+                    fullName: newUser[0].fullName,
+                    role: newUser[0].role,
+                }
+            };
+        });
+    }
+    async register(data) {
+        if (!data.email || !data.password || !data.fullName || !data.tenantId) {
+            throw new AppError('Missing required fields', 400);
+        }
+        const existingUser = await db
+            .select()
+            .from(users)
+            .where(eq(users.email, data.email))
+            .limit(1);
+        if (existingUser.length > 0) {
+            throw new AppError('Email already registered', 409);
+        }
+        this.validatePassword(data.password);
+        const passwordHash = await bcrypt.hash(data.password, 10);
+        const newUser = await db
+            .insert(users)
+            .values({
+            email: data.email,
+            passwordHash,
+            fullName: data.fullName,
+            tenantId: data.tenantId,
+            status: 'active',
+            emailVerified: true, // Auto verify for development
+        })
+            .returning();
+        const token = this.generateRandomToken(32);
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        const verificationToken = await db
+            .insert(emailVerificationTokens)
+            .values({
+            userId: newUser[0].id,
+            token,
+            expiresAt,
+        })
+            .returning();
+        await emailService.sendVerificationEmail(newUser[0].email, token);
+        return {
+            user: newUser[0],
+            verificationTokenId: verificationToken[0].id,
+        };
+    }
+    async login(email, password, ipAddress) {
+        const user = await db
+            .select()
+            .from(users)
+            .where(eq(users.email, email))
+            .limit(1);
+        if (user.length === 0) {
+            throw new AppError('Invalid email or password', 401);
+        }
+        const userRecord = user[0];
+        const isValidPassword = await bcrypt.compare(password, userRecord.passwordHash);
+        if (!isValidPassword) {
+            throw new AppError('Invalid email or password', 401);
+        }
+        if (!userRecord.emailVerified) {
+            throw new AppError('Please verify your email first', 403);
+        }
+        const accessToken = this.generateAccessToken(userRecord);
+        const refreshToken = this.generateRefreshToken(userRecord);
+        await this.createSession(userRecord.id, refreshToken, ipAddress);
+        await db.update(users).set({ lastLogin: new Date() }).where(eq(users.id, userRecord.id));
+        return {
+            accessToken,
+            refreshToken,
+            user: {
+                id: userRecord.id,
+                email: userRecord.email,
+                fullName: userRecord.fullName,
+                role: userRecord.role,
+            }
+        };
+    }
+    async loginPin(pin, ipAddress) {
+        const user = await db
+            .select()
+            .from(users)
+            .where(eq(users.pin, pin))
+            .limit(1);
+        if (user.length === 0) {
+            throw new AppError('Invalid PIN', 401);
+        }
+        const userRecord = user[0];
+        const accessToken = this.generateAccessToken(userRecord);
+        const refreshToken = this.generateRefreshToken(userRecord);
+        await this.createSession(userRecord.id, refreshToken, ipAddress);
+        await db.update(users).set({ lastLogin: new Date() }).where(eq(users.id, userRecord.id));
+        return {
+            accessToken,
+            refreshToken,
+            user: {
+                id: userRecord.id,
+                email: userRecord.email,
+                fullName: userRecord.fullName,
+                role: userRecord.role,
+                tenantId: userRecord.tenantId,
+            },
+        };
+    }
+    validatePassword(password) {
+        if (password.length < 6) {
+            throw new AppError('Password must be at least 6 characters', 400);
+        }
+    }
+    generateRandomToken(length) {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
+    }
+    generateAccessToken(user) {
+        return sign({ userId: user.id, email: user.email, role: user.role, tenantId: user.tenantId }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
+    }
+    generateRefreshToken(user) {
+        return sign({ userId: user.id }, process.env.JWT_REFRESH_SECRET || 'refresh-secret', { expiresIn: '7d' });
+    }
+    async createSession(userId, refreshToken, ipAddress) {
+        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        await db.insert(sessions).values({
+            userId,
+            refreshToken,
+            ipAddress: ipAddress || 'unknown',
+            expiresAt,
+        });
+    }
+}
+export const authService = new AuthService();
