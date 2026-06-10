@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { db } from '../db';
+import { db } from '../lib/db';
 import { discounts } from '../models';
 import { eq, and, getTableColumns } from 'drizzle-orm';
 import { authMiddleware, requireTenant } from '../middleware/auth';
