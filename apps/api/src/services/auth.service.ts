@@ -149,6 +149,11 @@ export class AuthService {
     }
 
     const userRecord = user[0];
+
+    if (userRecord.status === 'deleted' || userRecord.status === 'inactive') {
+      throw new AppError('Akun ini sudah dinonaktifkan atau dihapus', 403);
+    }
+
     const isValidPassword = await bcrypt.compare(password, userRecord.passwordHash);
     if (!isValidPassword) {
       throw new AppError('Invalid email or password', 401);
@@ -188,6 +193,10 @@ export class AuthService {
     }
 
     const userRecord = user[0];
+
+    if (userRecord.status === 'deleted' || userRecord.status === 'inactive') {
+      throw new AppError('Akun ini sudah dinonaktifkan atau dihapus', 403);
+    }
 
     const accessToken = this.generateAccessToken(userRecord);
     const refreshToken = this.generateRefreshToken(userRecord);
