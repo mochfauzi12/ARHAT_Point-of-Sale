@@ -138,20 +138,23 @@ export class AuthService {
   }
 
   async login(email: string, password: string, ipAddress?: string) {
-    const user = await db
+    const usersList = await db
       .select()
       .from(users)
-      .where(eq(users.email, email))
-      .limit(1);
+      .where(eq(users.email, email));
 
-    if (user.length === 0) {
+    if (usersList.length === 0) {
       throw new AppError('Invalid email or password', 401);
     }
 
-    const userRecord = user[0];
-
-    if (userRecord.status === 'deleted' || userRecord.status === 'inactive') {
-      throw new AppError('Akun ini sudah dinonaktifkan atau dihapus', 403);
+    let userRecord = usersList.find(u => u.status === 'active');
+    
+    if (!userRecord) {
+      // If no active user found but inactive exists
+      userRecord = usersList[0];
+      if (userRecord.status === 'deleted' || userRecord.status === 'inactive') {
+        throw new AppError('Akun ini sudah dinonaktifkan atau dihapus', 403);
+      }
     }
 
     const isValidPassword = await bcrypt.compare(password, userRecord.passwordHash);
@@ -182,20 +185,22 @@ export class AuthService {
   }
 
   async loginPin(pin: string, ipAddress?: string) {
-    const user = await db
+    const usersList = await db
       .select()
       .from(users)
-      .where(eq(users.pin, pin))
-      .limit(1);
+      .where(eq(users.pin, pin));
 
-    if (user.length === 0) {
+    if (usersList.length === 0) {
       throw new AppError('Invalid PIN', 401);
     }
 
-    const userRecord = user[0];
-
-    if (userRecord.status === 'deleted' || userRecord.status === 'inactive') {
-      throw new AppError('Akun ini sudah dinonaktifkan atau dihapus', 403);
+    let userRecord = usersList.find(u => u.status === 'active');
+    
+    if (!userRecord) {
+      userRecord = usersList[0];
+      if (userRecord.status === 'deleted' || userRecord.status === 'inactive') {
+        throw new AppError('Akun ini sudah dinonaktifkan atau dihapus', 403);
+      }
     }
 
     const accessToken = this.generateAccessToken(userRecord);
