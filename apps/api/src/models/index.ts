@@ -141,6 +141,24 @@ export const transactions = pgTable('transactions', {
   createdAtIdx: index('idx_transactions_created_at').on(table.createdAt)
 }));
 
+export const discounts = pgTable('discounts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
+  code: varchar('code', { length: 50 }).notNull(),
+  description: varchar('description', { length: 255 }),
+  type: varchar('type', { length: 50 }).notNull().default('fixed'), // 'fixed' or 'percentage'
+  value: varchar('value', { length: 20 }).notNull(), // nominal amount or percentage (0-100)
+  minPurchaseAmount: varchar('min_purchase_amount', { length: 20 }).default('0'),
+  isActive: boolean('is_active').default(true),
+  startDate: timestamp('start_date'),
+  endDate: timestamp('end_date'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  codeIdx: index('idx_discounts_code').on(table.code),
+  tenantCodeIdx: index('idx_discounts_tenant_code').on(table.tenantId, table.code)
+}));
+
 export const transactionItems = pgTable('transaction_items', {
   id: uuid('id').primaryKey().defaultRandom(),
   transactionId: uuid('transaction_id').notNull().references(() => transactions.id),

@@ -615,3 +615,58 @@ export async function deleteUser(id: string) {
   }
   return true;
 }
+
+// Discounts
+export async function getDiscounts() {
+  const res = await fetchWithAuth(`${API_URL}/discounts`, {
+    headers: getHeaders()
+  });
+  if (!res.ok) throw new Error('Failed to fetch discounts');
+  return res.json();
+}
+
+export async function createDiscount(data: any) {
+  const res = await fetchWithAuth(`${API_URL}/discounts`, {
+    method: 'POST',
+    headers: getHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to create discount');
+  }
+  return res.json();
+}
+
+export async function updateDiscount(id: string, data: any) {
+  const res = await fetchWithAuth(`${API_URL}/discounts/${id}`, {
+    method: 'PUT',
+    headers: getHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to update discount');
+  }
+  return res.json();
+}
+
+export async function deleteDiscount(id: string) {
+  const res = await fetchWithAuth(`${API_URL}/discounts/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders()
+  });
+  if (!res.ok) throw new Error('Failed to delete discount');
+  return res.json();
+}
+
+export async function validateDiscount(code: string, subtotal: number) {
+  const res = await fetchWithAuth(`${API_URL}/discounts/validate?code=${code}&subtotal=${subtotal}`, {
+    headers: getHeaders()
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Invalid promo code');
+  }
+  return res.json();
+}

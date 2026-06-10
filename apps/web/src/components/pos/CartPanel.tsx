@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useCartStore } from '@/store/useCartStore';
 import { Trash2, Plus, Minus, CreditCard, Wallet, Banknote, PauseCircle, ListTodo, User, X, MessageSquare } from 'lucide-react';
 import { HeldTransactionsModal } from './HeldTransactionsModal';
-import { checkoutTransaction, holdTransaction as apiHoldTransaction, getCustomers } from '@/lib/api';
+import { checkoutTransaction, holdTransaction as apiHoldTransaction, getCustomers, validateDiscount } from '@/lib/api';
 import { PrintReceiptPortal } from './ReceiptTemplate';
 import { CheckoutSuccessModal } from './CheckoutSuccessModal';
 import { NonCashPaymentModal } from './NonCashPaymentModal';
@@ -18,6 +18,11 @@ export function CartPanel() {
   const [showNonCashModal, setShowNonCashModal] = useState(false);
   const [printTx, setPrintTx] = useState<any>(null);
   const [successModalData, setSuccessModalData] = useState<{ transaction: any, changeAmount: number, customer: any } | null>(null);
+
+  // Promo Code States
+  const [promoCode, setPromoCode] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState<any>(null);
+  const [validatingPromo, setValidatingPromo] = useState(false);
 
   // Customer & Points
   const [customers, setCustomers] = useState<any[]>([]);
@@ -42,6 +47,29 @@ export function CartPanel() {
   // 1 point = Rp 10 discount
   const pointsDiscount = pointsToRedeem * 10;
   total = Math.max(0, total - pointsDiscount);
+
+  const handleApplyPromo = async () => {
+    if (!promoCode) return;
+    setValidatingPromo(true);
+    try {
+      const data = await validateDiscount(promoCode, subtotalAfterDiscount);
+      setAppliedPromo(data);
+      setGlobalDiscount(data.calculatedAmount);
+      showToast(`Promo ${data.code} berhasil diterapkan!`, 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Promo tidak valid', 'error');
+      setAppliedPromo(null);
+      setGlobalDiscount(0);
+    } finally {
+      setValidatingPromo(false);
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setPromoCode('');
+    setAppliedPromo(null);
+    setGlobalDiscount(0);
+  };
 
   const initiateCheckout = () => {
     if (paymentMethod !== 'Cash') {
@@ -130,6 +158,8 @@ export function CartPanel() {
         setGlobalDiscount(0);
         setSelectedCustomer(null);
         setPointsToRedeem(0);
+        setPromoCode('');
+        setAppliedPromo(null);
         showToast('Transaksi berhasil ditahan', 'info');
       } catch (err) {
         console.error(err);
@@ -334,14 +364,32 @@ export function CartPanel() {
           {showAdvancedOptions && (
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex flex-col gap-2 animate-in slide-in-from-top-2 fade-in">
               <div className="flex justify-between items-center text-xs font-bold text-slate-600">
-                <span>Diskon Nota (Rp)</span>
-                <input 
-                  type="number" 
-                  value={globalDiscount || ''}
-                  onChange={(e) => setGlobalDiscount(parseFloat(e.target.value) || 0)}
-                  className="bg-white border-2 border-slate-200 rounded-lg px-2 py-1 w-24 text-right focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100 text-slate-900 font-bold transition-all"
-                  placeholder="0"
-                />
+                <span>Kode Promo</span>
+                {appliedPromo ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-teal-600 bg-teal-50 px-2 py-1 rounded-md border border-teal-100">{appliedPromo.code}</span>
+                    <button onClick={handleRemovePromo} className="text-rose-500 hover:text-rose-600">
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      value={promoCode}
+                      onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                      className="bg-white border-2 border-slate-200 rounded-lg px-2 py-1 w-28 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100 text-slate-900 font-bold transition-all uppercase"
+                      placeholder="KODE"
+                    />
+                    <button 
+                      onClick={handleApplyPromo}
+                      disabled={validatingPromo || !promoCode}
+                      className="bg-slate-800 text-white px-3 py-1 rounded-lg text-xs hover:bg-slate-700 disabled:opacity-50"
+                    >
+                      Pakai
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-between items-center text-sm font-bold text-slate-600">
@@ -489,6 +537,9 @@ export function CartPanel() {
             setSelectedCustomer(null);
             setPointsToRedeem(0);
             setPrintTx(null);
+            setPromoCode('');
+            setAppliedPromo(null);
+            setGlobalDiscount(0);
           }}
         />
       )}
