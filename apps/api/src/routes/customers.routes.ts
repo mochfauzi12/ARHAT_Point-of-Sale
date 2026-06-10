@@ -2,15 +2,16 @@ import { Hono } from 'hono';
 import { db } from '../lib/db';
 import { customers, transactions } from '../models';
 import { eq, desc, ilike, or, and } from 'drizzle-orm';
-import { requireAuth, requireTenant } from '../middleware/auth';
+import { authMiddleware } from '../middleware/auth';
 
 const router = new Hono();
 
-router.use('*', requireAuth, requireTenant);
+router.use('*', authMiddleware);
 
 // Get all customers for tenant, optionally search
 router.get('/', async (c) => {
-  const tenantId = c.get('tenantId');
+  const user = c.get('user') as any;
+  const tenantId = user.tenantId;
   const search = c.req.query('q');
 
   let query = db.select().from(customers).where(eq(customers.tenantId, tenantId)).$dynamic();
@@ -31,7 +32,8 @@ router.get('/', async (c) => {
 // Get a single customer by ID
 router.get('/:id', async (c) => {
   const id = c.req.param('id');
-  const tenantId = c.get('tenantId');
+  const user = c.get('user') as any;
+  const tenantId = user.tenantId;
 
   const result = await db.select().from(customers).where(
     or(eq(customers.id, id), eq(customers.tenantId, tenantId)) // wait, needs AND
@@ -49,7 +51,8 @@ router.get('/:id', async (c) => {
 
 // Create customer
 router.post('/', async (c) => {
-  const tenantId = c.get('tenantId');
+  const user = c.get('user') as any;
+  const tenantId = user.tenantId;
   const body = await c.req.json();
 
   const newCustomer = await db.insert(customers).values({
@@ -66,7 +69,8 @@ router.post('/', async (c) => {
 // Update customer
 router.put('/:id', async (c) => {
   const id = c.req.param('id');
-  const tenantId = c.get('tenantId');
+  const user = c.get('user') as any;
+  const tenantId = user.tenantId;
   const body = await c.req.json();
 
   // verify ownership
@@ -89,7 +93,8 @@ router.put('/:id', async (c) => {
 // Get transactions for a customer
 router.get('/:id/transactions', async (c) => {
   const id = c.req.param('id');
-  const tenantId = c.get('tenantId');
+  const user = c.get('user') as any;
+  const tenantId = user.tenantId;
 
   // Verify ownership
   const customerResult = await db.select().from(customers).where(eq(customers.id, id));
