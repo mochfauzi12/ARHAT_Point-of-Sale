@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import * as bcrypt from 'bcryptjs';
 import { db } from '../lib/db';
 import { users } from '../models';
-import { eq } from 'drizzle-orm';
+import { eq, ne, and } from 'drizzle-orm';
 import { AppError } from '../lib/errors';
 import { z } from 'zod';
 import { authMiddleware } from '../middleware/auth';
@@ -29,7 +29,7 @@ usersRoutes.get('/', authMiddleware, async (c) => {
     role: users.role,
     status: users.status,
     lastLogin: users.lastLogin
-  }).from(users).where(eq(users.tenantId, user.tenantId));
+  }).from(users).where(and(eq(users.tenantId, user.tenantId), ne(users.status, 'deleted')));
 
   return c.json({ success: true, data: userList });
 });
@@ -133,7 +133,12 @@ usersRoutes.delete('/:id', authMiddleware, async (c) => {
     throw new AppError('Cannot delete yourself', 400);
   }
 
-  const deletedUser = await db.delete(users).where(eq(users.id, id as string)).returning();
+  // Soft delete to prevent foreign key errors if user has transactions/shifts
+  const deletedUser = await db.update(users)
+    .set({ status: 'deleted' })
+    .where(eq(users.id, id as string))
+    .returning();
+    
   if (deletedUser.length === 0) {
     throw new AppError('User not found', 404);
   }
