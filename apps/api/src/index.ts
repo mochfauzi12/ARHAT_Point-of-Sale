@@ -16,10 +16,20 @@ import whatsappRoutes from './routes/whatsapp.routes';
 import rawMaterialRoutes from './routes/rawMaterial.routes';
 const app = new Hono();
 
+const ALLOWED_ORIGINS = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  // Add production domain(s) here, e.g.:
+  // 'https://arhatpos.com',
+  // 'https://app.arhatpos.com',
+];
+
 // Middleware
 app.use('*', cors({
   origin: (origin) => {
-    return origin || 'http://localhost:3000';
+    // Allow requests with no origin (e.g. curl, mobile apps)
+    if (!origin) return ALLOWED_ORIGINS[0];
+    return ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
   },
   credentials: true,
 }));

@@ -12,7 +12,10 @@ export const authMiddleware = async (c: Context, next: Next) => {
   const token = authHeader.split(' ')[1];
   
   try {
-    const secret = process.env.JWT_SECRET || 'secret';
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new AppError('Server misconfigured: JWT_SECRET is not set', 500);
+    }
     const decoded = verify(token, secret) as any;
     
     // Set user data to context
