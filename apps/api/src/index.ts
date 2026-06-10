@@ -19,6 +19,7 @@ const app = new Hono();
 const ALLOWED_ORIGINS = [
   'http://localhost:3000',
   'http://localhost:3001',
+  'https://arhat-point-of-sale-web.vercel.app',
   // Add production domain(s) here, e.g.:
   // 'https://arhatpos.com',
   // 'https://app.arhatpos.com',
@@ -29,7 +30,10 @@ app.use('*', cors({
   origin: (origin) => {
     // Allow requests with no origin (e.g. curl, mobile apps)
     if (!origin) return ALLOWED_ORIGINS[0];
-    return ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+    if (ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.vercel.app')) {
+      return origin;
+    }
+    return ALLOWED_ORIGINS[0];
   },
   credentials: true,
 }));

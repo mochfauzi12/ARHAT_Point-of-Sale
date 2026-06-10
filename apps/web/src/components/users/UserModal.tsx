@@ -43,7 +43,11 @@ export function UserModal({ user, onClose, onSubmit }: UserModalProps) {
 
     try {
       setLoading(true);
-      await onSubmit(formData);
+      const submitData = { ...formData };
+      if (!submitData.password) delete (submitData as any).password;
+      if (!submitData.pin) delete (submitData as any).pin;
+      
+      await onSubmit(submitData);
     } catch (err: any) {
       setError(err.message || 'Terjadi kesalahan');
     } finally {
