@@ -477,7 +477,10 @@ export function CartPanel() {
           customer={successModalData.customer}
           onPrint={() => {
             setPrintTx(successModalData.transaction);
-            setTimeout(() => setPrintTx(null), 1000);
+            setTimeout(() => {
+              window.print();
+              setTimeout(() => setPrintTx(null), 500);
+            }, 100);
           }}
           onClose={() => {
             setSuccessModalData(null);
