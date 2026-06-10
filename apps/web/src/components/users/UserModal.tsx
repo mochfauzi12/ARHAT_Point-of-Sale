@@ -39,7 +39,7 @@ export function UserModal({ user, onClose, onSubmit }: UserModalProps) {
     if (!formData.fullName) return setError('Nama harus diisi');
     if (!user && !formData.email) return setError('Email harus diisi');
     if (!user && !formData.password) return setError('Password harus diisi');
-    if (formData.pin && !/^\d{6}$/.test(formData.pin)) return setError('PIN harus 6 angka');
+    if (formData.pin && !/^\d{4}$/.test(formData.pin)) return setError('PIN harus 4 angka');
 
     try {
       setLoading(true);
@@ -141,16 +141,16 @@ export function UserModal({ user, onClose, onSubmit }: UserModalProps) {
             </label>
             <input
               type="text"
-              maxLength={6}
+              maxLength={4}
               value={formData.pin}
               onChange={e => {
                 const val = e.target.value.replace(/\D/g, '');
                 setFormData({ ...formData, pin: val });
               }}
               className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all font-mono tracking-widest"
-              placeholder="Contoh: 123456"
+              placeholder="Contoh: 1234"
             />
-            <p className="text-xs text-gray-500 mt-1">6 Angka untuk quick-login di layar kasir.</p>
+            <p className="text-xs text-gray-500 mt-1">4 Angka untuk quick-login di layar kasir.</p>
           </div>
 
           <div className="pt-4 flex gap-3">
