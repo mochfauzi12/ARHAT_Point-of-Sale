@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm';
-import { db } from '../db';
+import { db } from '../lib/db';
 import { users } from '../models';
 
 async function makeSuperAdmin(email: string) {

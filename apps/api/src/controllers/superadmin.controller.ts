@@ -1,5 +1,5 @@
 import { Context } from 'hono';
-import { db } from '../db';
+import { db } from '../lib/db';
 import { tenants, users, outlets } from '../models';
 import { eq, sql } from 'drizzle-orm';
 import { AppError } from '../lib/errors';
@@ -25,7 +25,7 @@ export const getTenants = async (c: Context) => {
       .from(tenants)
       .leftJoin(outlets, eq(outlets.tenantId, tenants.id))
       .leftJoin(users, eq(users.tenantId, tenants.id))
-      .groupBy(tenants.id);
+      .groupBy(tenants.id, tenants.name, tenants.email);
 
     return c.json({
       success: true,
