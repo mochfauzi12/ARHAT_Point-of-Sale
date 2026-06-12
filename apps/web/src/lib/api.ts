@@ -674,3 +674,19 @@ export async function validateDiscount(code: string, subtotal: number) {
   }
   return res.json();
 }
+
+// =======================
+// SUPERADMIN
+// =======================
+
+export async function fetchSuperadminTenants() {
+  const res = await fetchWithAuth(`${API_URL}/superadmin/tenants`, {
+    headers: getHeaders()
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to fetch tenants');
+  }
+  const json = await res.json();
+  return json.data || [];
+}

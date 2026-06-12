@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { LayoutDashboard, Package, ShoppingCart, LogOut, Settings, ClipboardList, Users, FileText, BarChart3, UsersRound, Menu, X, Tag } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, LogOut, Settings, ClipboardList, Users, FileText, BarChart3, UsersRound, Menu, X, Tag, Building } from 'lucide-react';
 
 const MENU_ITEMS = [
   { name: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard size={20} />, roles: ['admin', 'supervisor'] },
@@ -16,6 +16,7 @@ const MENU_ITEMS = [
   { name: 'Transaksi', href: '/transactions', icon: <FileText size={20} />, roles: ['admin', 'supervisor', 'cashier'] },
   { name: 'Laporan', href: '/reports', icon: <BarChart3 size={20} />, roles: ['admin', 'supervisor'] },
   { name: 'Pengaturan', href: '/settings', icon: <Settings size={20} />, roles: ['admin'] },
+  { name: 'Tenants', href: '/superadmin/tenants', icon: <Building size={20} />, roles: ['superadmin'] },
 ];
 
 import { Logo } from '@/components/ui/Logo';
