@@ -110,6 +110,7 @@ export function UserModal({ user, onClose, onSubmit }: UserModalProps) {
               <option value="cashier">Kasir (Hanya akses POS)</option>
               <option value="supervisor">Supervisor (Akses POS & Produk)</option>
               <option value="admin">Admin (Akses Penuh)</option>
+              <option value="read_only">Demo / Read Only (Akses Lihat Saja)</option>
             </select>
           </div>
 

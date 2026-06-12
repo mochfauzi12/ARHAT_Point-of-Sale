@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-export function ReceiptTemplate({ transaction }: { transaction: any }) {
+export const ReceiptTemplate = React.forwardRef<HTMLDivElement, { transaction: any }>(({ transaction }, ref) => {
   if (!transaction) return null;
 
   return (
-    <div id="thermal-receipt" className="bg-white text-black font-sans leading-tight mx-auto" style={{ width: '58mm', padding: '0', fontSize: '12px' }}>
+    <div ref={ref} id="thermal-receipt" className="bg-white text-black font-sans leading-tight mx-auto" style={{ width: '58mm', padding: '0', fontSize: '12px' }}>
       <style type="text/css" media="print">
         {`
           @page { 
@@ -134,25 +134,6 @@ export function ReceiptTemplate({ transaction }: { transaction: any }) {
       </div>
     </div>
   );
-}
+});
 
-export function PrintReceiptPortal({ transaction }: { transaction: any }) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    return () => setMounted(false);
-  }, []);
-
-  if (!mounted || !transaction) return null;
-
-  return createPortal(
-    <div className="print-only bg-white fixed inset-0 z-50 flex justify-center items-start pt-8 print:p-0 print:block overflow-y-auto w-full h-full">
-      {/* Container ini hanya untuk pratinjau di web. Saat diprint, isinya akan otomatis menggunakan ukuran 58mm */}
-      <div className="shadow-2xl border border-gray-200 print:shadow-none print:border-none print:m-0" style={{ backgroundColor: 'white' }}>
-        <ReceiptTemplate transaction={transaction} />
-      </div>
-    </div>,
-    document.body
-  );
-}
+ReceiptTemplate.displayName = 'ReceiptTemplate';

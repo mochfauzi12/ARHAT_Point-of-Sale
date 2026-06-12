@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { playBeep } from '@/lib/audio';
 
 export interface ProductVariant {
   id: string;
@@ -76,6 +77,7 @@ export const useCartStore = create<CartState>((set, get) => ({
   isTaxEnabled: true,
   
   addItem: (product, quantity = 1, selectedVariant, selectedModifiers = []) => {
+    playBeep('success');
     set((state) => {
       const modifierIds = selectedModifiers.map(m => m.id).sort().join(',');
       const cartItemId = `${product.id}-${selectedVariant?.id || 'base'}-${modifierIds}`;

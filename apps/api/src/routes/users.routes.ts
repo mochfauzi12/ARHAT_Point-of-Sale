@@ -38,7 +38,7 @@ const createUserSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   fullName: z.string().min(1),
-  role: z.enum(['admin', 'supervisor', 'cashier']),
+  role: z.enum(['admin', 'supervisor', 'cashier', 'read_only']),
   pin: z.string().optional(),
 });
 
@@ -87,7 +87,7 @@ usersRoutes.post('/', authMiddleware, async (c) => {
 
 const updateUserSchema = z.object({
   fullName: z.string().min(1).optional(),
-  role: z.enum(['admin', 'supervisor', 'cashier']).optional(),
+  role: z.enum(['admin', 'supervisor', 'cashier', 'read_only']).optional(),
   password: z.string().min(6).optional(),
   pin: z.string().optional(),
 });

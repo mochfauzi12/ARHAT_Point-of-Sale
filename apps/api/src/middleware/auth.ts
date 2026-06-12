@@ -26,8 +26,14 @@ export const authMiddleware = async (c: Context, next: Next) => {
       email: decoded.email
     });
     
+    // Check for read_only role attempting to mutate data
+    if (decoded.role === 'read_only' && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(c.req.method)) {
+      throw new AppError('Akses ditolak: Akun demo tidak dapat mengubah data.', 403);
+    }
+
     await next();
-  } catch (error) {
+  } catch (error: any) {
+    if (error instanceof AppError) throw error;
     throw new AppError('Unauthorized: Invalid or expired token', 401);
   }
 };

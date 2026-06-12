@@ -1,16 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CheckCircle2, MessageCircle, Printer, Plus } from 'lucide-react';
+import { useReactToPrint } from 'react-to-print';
+import { ReceiptTemplate } from './ReceiptTemplate';
 
 interface CheckoutSuccessModalProps {
   transaction: any;
   changeAmount: number;
   customer?: any;
-  onPrint: () => void;
+  onPrint?: () => void; // Keep for backwards compatibility, but we handle it here now
   onClose: () => void;
 }
 
-export function CheckoutSuccessModal({ transaction, changeAmount, customer, onPrint, onClose }: CheckoutSuccessModalProps) {
+export function CheckoutSuccessModal({ transaction, changeAmount, customer, onClose }: CheckoutSuccessModalProps) {
   const [waNumber, setWaNumber] = useState('');
+  const printRef = useRef<HTMLDivElement>(null);
+
+  const handlePrint = useReactToPrint({
+    contentRef: printRef, // For react-to-print v3+
+    documentTitle: `Receipt-${transaction.transactionNumber}`,
+    onAfterPrint: () => console.log('Print completed')
+  });
+
+  // Polyfill for react-to-print v2 vs v3
+  const doPrint = () => {
+    if (handlePrint) {
+      handlePrint();
+    }
+  };
 
   useEffect(() => {
     if (customer?.phone) {
@@ -126,9 +142,7 @@ export function CheckoutSuccessModal({ transaction, changeAmount, customer, onPr
 
           <div className="grid grid-cols-2 gap-3 pt-4">
             <button 
-              onClick={() => {
-                onPrint();
-              }}
+              onClick={doPrint}
               className="w-full py-3.5 bg-white border-2 border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 rounded-xl font-bold flex items-center justify-center gap-2 transition-all"
             >
               <Printer size={18} />
@@ -143,6 +157,11 @@ export function CheckoutSuccessModal({ transaction, changeAmount, customer, onPr
             </button>
           </div>
         </div>
+      </div>
+      
+      {/* Hidden element for react-to-print */}
+      <div className="hidden">
+        <ReceiptTemplate ref={printRef} transaction={transaction} />
       </div>
     </div>
   );

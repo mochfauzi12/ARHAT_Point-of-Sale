@@ -8,6 +8,9 @@ import { PrintReceiptPortal } from './ReceiptTemplate';
 import { CheckoutSuccessModal } from './CheckoutSuccessModal';
 import { NonCashPaymentModal } from './NonCashPaymentModal';
 import { Toast, ToastType } from '../ui/Toast';
+import { playBeep } from '@/lib/audio';
+
+import { useHotkeys } from '@/hooks/useHotkeys';
 
 export function CartPanel() {
   const { items, removeItem, updateQuantity, updateDiscount, clearCart, getSubtotal, getTotalDiscount, holdTransaction, heldTransactions, globalDiscount, setGlobalDiscount, isTaxEnabled, setTaxEnabled } = useCartStore();
@@ -16,7 +19,6 @@ export function CartPanel() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [showHeldModal, setShowHeldModal] = useState(false);
   const [showNonCashModal, setShowNonCashModal] = useState(false);
-  const [printTx, setPrintTx] = useState<any>(null);
   const [successModalData, setSuccessModalData] = useState<{ transaction: any, changeAmount: number, customer: any } | null>(null);
 
   // Promo Code States
@@ -37,6 +39,22 @@ export function CartPanel() {
   useEffect(() => {
     getCustomers().then(data => setCustomers(data)).catch(console.error);
   }, []);
+
+  // Set up Hotkeys
+  useHotkeys({
+    'F8': (e) => {
+      e.preventDefault();
+      if (items.length > 0 && !isCheckout && !successModalData) {
+        initiateCheckout();
+      }
+    },
+    'Escape': (e) => {
+      e.preventDefault();
+      if (items.length > 0 && !successModalData && !showNonCashModal && !showHeldModal) {
+        clearCart();
+      }
+    }
+  });
 
   const subtotal = getSubtotal();
   const totalDiscount = getTotalDiscount();
@@ -122,8 +140,10 @@ export function CartPanel() {
         customer: selectedCustomer
       });
       
+      playBeep('success');
       showToast('Transaksi Berhasil!', 'success');
     } catch (err) {
+      playBeep('error');
       showToast('Gagal memproses transaksi. Pastikan API menyala.', 'error');
     } finally {
       setIsCheckout(false);
@@ -516,27 +536,18 @@ export function CartPanel() {
       )}
       
       {/* Modals & Portals */}
-      {printTx && <PrintReceiptPortal transaction={printTx} />}
       
       {successModalData && (
         <CheckoutSuccessModal
           transaction={successModalData.transaction}
           changeAmount={successModalData.changeAmount}
           customer={successModalData.customer}
-          onPrint={() => {
-            setPrintTx(successModalData.transaction);
-            setTimeout(() => {
-              window.print();
-              setTimeout(() => setPrintTx(null), 500);
-            }, 100);
-          }}
           onClose={() => {
             setSuccessModalData(null);
             clearCart();
             setCashTendered(0);
             setSelectedCustomer(null);
             setPointsToRedeem(0);
-            setPrintTx(null);
             setPromoCode('');
             setAppliedPromo(null);
             setGlobalDiscount(0);

@@ -23,6 +23,10 @@ async function fetchWithAuth(url: string, options: any = {}) {
     }
     throw new Error('Session expired');
   }
+  if (res.status === 403) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Akses ditolak: Akun demo tidak dapat mengubah data.');
+  }
   return res;
 }
 export async function loginPin(pin: string) {
