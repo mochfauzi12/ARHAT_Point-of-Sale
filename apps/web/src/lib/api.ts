@@ -690,3 +690,39 @@ export async function fetchSuperadminTenants() {
   const json = await res.json();
   return json.data || [];
 }
+
+export async function deactivateTenant(id: string) {
+  const res = await fetchWithAuth(`${API_URL}/superadmin/tenants/${id}/deactivate`, {
+    method: 'PATCH',
+    headers: getHeaders()
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to deactivate tenant');
+  }
+  return res.json();
+}
+
+export async function activateTenant(id: string) {
+  const res = await fetchWithAuth(`${API_URL}/superadmin/tenants/${id}/activate`, {
+    method: 'PATCH',
+    headers: getHeaders()
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to activate tenant');
+  }
+  return res.json();
+}
+
+export async function deleteTenant(id: string) {
+  const res = await fetchWithAuth(`${API_URL}/superadmin/tenants/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders()
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to delete tenant');
+  }
+  return res.json();
+}
