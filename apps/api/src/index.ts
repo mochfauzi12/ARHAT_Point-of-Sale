@@ -15,6 +15,7 @@ import shiftsRoutes from './routes/shifts.routes';
 import whatsappRoutes from './routes/whatsapp.routes';
 import rawMaterialRoutes from './routes/rawMaterial.routes';
 import discountsRoutes from './routes/discounts.routes';
+import superadminRoutes from './routes/superadmin.routes';
 const app = new Hono();
 
 const ALLOWED_ORIGINS = [
@@ -96,6 +97,7 @@ app.route('/api/shifts', shiftsRoutes);
 app.route('/api/whatsapp', whatsappRoutes);
 app.route('/api/raw-materials', rawMaterialRoutes);
 app.route('/api/discounts', discountsRoutes);
+app.route('/api/superadmin', superadminRoutes);
 
 // Error handling
 app.onError(errorHandler);
