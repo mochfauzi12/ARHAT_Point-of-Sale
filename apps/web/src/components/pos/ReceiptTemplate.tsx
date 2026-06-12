@@ -137,3 +137,39 @@ export const ReceiptTemplate = React.forwardRef<HTMLDivElement, { transaction: a
 });
 
 ReceiptTemplate.displayName = 'ReceiptTemplate';
+
+// Portal wrapper for printing receipts from any page
+export function PrintReceiptPortal({ transaction }: { transaction: any }) {
+  const [container, setContainer] = useState<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const div = document.createElement('div');
+    div.className = 'print-only';
+    div.style.position = 'fixed';
+    div.style.left = '-9999px';
+    div.style.top = '0';
+    document.body.appendChild(div);
+    setContainer(div);
+
+    return () => {
+      document.body.removeChild(div);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (container && transaction) {
+      // Small delay to ensure the portal content is rendered
+      const timer = setTimeout(() => {
+        window.print();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [container, transaction]);
+
+  if (!container) return null;
+
+  return createPortal(
+    <ReceiptTemplate transaction={transaction} />,
+    container
+  );
+}
