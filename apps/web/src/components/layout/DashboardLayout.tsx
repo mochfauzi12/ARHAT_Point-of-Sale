@@ -6,16 +6,16 @@ import { useAuth } from '@/contexts/AuthContext';
 import { LayoutDashboard, Package, ShoppingCart, LogOut, Settings, ClipboardList, Users, FileText, BarChart3, UsersRound, Menu, X, Tag, Building } from 'lucide-react';
 
 const MENU_ITEMS = [
-  { name: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard size={20} />, roles: ['admin', 'supervisor'] },
-  { name: 'POS', href: '/pos', icon: <ShoppingCart size={20} />, roles: ['admin', 'supervisor', 'cashier'] },
-  { name: 'Produk', href: '/products', icon: <Package size={20} />, roles: ['admin', 'supervisor'] },
-  { name: 'Inventori', href: '/inventory', icon: <ClipboardList size={20} />, roles: ['admin', 'supervisor'] },
-  { name: 'Pelanggan', href: '/customers', icon: <Users size={20} />, roles: ['admin', 'supervisor'] },
-  { name: 'Karyawan', href: '/users', icon: <UsersRound size={20} />, roles: ['admin'] },
-  { name: 'Promo & Diskon', href: '/discounts', icon: <Tag size={20} />, roles: ['admin', 'supervisor'] },
-  { name: 'Transaksi', href: '/transactions', icon: <FileText size={20} />, roles: ['admin', 'supervisor', 'cashier'] },
-  { name: 'Laporan', href: '/reports', icon: <BarChart3 size={20} />, roles: ['admin', 'supervisor'] },
-  { name: 'Pengaturan', href: '/settings', icon: <Settings size={20} />, roles: ['admin'] },
+  { name: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard size={20} />, roles: ['admin', 'supervisor', 'superadmin'] },
+  { name: 'POS', href: '/pos', icon: <ShoppingCart size={20} />, roles: ['admin', 'supervisor', 'cashier', 'superadmin'] },
+  { name: 'Produk', href: '/products', icon: <Package size={20} />, roles: ['admin', 'supervisor', 'superadmin'] },
+  { name: 'Inventori', href: '/inventory', icon: <ClipboardList size={20} />, roles: ['admin', 'supervisor', 'superadmin'] },
+  { name: 'Pelanggan', href: '/customers', icon: <Users size={20} />, roles: ['admin', 'supervisor', 'superadmin'] },
+  { name: 'Karyawan', href: '/users', icon: <UsersRound size={20} />, roles: ['admin', 'superadmin'] },
+  { name: 'Promo & Diskon', href: '/discounts', icon: <Tag size={20} />, roles: ['admin', 'supervisor', 'superadmin'] },
+  { name: 'Transaksi', href: '/transactions', icon: <FileText size={20} />, roles: ['admin', 'supervisor', 'cashier', 'superadmin'] },
+  { name: 'Laporan', href: '/reports', icon: <BarChart3 size={20} />, roles: ['admin', 'supervisor', 'superadmin'] },
+  { name: 'Pengaturan', href: '/settings', icon: <Settings size={20} />, roles: ['admin', 'superadmin'] },
   { name: 'Tenants', href: '/superadmin/tenants', icon: <Building size={20} />, roles: ['superadmin'] },
 ];
 
