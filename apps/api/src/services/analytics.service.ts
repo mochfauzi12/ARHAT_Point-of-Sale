@@ -1,5 +1,5 @@
 import { db } from '../lib/db';
-import { transactions, transactionItems, products, customers } from '../models';
+import { transactions, transactionItems, products, customers, expenses } from '../models';
 import { and, eq, gte, sql, desc } from 'drizzle-orm';
 
 export class AnalyticsService {
@@ -278,12 +278,39 @@ export class AnalyticsService {
 
       let totalRevenue = 0;
       let totalCOGS = 0;
+      let totalExpenses = 0;
 
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
       thirtyDaysAgo.setHours(0, 0, 0, 0);
 
-      const chartMap: Record<string, { revenue: number, cogs: number }> = {};
+      const chartMap: Record<string, { revenue: number, cogs: number, expenses: number }> = {};
+
+      // Fetch expenses
+      const allExpenses = await db
+        .select({
+          amount: expenses.amount,
+          date: expenses.date
+        })
+        .from(expenses)
+        .where(
+          and(
+            eq(expenses.tenantId, tenantId),
+            gte(expenses.date, thirtyDaysAgo)
+          )
+        );
+
+      for (const exp of allExpenses) {
+        const amt = Number(exp.amount) || 0;
+        totalExpenses += amt;
+        
+        if (exp.date) {
+          const expDateObj = new Date(exp.date);
+          const dateStr = expDateObj.toISOString().split('T')[0];
+          if (!chartMap[dateStr]) chartMap[dateStr] = { revenue: 0, cogs: 0, expenses: 0 };
+          chartMap[dateStr].expenses += amt;
+        }
+      }
 
       for (const item of allTxItems) {
         const qty = Number(item.quantity) || 0;
@@ -298,7 +325,7 @@ export class AnalyticsService {
           const txDateObj = new Date(item.createdAt);
           if (txDateObj >= thirtyDaysAgo) {
             const dateStr = txDateObj.toISOString().split('T')[0];
-            if (!chartMap[dateStr]) chartMap[dateStr] = { revenue: 0, cogs: 0 };
+            if (!chartMap[dateStr]) chartMap[dateStr] = { revenue: 0, cogs: 0, expenses: 0 };
             chartMap[dateStr].revenue += rev;
             chartMap[dateStr].cogs += cogs;
           }
@@ -310,19 +337,28 @@ export class AnalyticsService {
         const d = new Date(thirtyDaysAgo);
         d.setDate(d.getDate() + i);
         const dateStr = d.toISOString().split('T')[0];
-        const dayData = chartMap[dateStr] || { revenue: 0, cogs: 0 };
+        const dayData = chartMap[dateStr] || { revenue: 0, cogs: 0, expenses: 0 };
+        const dailyGrossProfit = dayData.revenue - dayData.cogs;
+        const dailyNetProfit = dailyGrossProfit - dayData.expenses;
+        
         chartData.push({
           date: dateStr,
           revenue: dayData.revenue,
-          profit: dayData.revenue - dayData.cogs
+          profit: dailyGrossProfit,
+          netProfit: dailyNetProfit
         });
       }
+
+      const grossProfit = totalRevenue - totalCOGS;
+      const netProfit = grossProfit - totalExpenses;
 
       return {
         totalRevenue,
         totalCOGS,
-        grossProfit: totalRevenue - totalCOGS,
-        margin: totalRevenue > 0 ? ((totalRevenue - totalCOGS) / totalRevenue) * 100 : 0,
+        totalExpenses,
+        grossProfit,
+        netProfit,
+        margin: totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0,
         chartData
       };
     } catch (error: any) {

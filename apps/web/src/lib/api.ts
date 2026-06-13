@@ -765,3 +765,51 @@ export async function bulkDeleteTenants(tenantIds: string[]) {
   }
   return res.json();
 }
+
+// =======================
+// EXPENSES
+// =======================
+
+export async function fetchExpenses() {
+  const res = await fetchWithAuth(`${API_URL}/expenses`, { headers: getHeaders() });
+  if (!res.ok) return [];
+  const json = await res.json();
+  return json.data || [];
+}
+
+export async function createExpense(data: any) {
+  const res = await fetchWithAuth(`${API_URL}/expenses`, {
+    method: 'POST',
+    headers: getHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to create expense');
+  }
+  const json = await res.json();
+  return json.data;
+}
+
+export async function updateExpense(id: string, data: any) {
+  const res = await fetchWithAuth(`${API_URL}/expenses/${id}`, {
+    method: 'PUT',
+    headers: getHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to update expense');
+  }
+  const json = await res.json();
+  return json.data;
+}
+
+export async function deleteExpense(id: string) {
+  const res = await fetchWithAuth(`${API_URL}/expenses/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders()
+  });
+  if (!res.ok) throw new Error('Failed to delete expense');
+  return res.json();
+}

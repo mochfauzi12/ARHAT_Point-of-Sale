@@ -322,3 +322,16 @@ export const boms = pgTable('boms', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
+export const expenses = pgTable('expenses', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
+  outletId: uuid('outlet_id').references(() => outlets.id),
+  category: varchar('category', { length: 100 }).notNull(), // Rent, Utilities, Salary, Marketing, Supplies, Maintenance, Other
+  amount: varchar('amount', { length: 20 }).notNull(),
+  date: timestamp('date').notNull().defaultNow(),
+  notes: varchar('notes', { length: 1000 }),
+  recordedBy: uuid('recorded_by').references(() => users.id),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+

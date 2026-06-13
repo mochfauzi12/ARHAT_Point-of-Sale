@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { LayoutDashboard, Package, ShoppingCart, LogOut, Settings, ClipboardList, Users, FileText, BarChart3, UsersRound, Menu, X, Tag, Building } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, LogOut, Settings, ClipboardList, Users, FileText, BarChart3, UsersRound, Menu, X, Tag, Building, Wallet } from 'lucide-react';
 
 const MENU_ITEMS = [
   { name: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard size={20} />, roles: ['admin', 'supervisor', 'superadmin'] },
@@ -14,6 +14,7 @@ const MENU_ITEMS = [
   { name: 'Karyawan', href: '/users', icon: <UsersRound size={20} />, roles: ['admin', 'superadmin'] },
   { name: 'Promo & Diskon', href: '/discounts', icon: <Tag size={20} />, roles: ['admin', 'supervisor', 'superadmin'] },
   { name: 'Transaksi', href: '/transactions', icon: <FileText size={20} />, roles: ['admin', 'supervisor', 'cashier', 'superadmin'] },
+  { name: 'Pengeluaran', href: '/expenses', icon: <Wallet size={20} />, roles: ['admin', 'supervisor', 'superadmin'] },
   { name: 'Laporan', href: '/reports', icon: <BarChart3 size={20} />, roles: ['admin', 'supervisor', 'superadmin'] },
   { name: 'Pengaturan', href: '/settings', icon: <Settings size={20} />, roles: ['admin', 'superadmin'] },
   { name: 'Tenants', href: '/superadmin/tenants', icon: <Building size={20} />, roles: ['superadmin'] },

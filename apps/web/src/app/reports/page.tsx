@@ -255,18 +255,29 @@ export default function ReportsPage() {
             {/* TAB: LABA RUGI */}
             {activeTab === 'labaRugi' && plData && (
               <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm text-center">
-                    <p className="text-sm font-medium text-gray-500 mb-1">Total Pendapatan</p>
-                    <h3 className="text-2xl font-bold text-gray-900">{formatCurrency(plData.totalRevenue)}</h3>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm text-center flex flex-col justify-center">
+                    <p className="text-xs font-medium text-gray-500 mb-1">Total Pendapatan</p>
+                    <h3 className="text-lg md:text-xl font-bold text-gray-900">{formatCurrency(plData.totalRevenue)}</h3>
                   </div>
-                  <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm text-center">
-                    <p className="text-sm font-medium text-gray-500 mb-1">Harga Pokok Penjualan (HPP)</p>
-                    <h3 className="text-2xl font-bold text-red-600">- {formatCurrency(plData.totalCOGS)}</h3>
+                  <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm text-center flex flex-col justify-center">
+                    <p className="text-xs font-medium text-gray-500 mb-1">HPP</p>
+                    <h3 className="text-lg md:text-xl font-bold text-red-600">- {formatCurrency(plData.totalCOGS)}</h3>
                   </div>
-                  <div className="bg-teal-600 p-6 rounded-2xl shadow-sm text-center text-white">
-                    <p className="text-sm font-medium text-teal-100 mb-1">Laba Kotor</p>
-                    <h3 className="text-2xl font-bold">{formatCurrency(plData.grossProfit)}</h3>
+                  <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm text-center flex flex-col justify-center">
+                    <p className="text-xs font-medium text-teal-600 mb-1">Laba Kotor</p>
+                    <h3 className="text-lg md:text-xl font-bold text-teal-700">{formatCurrency(plData.grossProfit)}</h3>
+                  </div>
+                  <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm text-center flex flex-col justify-center">
+                    <p className="text-xs font-medium text-gray-500 mb-1">Pengeluaran</p>
+                    <h3 className="text-lg md:text-xl font-bold text-orange-600">- {formatCurrency(plData.totalExpenses || 0)}</h3>
+                  </div>
+                  <div className="bg-[#0B5A63] p-4 rounded-2xl shadow-sm text-center flex flex-col justify-center text-white col-span-2 md:col-span-1">
+                    <p className="text-xs font-medium text-[#0B5A63] text-white/80 mb-1">Laba Bersih</p>
+                    <h3 className="text-xl md:text-2xl font-bold">{formatCurrency(plData.netProfit || 0)}</h3>
+                    {plData.totalRevenue > 0 && (
+                      <p className="text-xs mt-1 text-white/90 font-medium text-[#0B5A63]">Margin: {((plData.netProfit / plData.totalRevenue) * 100).toFixed(1)}%</p>
+                    )}
                   </div>
                 </div>
 
@@ -281,7 +292,8 @@ export default function ReportsPage() {
                         <RechartsTooltip formatter={(value: any) => formatCurrency(Number(value))} />
                         <Legend />
                         <Line type="monotone" dataKey="revenue" name="Pendapatan" stroke="#0ea5e9" strokeWidth={2} dot={false} />
-                        <Line type="monotone" dataKey="profit" name="Laba" stroke="#10b981" strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="profit" name="Laba Kotor" stroke="#10b981" strokeWidth={2} dot={false} strokeDasharray="5 5" />
+                        <Line type="monotone" dataKey="netProfit" name="Laba Bersih" stroke="#0B5A63" strokeWidth={3} dot={false} />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
