@@ -29,20 +29,20 @@ export default function DashboardPage() {
     <DashboardLayout>
       <ErrorBoundary>
         <div className="mb-8 flex flex-col gap-1">
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Overview</h1>
-          <p className="text-slate-500 font-medium">Here's what's happening in your store today.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Overview</h1>
+          <p className="text-slate-500 dark:text-slate-400 font-medium">Here's what's happening in your store today.</p>
         </div>
 
         {loading ? (
           <div className="animate-pulse">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               {[1, 2, 3].map(i => (
-                <div key={i} className="bg-slate-50 h-32 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/60"></div>
+                <div key={i} className="bg-slate-50 dark:bg-slate-800 h-32 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none border border-slate-100/60 dark:border-slate-800"></div>
               ))}
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 bg-slate-50 h-96 rounded-3xl border border-slate-100/60"></div>
-              <div className="bg-slate-50 h-96 rounded-3xl border border-slate-100/60"></div>
+              <div className="lg:col-span-2 bg-slate-50 dark:bg-slate-800 h-96 rounded-3xl border border-slate-100/60 dark:border-slate-800"></div>
+              <div className="bg-slate-50 dark:bg-slate-800 h-96 rounded-3xl border border-slate-100/60 dark:border-slate-800"></div>
             </div>
           </div>
         ) : !data ? (
@@ -71,44 +71,44 @@ export default function DashboardPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/60 hover:-translate-y-1 transition-all duration-300">
+        <div className="bg-white dark:bg-slate-950 p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none border border-slate-100/60 dark:border-slate-800 hover:-translate-y-1 transition-all duration-300">
           <div className="flex justify-between items-start mb-4">
-            <div className="p-3 bg-teal-50 text-teal-600 rounded-2xl">
+            <div className="p-3 bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 rounded-2xl">
               <TrendingUp size={24} />
             </div>
-            <span className="flex items-center text-sm font-medium text-teal-600 bg-teal-50/50 px-2.5 py-1 rounded-full">
+            <span className="flex items-center text-sm font-medium text-teal-600 dark:text-teal-400 bg-teal-50/50 dark:bg-teal-900/30 px-2.5 py-1 rounded-full">
               <ArrowUpRight size={16} className="mr-1" /> +12%
             </span>
           </div>
-          <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Today's Revenue</h3>
-          <p className="text-3xl font-bold">Rp {data.todayRevenue.toLocaleString('id-ID')}</p>
+          <h3 className="text-slate-400 dark:text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Today's Revenue</h3>
+          <p className="text-3xl font-bold dark:text-slate-100">Rp {data.todayRevenue.toLocaleString('id-ID')}</p>
         </div>
 
-        <div className="bg-white p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/60 hover:-translate-y-1 transition-all duration-300">
+        <div className="bg-white dark:bg-slate-950 p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none border border-slate-100/60 dark:border-slate-800 hover:-translate-y-1 transition-all duration-300">
           <div className="flex justify-between items-start mb-4">
-            <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-2xl">
               <CreditCard size={24} />
             </div>
           </div>
-          <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Today's Transactions</h3>
-          <p className="text-3xl font-bold text-slate-900">{data.todayTransactions}</p>
+          <h3 className="text-slate-400 dark:text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Today's Transactions</h3>
+          <p className="text-3xl font-bold text-slate-900 dark:text-slate-100">{data.todayTransactions}</p>
         </div>
 
-        <div className="bg-white p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/60 hover:-translate-y-1 transition-all duration-300">
+        <div className="bg-white dark:bg-slate-950 p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none border border-slate-100/60 dark:border-slate-800 hover:-translate-y-1 transition-all duration-300">
           <div className="flex justify-between items-start mb-4">
-            <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl">
+            <div className="p-3 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-2xl">
               <Package size={24} />
             </div>
           </div>
-          <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Active Products</h3>
-          <p className="text-3xl font-bold">{data.activeProducts}</p>
+          <h3 className="text-slate-400 dark:text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Active Products</h3>
+          <p className="text-3xl font-bold dark:text-slate-100">{data.activeProducts}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Chart */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/60">
-          <h2 className="text-lg font-bold mb-6 text-slate-900">Revenue Last 7 Days</h2>
+        <div className="lg:col-span-2 bg-white dark:bg-slate-950 p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none border border-slate-100/60 dark:border-slate-800">
+          <h2 className="text-lg font-bold mb-6 text-slate-900 dark:text-slate-100">Revenue Last 7 Days</h2>
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -132,27 +132,27 @@ export default function DashboardPage() {
         </div>
 
         {/* Top Products */}
-        <div className="bg-white p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/60">
-          <h2 className="text-lg font-bold mb-6 text-slate-900">Top Products (Best Sellers)</h2>
+        <div className="bg-white dark:bg-slate-950 p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none border border-slate-100/60 dark:border-slate-800">
+          <h2 className="text-lg font-bold mb-6 text-slate-900 dark:text-slate-100">Top Products (Best Sellers)</h2>
           <div className="space-y-6">
             {data.topProducts.map((p: any, i: number) => (
               <div key={p.id} className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center font-bold text-gray-500">
+                  <div className="w-10 h-10 bg-gray-50 dark:bg-slate-900 rounded-xl flex items-center justify-center font-bold text-gray-500 dark:text-slate-400">
                     #{i + 1}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-sm line-clamp-1">{p.name}</h3>
-                    <p className="text-xs text-gray-500">{p.totalQuantity} items sold</p>
+                    <h3 className="font-semibold text-sm line-clamp-1 dark:text-slate-200">{p.name}</h3>
+                    <p className="text-xs text-gray-500 dark:text-slate-500">{p.totalQuantity} items sold</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className="text-sm font-bold">Rp {Number(p.totalRevenue).toLocaleString('id-ID')}</span>
+                  <span className="text-sm font-bold dark:text-slate-100">Rp {Number(p.totalRevenue).toLocaleString('id-ID')}</span>
                 </div>
               </div>
             ))}
             {data.topProducts.length === 0 && (
-              <p className="text-gray-500 text-sm text-center py-4">No sales data available yet.</p>
+              <p className="text-gray-500 dark:text-slate-500 text-sm text-center py-4">No sales data available yet.</p>
             )}
           </div>
         </div>
