@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { expensesController } from '../controllers/expenses.controller';
-import { authMiddleware } from '../middleware/auth.middleware';
+import { authMiddleware } from '../middleware/auth';
 
 const expensesRoutes = new Hono();
 
