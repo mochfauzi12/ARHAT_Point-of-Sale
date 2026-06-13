@@ -1,6 +1,6 @@
 import { Context } from 'hono';
 import { db } from '../lib/db';
-import { tenants, users, outlets, products, transactions, transactionItems, payments, customers, stockMovements, shifts, discounts, productStocks, productVariants, productModifiers, whatsappMessages, stockAdjustments, stockAdjustmentItems, stockOpnameSessions, stockOpnameItems, stockTransfers, stockTransferItems, rawMaterials, rawMaterialStocks, boms } from '../models';
+import { tenants, users, outlets, products, transactions, transactionItems, payments, customers, stockMovements, shifts, discounts, productStocks, productVariants, productModifiers, whatsappMessages, stockAdjustments, stockAdjustmentItems, stockOpnameSessions, stockOpnameItems, stockTransfers, stockTransferItems, rawMaterials, rawMaterialStocks, boms, sessions, emailVerificationTokens, passwordResetTokens } from '../models';
 import { eq, sql } from 'drizzle-orm';
 import { AppError } from '../lib/errors';
 
@@ -147,7 +147,14 @@ export const deleteTenant = async (c: Context) => {
 
     // 7. Users (sessions, tokens)
     const userList = await db.select({ id: users.id }).from(users).where(eq(users.tenantId, tenantId));
-    // Note: sessions and tokens reference users but may need cleanup too
+    const userIds = userList.map(u => u.id);
+    if (userIds.length > 0) {
+      for (const uId of userIds) {
+        await db.delete(sessions).where(eq(sessions.userId, uId));
+        await db.delete(emailVerificationTokens).where(eq(emailVerificationTokens.userId, uId));
+        await db.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, uId));
+      }
+    }
     await db.delete(users).where(eq(users.tenantId, tenantId));
 
     // 8. Outlets

@@ -7,7 +7,7 @@ const runMigration = async () => {
   console.log('Running migration...');
   const sql = postgres(process.env.DATABASE_URL!);
   try {
-    const query = readFileSync('./migrations/0003_tearful_supernaut.sql', 'utf-8');
+    const query = readFileSync('./migrations/0004_salty_lorna_dane.sql', 'utf-8');
     await sql.unsafe(query);
     console.log('Migration successful!');
   } catch (err) {
