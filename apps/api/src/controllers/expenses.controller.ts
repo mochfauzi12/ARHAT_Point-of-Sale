@@ -2,7 +2,6 @@ import { Context } from 'hono';
 import { db } from '../lib/db';
 import { expenses } from '../models';
 import { eq, and, desc } from 'drizzle-orm';
-import { v4 as uuidv4 } from 'uuid';
 
 export const expensesController = {
   async getExpenses(c: Context) {
