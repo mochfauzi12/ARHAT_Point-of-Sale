@@ -26,7 +26,7 @@ export default function SuperadminTenantsPage() {
   const [modalAction, setModalAction] = useState<ModalAction>(null);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLTableCellElement>(null);
 
   useEffect(() => {
     loadTenants();
@@ -209,7 +209,7 @@ export default function SuperadminTenantsPage() {
                         }) : 'N/A'}
                       </div>
                     </td>
-                    <td className="py-4 px-6 text-right relative" ref={openDropdown === tenant.id ? dropdownRef : null}>
+                    <td className="py-4 px-6 text-right relative" ref={openDropdown === tenant.id ? dropdownRef as any : null}>
                       <button
                         onClick={() => setOpenDropdown(openDropdown === tenant.id ? null : tenant.id)}
                         className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
