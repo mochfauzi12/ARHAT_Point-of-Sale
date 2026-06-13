@@ -94,13 +94,13 @@ export default function SuperadminTenantsPage() {
         <div>
           <button
             onClick={() => router.push('/dashboard')}
-            className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-teal-600 transition-colors mb-3 group"
+            className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-teal-600 dark:text-slate-300 dark:hover:text-teal-400 transition-colors mb-3 group"
           >
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
             Kembali ke Dashboard
           </button>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Manajemen Tenant</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Manajemen Tenant</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-300 mt-1">
             Lihat dan kelola semua bisnis yang menggunakan aplikasi Transaksi Kita.
           </p>
         </div>
