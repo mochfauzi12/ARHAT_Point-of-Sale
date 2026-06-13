@@ -357,7 +357,7 @@ export default function SuperadminTenantsPage() {
       {/* Confirmation & Create Modal */}
       {modalAction && (selectedTenant || modalAction.startsWith('bulk_') || modalAction === 'create') && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-transparent dark:border-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-start justify-between">
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
                 modalAction === 'create' ? 'bg-teal-100 text-teal-600' :
@@ -370,7 +370,7 @@ export default function SuperadminTenantsPage() {
                  modalAction.includes('deactivate') ? <Ban size={24} /> :
                  <CheckCircle size={24} />}
               </div>
-              <button onClick={() => { setModalAction(null); setSelectedTenant(null); }} className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
+              <button onClick={() => { setModalAction(null); setSelectedTenant(null); }} className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                 <X size={20} />
               </button>
             </div>
@@ -378,60 +378,60 @@ export default function SuperadminTenantsPage() {
             {modalAction === 'create' ? (
               <form onSubmit={handleCreateSubmit} className="space-y-4">
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900 mb-4">Tambah Tenant Baru</h3>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Tambah Tenant Baru</h3>
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Nama Bisnis (Tenant)</label>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nama Bisnis (Tenant)</label>
                       <input
                         type="text"
                         required
                         value={createForm.tenantName}
                         onChange={e => setCreateForm({...createForm, tenantName: e.target.value})}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                        className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
                         placeholder="Contoh: Toko Berkah"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Nama Owner</label>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nama Owner</label>
                       <input
                         type="text"
                         required
                         value={createForm.fullName}
                         onChange={e => setCreateForm({...createForm, fullName: e.target.value})}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                        className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
                         placeholder="Contoh: Budi Santoso"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Email Owner</label>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email Owner</label>
                       <input
                         type="email"
                         required
                         value={createForm.email}
                         onChange={e => setCreateForm({...createForm, email: e.target.value})}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                        className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
                         placeholder="Contoh: budi@gmail.com"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Password</label>
                       <input
                         type="password"
                         required
                         minLength={6}
                         value={createForm.password}
                         onChange={e => setCreateForm({...createForm, password: e.target.value})}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                        className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
                         placeholder="Minimal 6 karakter"
                       />
                     </div>
                   </div>
                 </div>
-                <div className="flex gap-3 pt-4 border-t border-slate-100">
+                <div className="flex gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
                   <button
                     type="button"
                     onClick={() => { setModalAction(null); setSelectedTenant(null); }}
-                    className="flex-1 px-4 py-2.5 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+                    className="flex-1 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors"
                   >
                     Batal
                   </button>
@@ -448,7 +448,7 @@ export default function SuperadminTenantsPage() {
             ) : (
               <>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                     {modalAction === 'delete' ? 'Hapus Tenant' :
                      modalAction === 'deactivate' ? 'Nonaktifkan Tenant' :
                      modalAction === 'activate' ? 'Aktifkan Tenant' :
@@ -456,34 +456,34 @@ export default function SuperadminTenantsPage() {
                      modalAction === 'bulk_deactivate' ? 'Nonaktifkan Beberapa Tenant' :
                      'Aktifkan Beberapa Tenant'}
                   </h3>
-                  <p className="text-sm text-slate-500 mt-2">
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
                     {modalAction === 'delete' ? (
-                      <>Apakah Anda yakin ingin <strong className="text-red-600">menghapus permanen</strong> tenant <strong>{selectedTenant?.name}</strong>? Semua data (produk, transaksi, karyawan, dll.) akan dihapus dan <strong>tidak dapat dikembalikan</strong>.</>
+                      <>Apakah Anda yakin ingin <strong className="text-red-600 dark:text-red-400">menghapus permanen</strong> tenant <strong className="text-slate-900 dark:text-slate-200">{selectedTenant?.name}</strong>? Semua data (produk, transaksi, karyawan, dll.) akan dihapus dan <strong className="text-slate-900 dark:text-slate-200">tidak dapat dikembalikan</strong>.</>
                     ) : modalAction === 'deactivate' ? (
-                      <>Semua user milik tenant <strong>{selectedTenant?.name}</strong> akan di-nonaktifkan dan <strong>tidak bisa login</strong> sampai Anda mengaktifkannya kembali.</>
+                      <>Semua user milik tenant <strong className="text-slate-900 dark:text-slate-200">{selectedTenant?.name}</strong> akan di-nonaktifkan dan <strong className="text-slate-900 dark:text-slate-200">tidak bisa login</strong> sampai Anda mengaktifkannya kembali.</>
                     ) : modalAction === 'activate' ? (
-                      <>Semua user milik tenant <strong>{selectedTenant?.name}</strong> akan diaktifkan kembali dan <strong>bisa login</strong> seperti biasa.</>
+                      <>Semua user milik tenant <strong className="text-slate-900 dark:text-slate-200">{selectedTenant?.name}</strong> akan diaktifkan kembali dan <strong className="text-slate-900 dark:text-slate-200">bisa login</strong> seperti biasa.</>
                     ) : modalAction === 'bulk_delete' ? (
-                      <>Apakah Anda yakin ingin <strong className="text-red-600">menghapus permanen</strong> <strong>{selectedTenants.size} tenant</strong> yang dipilih? Semua data mereka akan dihapus dan <strong>tidak dapat dikembalikan</strong>.</>
+                      <>Apakah Anda yakin ingin <strong className="text-red-600 dark:text-red-400">menghapus permanen</strong> <strong className="text-slate-900 dark:text-slate-200">{selectedTenants.size} tenant</strong> yang dipilih? Semua data mereka akan dihapus dan <strong className="text-slate-900 dark:text-slate-200">tidak dapat dikembalikan</strong>.</>
                     ) : modalAction === 'bulk_deactivate' ? (
-                      <>Semua user dari <strong>{selectedTenants.size} tenant</strong> terpilih akan di-nonaktifkan dan <strong>tidak bisa login</strong>.</>
+                      <>Semua user dari <strong className="text-slate-900 dark:text-slate-200">{selectedTenants.size} tenant</strong> terpilih akan di-nonaktifkan dan <strong className="text-slate-900 dark:text-slate-200">tidak bisa login</strong>.</>
                     ) : (
-                      <>Semua user dari <strong>{selectedTenants.size} tenant</strong> terpilih akan diaktifkan kembali dan <strong>bisa login</strong> seperti biasa.</>
+                      <>Semua user dari <strong className="text-slate-900 dark:text-slate-200">{selectedTenants.size} tenant</strong> terpilih akan diaktifkan kembali dan <strong className="text-slate-900 dark:text-slate-200">bisa login</strong> seperti biasa.</>
                     )}
                   </p>
                 </div>
 
                 {modalAction.includes('delete') && (
-                  <div className="flex items-start gap-3 p-3 rounded-xl bg-red-50 border border-red-100">
-                    <AlertTriangle size={18} className="text-red-500 mt-0.5 shrink-0" />
-                    <p className="text-xs text-red-600 font-medium">Tindakan ini bersifat permanen dan tidak dapat dibatalkan!</p>
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20">
+                    <AlertTriangle size={18} className="text-red-500 dark:text-red-400 mt-0.5 shrink-0" />
+                    <p className="text-xs text-red-600 dark:text-red-400 font-medium">Tindakan ini bersifat permanen dan tidak dapat dibatalkan!</p>
                   </div>
                 )}
 
                 <div className="flex gap-3 pt-2">
                   <button
                     onClick={() => { setModalAction(null); setSelectedTenant(null); }}
-                    className="flex-1 px-4 py-2.5 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+                    className="flex-1 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors"
                   >
                     Batal
                   </button>
