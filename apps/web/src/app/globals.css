@@ -3,6 +3,8 @@
 @tailwind base;
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
 @layer base {
   * {
     font-family: 'Inter', sans-serif;
