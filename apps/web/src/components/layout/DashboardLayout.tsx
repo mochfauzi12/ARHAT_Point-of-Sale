@@ -22,6 +22,7 @@ const MENU_ITEMS = [
 
 import { Logo } from '@/components/ui/Logo';
 import { SyncManager } from '@/components/SyncManager';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -32,14 +33,15 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const filteredMenuItems = MENU_ITEMS.filter(item => item.roles.includes(userRole));
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex transition-colors duration-300 text-slate-900 dark:text-slate-100">
       {/* Desktop Sidebar */}
-      <aside className="w-64 bg-white border-r border-slate-200/60 flex-col hidden md:flex z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
-        <div className="h-16 flex items-center px-6 border-b border-gray-100">
+      <aside className="w-64 bg-white dark:bg-slate-950 border-r border-slate-200/60 dark:border-slate-800 flex-col hidden md:flex z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)] transition-colors duration-300">
+        <div className="h-16 flex items-center justify-between px-4 border-b border-gray-100 dark:border-slate-800">
           <div className="flex items-center gap-3 px-2">
             <Logo width={28} height={28} />
-            <span className="font-bold text-lg tracking-tight text-[#0B5A63]">TRANSAKSI KITA</span>
+            <span className="font-bold text-lg tracking-tight text-[#0B5A63] dark:text-[#38bdf8]">TRANSAKSI KITA</span>
           </div>
+          <ThemeToggle />
         </div>
 
         <nav className="flex-1 py-6 px-4 flex flex-col gap-1 overflow-y-auto">
@@ -51,8 +53,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 href={item.href}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 group ${
                   isActive 
-                    ? 'bg-[#0B5A63]/10 text-[#0B5A63] shadow-sm' 
-                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                    ? 'bg-[#0B5A63]/10 dark:bg-[#38bdf8]/10 text-[#0B5A63] dark:text-[#38bdf8] shadow-sm' 
+                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-slate-100'
                 }`}
               >
                 <div className={`transition-transform duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}>
@@ -64,21 +66,21 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="p-4 border-t border-slate-100 shrink-0">
+        <div className="p-4 border-t border-slate-100 dark:border-slate-800 shrink-0">
           {user && (
             <div className="flex items-center gap-3 px-4 py-3 mb-2">
-              <div className="w-9 h-9 rounded-full bg-[#0B5A63] flex items-center justify-center text-white font-semibold text-sm shrink-0">
+              <div className="w-9 h-9 rounded-full bg-[#0B5A63] dark:bg-[#38bdf8] flex items-center justify-center text-white dark:text-slate-900 font-semibold text-sm shrink-0">
                 {user.fullName?.charAt(0)?.toUpperCase() || 'U'}
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-medium text-slate-700 truncate">{user.fullName}</p>
-                <p className="text-xs text-slate-400 capitalize">{user.role}</p>
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">{user.fullName}</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 capitalize">{user.role}</p>
               </div>
             </div>
           )}
           <button 
             onClick={logout}
-            className="flex items-center gap-3 px-4 py-3 w-full rounded-xl font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 transition-all duration-300 group"
+            className="flex items-center gap-3 px-4 py-3 w-full rounded-xl font-medium text-slate-500 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-500 transition-all duration-300 group"
           >
             <div className="transition-transform duration-200 group-hover:scale-110">
               <LogOut size={20} />
@@ -97,17 +99,17 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Mobile Sidebar Drawer */}
-      <aside className={`fixed top-0 left-0 bottom-0 w-72 bg-white z-50 flex flex-col shadow-2xl transform transition-transform duration-300 ease-in-out md:hidden ${
+      <aside className={`fixed top-0 left-0 bottom-0 w-72 bg-white dark:bg-slate-950 z-50 flex flex-col shadow-2xl transform transition-transform duration-300 ease-in-out md:hidden ${
         mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
-        <div className="h-16 flex items-center justify-between px-6 border-b border-gray-100 shrink-0">
+        <div className="h-16 flex items-center justify-between px-6 border-b border-gray-100 dark:border-slate-800 shrink-0">
           <div className="flex items-center gap-3">
             <Logo width={28} height={28} />
-            <span className="font-bold text-lg tracking-tight text-[#0B5A63]">TRANSAKSI KITA</span>
+            <span className="font-bold text-lg tracking-tight text-[#0B5A63] dark:text-[#38bdf8]">TRANSAKSI KITA</span>
           </div>
           <button 
             onClick={() => setMobileMenuOpen(false)}
-            className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            className="p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             <X size={20} />
           </button>
@@ -123,8 +125,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 onClick={() => setMobileMenuOpen(false)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
                   isActive 
-                    ? 'bg-[#0B5A63]/10 text-[#0B5A63] shadow-sm' 
-                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                    ? 'bg-[#0B5A63]/10 dark:bg-[#38bdf8]/10 text-[#0B5A63] dark:text-[#38bdf8] shadow-sm' 
+                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-slate-100'
                 }`}
               >
                 {item.icon}
@@ -134,21 +136,21 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="p-4 border-t border-slate-100 shrink-0">
+        <div className="p-4 border-t border-slate-100 dark:border-slate-800 shrink-0">
           {user && (
             <div className="flex items-center gap-3 px-4 py-3 mb-2">
-              <div className="w-9 h-9 rounded-full bg-[#0B5A63] flex items-center justify-center text-white font-semibold text-sm shrink-0">
+              <div className="w-9 h-9 rounded-full bg-[#0B5A63] dark:bg-[#38bdf8] flex items-center justify-center text-white dark:text-slate-900 font-semibold text-sm shrink-0">
                 {user.fullName?.charAt(0)?.toUpperCase() || 'U'}
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-medium text-slate-700 truncate">{user.fullName}</p>
-                <p className="text-xs text-slate-400 capitalize">{user.role}</p>
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">{user.fullName}</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 capitalize">{user.role}</p>
               </div>
             </div>
           )}
           <button 
             onClick={() => { logout(); setMobileMenuOpen(false); }}
-            className="flex items-center gap-3 px-4 py-3 w-full rounded-xl font-medium text-red-500 hover:bg-red-50 transition-all duration-200"
+            className="flex items-center gap-3 px-4 py-3 w-full rounded-xl font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all duration-200"
           >
             <LogOut size={20} />
             Logout
@@ -157,22 +159,23 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-h-screen max-w-full overflow-hidden">
+      <main className="flex-1 flex flex-col min-h-screen max-w-full overflow-hidden bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
         {/* Mobile Header */}
-        <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200/60 flex items-center justify-between px-4 md:hidden sticky top-0 z-20">
+        <header className="h-16 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800 flex items-center justify-between px-4 md:hidden sticky top-0 z-20">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
+              className="p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               aria-label="Buka menu"
             >
               <Menu size={22} />
             </button>
             <div className="flex items-center gap-2">
               <Logo width={24} height={24} />
-              <span className="font-bold text-base text-[#0B5A63]">TRANSAKSI KITA</span>
+              <span className="font-bold text-base text-[#0B5A63] dark:text-[#38bdf8]">TRANSAKSI KITA</span>
             </div>
           </div>
+          <ThemeToggle />
         </header>
         <div className="flex-1 overflow-auto p-4 md:p-8">
           {children}
