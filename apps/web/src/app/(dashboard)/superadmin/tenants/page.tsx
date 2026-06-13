@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { fetchSuperadminTenants, deactivateTenant, activateTenant, deleteTenant } from '@/lib/api';
+import { fetchSuperadminTenants, deactivateTenant, activateTenant, deleteTenant, bulkActivateTenants, bulkDeactivateTenants, bulkDeleteTenants } from '@/lib/api';
 import { Building, Users, Search, ArrowLeft, MoreVertical, Trash2, Ban, CheckCircle, Mail, Calendar, AlertTriangle, X, Loader2 } from 'lucide-react';
 
 interface Tenant {
@@ -14,7 +14,7 @@ interface Tenant {
   user_count: number;
 }
 
-type ModalAction = 'deactivate' | 'activate' | 'delete' | null;
+type ModalAction = 'deactivate' | 'activate' | 'delete' | 'bulk_deactivate' | 'bulk_activate' | 'bulk_delete' | null;
 
 export default function SuperadminTenantsPage() {
   const router = useRouter();
@@ -26,6 +26,7 @@ export default function SuperadminTenantsPage() {
   const [modalAction, setModalAction] = useState<ModalAction>(null);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [selectedTenants, setSelectedTenants] = useState<Set<string>>(new Set());
   const dropdownRef = useRef<HTMLTableCellElement>(null);
 
   useEffect(() => {
@@ -62,19 +63,32 @@ export default function SuperadminTenantsPage() {
   };
 
   const confirmAction = async () => {
-    if (!selectedTenant || !modalAction) return;
+    const isBulk = modalAction?.startsWith('bulk_');
+    if (!isBulk && !selectedTenant) return;
+    if (!modalAction) return;
+    
     setActionLoading(true);
     try {
       if (modalAction === 'deactivate') {
-        await deactivateTenant(selectedTenant.id);
+        await deactivateTenant(selectedTenant!.id);
       } else if (modalAction === 'activate') {
-        await activateTenant(selectedTenant.id);
+        await activateTenant(selectedTenant!.id);
       } else if (modalAction === 'delete') {
-        await deleteTenant(selectedTenant.id);
+        await deleteTenant(selectedTenant!.id);
+      } else if (modalAction === 'bulk_deactivate') {
+        await bulkDeactivateTenants(Array.from(selectedTenants));
+      } else if (modalAction === 'bulk_activate') {
+        await bulkActivateTenants(Array.from(selectedTenants));
+      } else if (modalAction === 'bulk_delete') {
+        await bulkDeleteTenants(Array.from(selectedTenants));
       }
+      
       await loadTenants();
       setModalAction(null);
       setSelectedTenant(null);
+      if (isBulk) {
+        setSelectedTenants(new Set());
+      }
     } catch (err: any) {
       alert('Gagal: ' + (err.message || 'Terjadi kesalahan'));
     } finally {
@@ -86,6 +100,24 @@ export default function SuperadminTenantsPage() {
     t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     t.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedTenants(new Set(filteredTenants.map(t => t.id)));
+    } else {
+      setSelectedTenants(new Set());
+    }
+  };
+
+  const handleSelectTenant = (id: string) => {
+    const newSelected = new Set(selectedTenants);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedTenants(newSelected);
+  };
 
   return (
     <div className="space-y-6">
@@ -170,6 +202,14 @@ export default function SuperadminTenantsPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50/80 border-b border-slate-200 text-sm text-slate-500">
+                  <th className="py-4 px-6 w-12">
+                    <input 
+                      type="checkbox" 
+                      className="w-4 h-4 rounded border-slate-300 text-teal-600 focus:ring-teal-600"
+                      checked={filteredTenants.length > 0 && selectedTenants.size === filteredTenants.length}
+                      onChange={handleSelectAll}
+                    />
+                  </th>
                   <th className="font-semibold py-4 px-6">Nama Bisnis (Tenant)</th>
                   <th className="font-semibold py-4 px-6 hidden sm:table-cell">Email Owner</th>
                   <th className="font-semibold py-4 px-6 text-center">Outlet</th>
@@ -180,7 +220,15 @@ export default function SuperadminTenantsPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredTenants.map((tenant) => (
-                  <tr key={tenant.id} className="hover:bg-slate-50/50 transition-colors group">
+                  <tr key={tenant.id} className={`hover:bg-slate-50/50 transition-colors group ${selectedTenants.has(tenant.id) ? 'bg-teal-50/30' : ''}`}>
+                    <td className="py-4 px-6">
+                      <input 
+                        type="checkbox" 
+                        className="w-4 h-4 rounded border-slate-300 text-teal-600 focus:ring-teal-600"
+                        checked={selectedTenants.has(tenant.id)}
+                        onChange={() => handleSelectTenant(tenant.id)}
+                      />
+                    </td>
                     <td className="py-4 px-6">
                       <div className="font-medium text-slate-900">{tenant.name}</div>
                       <div className="text-xs text-slate-500 sm:hidden mt-0.5">{tenant.email}</div>
@@ -253,18 +301,40 @@ export default function SuperadminTenantsPage() {
         )}
       </div>
 
+      {/* Floating Action Bar for Bulk Actions */}
+      {selectedTenants.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-6 animate-in slide-in-from-bottom-10">
+          <div className="flex items-center gap-2">
+            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-white/20 text-xs font-bold">{selectedTenants.size}</span>
+            <span className="text-sm font-medium hidden sm:inline">terpilih</span>
+          </div>
+          <div className="w-px h-6 bg-white/20" />
+          <div className="flex items-center gap-1 sm:gap-2">
+             <button onClick={() => setModalAction('bulk_activate')} className="px-3 py-1.5 text-xs sm:text-sm font-medium hover:bg-white/10 rounded-lg transition-colors flex items-center gap-2 text-emerald-400">
+               <CheckCircle size={16} /> <span className="hidden sm:inline">Aktifkan</span>
+             </button>
+             <button onClick={() => setModalAction('bulk_deactivate')} className="px-3 py-1.5 text-xs sm:text-sm font-medium hover:bg-white/10 rounded-lg transition-colors flex items-center gap-2 text-amber-400">
+               <Ban size={16} /> <span className="hidden sm:inline">Nonaktifkan</span>
+             </button>
+             <button onClick={() => setModalAction('bulk_delete')} className="px-3 py-1.5 text-xs sm:text-sm font-medium hover:bg-white/10 rounded-lg transition-colors flex items-center gap-2 text-red-400">
+               <Trash2 size={16} /> <span className="hidden sm:inline">Hapus</span>
+             </button>
+          </div>
+        </div>
+      )}
+
       {/* Confirmation Modal */}
-      {modalAction && selectedTenant && (
+      {modalAction && (selectedTenant || modalAction.startsWith('bulk_')) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-start justify-between">
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                modalAction === 'delete' ? 'bg-red-100 text-red-600' :
-                modalAction === 'deactivate' ? 'bg-amber-100 text-amber-600' :
+                modalAction.includes('delete') ? 'bg-red-100 text-red-600' :
+                modalAction.includes('deactivate') ? 'bg-amber-100 text-amber-600' :
                 'bg-emerald-100 text-emerald-600'
               }`}>
-                {modalAction === 'delete' ? <Trash2 size={24} /> :
-                 modalAction === 'deactivate' ? <Ban size={24} /> :
+                {modalAction.includes('delete') ? <Trash2 size={24} /> :
+                 modalAction.includes('deactivate') ? <Ban size={24} /> :
                  <CheckCircle size={24} />}
               </div>
               <button onClick={() => { setModalAction(null); setSelectedTenant(null); }} className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
@@ -276,20 +346,29 @@ export default function SuperadminTenantsPage() {
               <h3 className="text-lg font-bold text-slate-900">
                 {modalAction === 'delete' ? 'Hapus Tenant' :
                  modalAction === 'deactivate' ? 'Nonaktifkan Tenant' :
-                 'Aktifkan Tenant'}
+                 modalAction === 'activate' ? 'Aktifkan Tenant' :
+                 modalAction === 'bulk_delete' ? 'Hapus Beberapa Tenant' :
+                 modalAction === 'bulk_deactivate' ? 'Nonaktifkan Beberapa Tenant' :
+                 'Aktifkan Beberapa Tenant'}
               </h3>
               <p className="text-sm text-slate-500 mt-2">
                 {modalAction === 'delete' ? (
-                  <>Apakah Anda yakin ingin <strong className="text-red-600">menghapus permanen</strong> tenant <strong>{selectedTenant.name}</strong>? Semua data (produk, transaksi, karyawan, dll.) akan dihapus dan <strong>tidak dapat dikembalikan</strong>.</>
+                  <>Apakah Anda yakin ingin <strong className="text-red-600">menghapus permanen</strong> tenant <strong>{selectedTenant?.name}</strong>? Semua data (produk, transaksi, karyawan, dll.) akan dihapus dan <strong>tidak dapat dikembalikan</strong>.</>
                 ) : modalAction === 'deactivate' ? (
-                  <>Semua user milik tenant <strong>{selectedTenant.name}</strong> akan di-nonaktifkan dan <strong>tidak bisa login</strong> sampai Anda mengaktifkannya kembali.</>
+                  <>Semua user milik tenant <strong>{selectedTenant?.name}</strong> akan di-nonaktifkan dan <strong>tidak bisa login</strong> sampai Anda mengaktifkannya kembali.</>
+                ) : modalAction === 'activate' ? (
+                  <>Semua user milik tenant <strong>{selectedTenant?.name}</strong> akan diaktifkan kembali dan <strong>bisa login</strong> seperti biasa.</>
+                ) : modalAction === 'bulk_delete' ? (
+                  <>Apakah Anda yakin ingin <strong className="text-red-600">menghapus permanen</strong> <strong>{selectedTenants.size} tenant</strong> yang dipilih? Semua data mereka akan dihapus dan <strong>tidak dapat dikembalikan</strong>.</>
+                ) : modalAction === 'bulk_deactivate' ? (
+                  <>Semua user dari <strong>{selectedTenants.size} tenant</strong> terpilih akan di-nonaktifkan dan <strong>tidak bisa login</strong>.</>
                 ) : (
-                  <>Semua user milik tenant <strong>{selectedTenant.name}</strong> akan diaktifkan kembali dan <strong>bisa login</strong> seperti biasa.</>
+                  <>Semua user dari <strong>{selectedTenants.size} tenant</strong> terpilih akan diaktifkan kembali dan <strong>bisa login</strong> seperti biasa.</>
                 )}
               </p>
             </div>
 
-            {modalAction === 'delete' && (
+            {modalAction.includes('delete') && (
               <div className="flex items-start gap-3 p-3 rounded-xl bg-red-50 border border-red-100">
                 <AlertTriangle size={18} className="text-red-500 mt-0.5 shrink-0" />
                 <p className="text-xs text-red-600 font-medium">Tindakan ini bersifat permanen dan tidak dapat dibatalkan!</p>
@@ -307,14 +386,14 @@ export default function SuperadminTenantsPage() {
                 onClick={confirmAction}
                 disabled={actionLoading}
                 className={`flex-1 px-4 py-2.5 text-sm font-semibold text-white rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-60 ${
-                  modalAction === 'delete' ? 'bg-red-600 hover:bg-red-700' :
-                  modalAction === 'deactivate' ? 'bg-amber-500 hover:bg-amber-600' :
+                  modalAction.includes('delete') ? 'bg-red-600 hover:bg-red-700' :
+                  modalAction.includes('deactivate') ? 'bg-amber-500 hover:bg-amber-600' :
                   'bg-emerald-600 hover:bg-emerald-700'
                 }`}
               >
                 {actionLoading && <Loader2 size={16} className="animate-spin" />}
-                {modalAction === 'delete' ? 'Ya, Hapus' :
-                 modalAction === 'deactivate' ? 'Ya, Nonaktifkan' :
+                {modalAction.includes('delete') ? 'Ya, Hapus' :
+                 modalAction.includes('deactivate') ? 'Ya, Nonaktifkan' :
                  'Ya, Aktifkan'}
               </button>
             </div>

@@ -726,3 +726,42 @@ export async function deleteTenant(id: string) {
   }
   return res.json();
 }
+
+export async function bulkDeactivateTenants(tenantIds: string[]) {
+  const res = await fetchWithAuth(`${API_URL}/superadmin/tenants/bulk-deactivate`, {
+    method: 'POST',
+    headers: getHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ tenantIds })
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to deactivate tenants');
+  }
+  return res.json();
+}
+
+export async function bulkActivateTenants(tenantIds: string[]) {
+  const res = await fetchWithAuth(`${API_URL}/superadmin/tenants/bulk-activate`, {
+    method: 'POST',
+    headers: getHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ tenantIds })
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to activate tenants');
+  }
+  return res.json();
+}
+
+export async function bulkDeleteTenants(tenantIds: string[]) {
+  const res = await fetchWithAuth(`${API_URL}/superadmin/tenants/bulk-delete`, {
+    method: 'POST',
+    headers: getHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ tenantIds })
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to delete tenants');
+  }
+  return res.json();
+}
