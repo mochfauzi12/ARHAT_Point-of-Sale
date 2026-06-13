@@ -256,7 +256,7 @@ export default function SettingsPage() {
                       type="text" 
                       value={storeName}
                       onChange={(e) => setStoreName(e.target.value)}
-                      className="w-full px-4 py-3.5 bg-slate-50 border-slate-200 rounded-2xl focus:bg-white focus:border-slate-400 focus:ring-4 focus:ring-slate-100 transition-all outline-none" 
+                      className="w-full px-4 py-3.5 bg-slate-50 border-slate-200 rounded-2xl focus:bg-white focus:border-slate-400 focus:ring-4 focus:ring-slate-100 transition-all outline-none text-slate-900" 
                       placeholder="Contoh: Kopi Senopati"
                     />
                   </div>
@@ -266,7 +266,7 @@ export default function SettingsPage() {
                       type="text" 
                       value={storePhone}
                       onChange={(e) => setStorePhone(e.target.value)}
-                      className="w-full px-4 py-3.5 bg-slate-50 border-slate-200 rounded-2xl focus:bg-white focus:border-slate-400 focus:ring-4 focus:ring-slate-100 transition-all outline-none" 
+                      className="w-full px-4 py-3.5 bg-slate-50 border-slate-200 rounded-2xl focus:bg-white focus:border-slate-400 focus:ring-4 focus:ring-slate-100 transition-all outline-none text-slate-900" 
                       placeholder="Contoh: 08123456789"
                     />
                   </div>
@@ -278,7 +278,7 @@ export default function SettingsPage() {
                     rows={3}
                     value={storeAddress}
                     onChange={(e) => setStoreAddress(e.target.value)}
-                    className="w-full px-4 py-3.5 bg-slate-50 border-slate-200 rounded-2xl focus:bg-white focus:border-slate-400 focus:ring-4 focus:ring-slate-100 transition-all outline-none" 
+                    className="w-full px-4 py-3.5 bg-slate-50 border-slate-200 rounded-2xl focus:bg-white focus:border-slate-400 focus:ring-4 focus:ring-slate-100 transition-all outline-none text-slate-900" 
                     placeholder="Alamat lengkap toko Anda"
                   />
                 </div>
@@ -299,7 +299,7 @@ export default function SettingsPage() {
                           type="number" 
                           value={taxRate}
                           onChange={(e) => setTaxRate(e.target.value)}
-                          className="w-full px-4 py-3.5 bg-slate-50 border-slate-200 rounded-2xl focus:bg-white focus:border-slate-400 focus:ring-4 focus:ring-slate-100 transition-all outline-none pr-10" 
+                          className="w-full px-4 py-3.5 bg-slate-50 border-slate-200 rounded-2xl focus:bg-white focus:border-slate-400 focus:ring-4 focus:ring-slate-100 transition-all outline-none pr-10 text-slate-900" 
                           placeholder="0"
                         />
                         <span className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">%</span>
@@ -322,7 +322,7 @@ export default function SettingsPage() {
                       rows={2}
                       value={receiptFooter}
                       onChange={(e) => setReceiptFooter(e.target.value)}
-                      className="w-full px-4 py-3.5 bg-slate-50 border-slate-200 rounded-2xl focus:bg-white focus:border-slate-400 focus:ring-4 focus:ring-slate-100 transition-all outline-none" 
+                      className="w-full px-4 py-3.5 bg-slate-50 border-slate-200 rounded-2xl focus:bg-white focus:border-slate-400 focus:ring-4 focus:ring-slate-100 transition-all outline-none text-slate-900" 
                       placeholder="Contoh: Terima kasih telah berbelanja! Follow IG @toko_kami"
                     />
                   </div>
@@ -459,7 +459,7 @@ export default function SettingsPage() {
                         required
                         value={newFullName}
                         onChange={(e) => setNewFullName(e.target.value)}
-                        className="w-full px-4 py-3.5 bg-slate-50 border-slate-200 rounded-2xl focus:bg-white focus:border-slate-400 focus:ring-4 focus:ring-slate-100 transition-all outline-none" 
+                        className="w-full px-4 py-3.5 bg-slate-50 border-slate-200 rounded-2xl focus:bg-white focus:border-slate-400 focus:ring-4 focus:ring-slate-100 transition-all outline-none text-slate-900" 
                         placeholder="Contoh: Budi Santoso"
                       />
                     </div>
@@ -471,7 +471,7 @@ export default function SettingsPage() {
                         disabled={!!editingUserId}
                         value={newEmail}
                         onChange={(e) => setNewEmail(e.target.value)}
-                        className={`w-full px-4 py-3.5 rounded-2xl transition-all outline-none ${editingUserId ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-slate-50 border-slate-200 focus:bg-white focus:border-slate-400 focus:ring-4 focus:ring-slate-100'}`} 
+                        className={`w-full px-4 py-3.5 rounded-2xl transition-all outline-none ${editingUserId ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-slate-50 border-slate-200 focus:bg-white focus:border-slate-400 focus:ring-4 focus:ring-slate-100 text-slate-900'}`} 
                         placeholder="kasir1@toko.com"
                       />
                     </div>
@@ -486,7 +486,7 @@ export default function SettingsPage() {
                         minLength={6}
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
-                        className="w-full px-4 py-3.5 bg-slate-50 border-slate-200 rounded-2xl focus:bg-white focus:border-slate-400 focus:ring-4 focus:ring-slate-100 transition-all outline-none" 
+                        className="w-full px-4 py-3.5 bg-slate-50 border-slate-200 rounded-2xl focus:bg-white focus:border-slate-400 focus:ring-4 focus:ring-slate-100 transition-all outline-none text-slate-900" 
                         placeholder={editingUserId ? "Kosongkan jika tidak ganti" : "Minimal 6 karakter"}
                       />
                     </div>
@@ -498,7 +498,7 @@ export default function SettingsPage() {
                         pattern="\d{4}"
                         value={newPin}
                         onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
-                        className="w-full px-4 py-3.5 bg-slate-50 border-slate-200 rounded-2xl focus:bg-white focus:border-slate-400 focus:ring-4 focus:ring-slate-100 transition-all outline-none font-mono" 
+                        className="w-full px-4 py-3.5 bg-slate-50 border-slate-200 rounded-2xl focus:bg-white focus:border-slate-400 focus:ring-4 focus:ring-slate-100 transition-all outline-none font-mono text-slate-900" 
                         placeholder={editingUserId ? "Kosongkan jika tidak ganti" : "Contoh: 1234"}
                       />
                     </div>
