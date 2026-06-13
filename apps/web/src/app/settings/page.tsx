@@ -185,7 +185,7 @@ export default function SettingsPage() {
     }
   };
 
-  if (user?.role !== 'admin' && user?.role !== 'owner') {
+  if (user?.role !== 'admin' && user?.role !== 'owner' && user?.role !== 'superadmin') {
     return (
       <DashboardLayout>
         <div className="p-6">

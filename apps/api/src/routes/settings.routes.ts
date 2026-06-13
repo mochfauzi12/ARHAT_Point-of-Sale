@@ -38,9 +38,9 @@ settingsRoutes.put('/', authMiddleware, async (c) => {
     throw new AppError('Unauthorized', 401);
   }
 
-  // Only admin can update settings
-  if (user.role !== 'admin') {
-    throw new AppError('Forbidden: Only admins can update settings', 403);
+  // Only admin, owner, and superadmin can update settings
+  if (user.role !== 'admin' && user.role !== 'owner' && user.role !== 'superadmin') {
+    throw new AppError('Forbidden: Only admins, owners, or superadmins can update settings', 403);
   }
 
   const body = await c.req.json();

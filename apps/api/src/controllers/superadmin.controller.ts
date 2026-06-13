@@ -216,96 +216,86 @@ export const bulkDeleteTenants = async (c: Context) => {
   }
 
   try {
-    // For delete, we can iterate over the IDs and use the existing logic for each ID, 
-    // or we can adjust it to use inArray. Iterating is safer to ensure all dependencies are caught per tenant.
-    // Since this is a critical destructive operation, iteration over the deletion logic is acceptable.
-    for (const tenantId of tenantIds) {
-      // 1. Transaction-related
-      const txList = await db.select({ id: transactions.id }).from(transactions).where(eq(transactions.tenantId, tenantId));
-      const txIds = txList.map(t => t.id);
-      if (txIds.length > 0) {
-        for (const txId of txIds) {
-          await db.delete(transactionItems).where(eq(transactionItems.transactionId, txId));
-          await db.delete(payments).where(eq(payments.transactionId, txId));
-          await db.delete(whatsappMessages).where(eq(whatsappMessages.transactionId, txId));
-        }
-        await db.delete(transactions).where(eq(transactions.tenantId, tenantId));
-      }
-
-      // 2. Inventory-related
-      const outletList = await db.select({ id: outlets.id }).from(outlets).where(eq(outlets.tenantId, tenantId));
-      const outletIds = outletList.map(o => o.id);
-
-      // Stock transfers
-      const transferList = await db.select({ id: stockTransfers.id }).from(stockTransfers).where(eq(stockTransfers.tenantId, tenantId));
-      for (const t of transferList) {
-        await db.delete(stockTransferItems).where(eq(stockTransferItems.transferId, t.id));
-      }
-      await db.delete(stockTransfers).where(eq(stockTransfers.tenantId, tenantId));
-
-      // Stock adjustments
-      const adjList = await db.select({ id: stockAdjustments.id }).from(stockAdjustments).where(eq(stockAdjustments.tenantId, tenantId));
-      for (const a of adjList) {
-        await db.delete(stockAdjustmentItems).where(eq(stockAdjustmentItems.adjustmentId, a.id));
-      }
-      await db.delete(stockAdjustments).where(eq(stockAdjustments.tenantId, tenantId));
-
-      // Stock opname sessions
-      const opnameList = await db.select({ id: stockOpnameSessions.id }).from(stockOpnameSessions).where(eq(stockOpnameSessions.tenantId, tenantId));
-      for (const o of opnameList) {
-        await db.delete(stockOpnameItems).where(eq(stockOpnameItems.opnameId, o.id));
-      }
-      await db.delete(stockOpnameSessions).where(eq(stockOpnameSessions.tenantId, tenantId));
-
-      // Stock movements
-      await db.delete(stockMovements).where(eq(stockMovements.tenantId, tenantId));
-
-      // 3. Product-related
-      const productList = await db.select({ id: products.id }).from(products).where(eq(products.tenantId, tenantId));
-      const productIds = productList.map(p => p.id);
-      if (productIds.length > 0) {
-        for (const pId of productIds) {
-          await db.delete(boms).where(eq(boms.productId, pId));
-          await db.delete(productStocks).where(eq(productStocks.productId, pId));
-          await db.delete(productVariants).where(eq(productVariants.productId, pId));
-          await db.delete(productModifiers).where(eq(productModifiers.productId, pId));
-        }
-        await db.delete(products).where(eq(products.tenantId, tenantId));
-      }
-
-      // 4. Raw materials
-      const rmList = await db.select({ id: rawMaterials.id }).from(rawMaterials).where(eq(rawMaterials.tenantId, tenantId));
-      for (const rm of rmList) {
-        await db.delete(rawMaterialStocks).where(eq(rawMaterialStocks.rawMaterialId, rm.id));
-      }
-      await db.delete(rawMaterials).where(eq(rawMaterials.tenantId, tenantId));
-
-      // 5. Customers, Discounts, Shifts
-      await db.delete(customers).where(eq(customers.tenantId, tenantId));
-      await db.delete(discounts).where(eq(discounts.tenantId, tenantId));
-      await db.delete(shifts).where(eq(shifts.tenantId, tenantId));
-
-      // 6. WhatsApp messages (tenant-level)
-      await db.delete(whatsappMessages).where(eq(whatsappMessages.tenantId, tenantId));
-
-      // 7. Users (sessions, tokens)
-      const userList = await db.select({ id: users.id }).from(users).where(eq(users.tenantId, tenantId));
-      const userIds = userList.map(u => u.id);
-      if (userIds.length > 0) {
-        for (const uId of userIds) {
-          await db.delete(sessions).where(eq(sessions.userId, uId));
-          await db.delete(emailVerificationTokens).where(eq(emailVerificationTokens.userId, uId));
-          await db.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, uId));
-        }
-      }
-      await db.delete(users).where(eq(users.tenantId, tenantId));
-
-      // 8. Outlets
-      await db.delete(outlets).where(eq(outlets.tenantId, tenantId));
-
-      // 9. Finally, delete the tenant itself
-      await db.delete(tenants).where(eq(tenants.id, tenantId));
+    // 1. Transaction-related
+    const txList = await db.select({ id: transactions.id }).from(transactions).where(inArray(transactions.tenantId, tenantIds));
+    const txIds = txList.map(t => t.id);
+    if (txIds.length > 0) {
+      await db.delete(transactionItems).where(inArray(transactionItems.transactionId, txIds));
+      await db.delete(payments).where(inArray(payments.transactionId, txIds));
+      await db.delete(whatsappMessages).where(inArray(whatsappMessages.transactionId, txIds));
+      await db.delete(transactions).where(inArray(transactions.tenantId, tenantIds));
     }
+
+    // 2. Inventory-related
+    // Stock transfers
+    const transferList = await db.select({ id: stockTransfers.id }).from(stockTransfers).where(inArray(stockTransfers.tenantId, tenantIds));
+    const transferIds = transferList.map(t => t.id);
+    if (transferIds.length > 0) {
+      await db.delete(stockTransferItems).where(inArray(stockTransferItems.transferId, transferIds));
+    }
+    await db.delete(stockTransfers).where(inArray(stockTransfers.tenantId, tenantIds));
+
+    // Stock adjustments
+    const adjList = await db.select({ id: stockAdjustments.id }).from(stockAdjustments).where(inArray(stockAdjustments.tenantId, tenantIds));
+    const adjIds = adjList.map(a => a.id);
+    if (adjIds.length > 0) {
+      await db.delete(stockAdjustmentItems).where(inArray(stockAdjustmentItems.adjustmentId, adjIds));
+    }
+    await db.delete(stockAdjustments).where(inArray(stockAdjustments.tenantId, tenantIds));
+
+    // Stock opname sessions
+    const opnameList = await db.select({ id: stockOpnameSessions.id }).from(stockOpnameSessions).where(inArray(stockOpnameSessions.tenantId, tenantIds));
+    const opnameIds = opnameList.map(o => o.id);
+    if (opnameIds.length > 0) {
+      await db.delete(stockOpnameItems).where(inArray(stockOpnameItems.opnameId, opnameIds));
+    }
+    await db.delete(stockOpnameSessions).where(inArray(stockOpnameSessions.tenantId, tenantIds));
+
+    // Stock movements
+    await db.delete(stockMovements).where(inArray(stockMovements.tenantId, tenantIds));
+
+    // 3. Product-related
+    const productList = await db.select({ id: products.id }).from(products).where(inArray(products.tenantId, tenantIds));
+    const productIds = productList.map(p => p.id);
+    if (productIds.length > 0) {
+      await db.delete(boms).where(inArray(boms.productId, productIds));
+      await db.delete(productStocks).where(inArray(productStocks.productId, productIds));
+      await db.delete(productVariants).where(inArray(productVariants.productId, productIds));
+      await db.delete(productModifiers).where(inArray(productModifiers.productId, productIds));
+      await db.delete(products).where(inArray(products.tenantId, tenantIds));
+    }
+
+    // 4. Raw materials
+    const rmList = await db.select({ id: rawMaterials.id }).from(rawMaterials).where(inArray(rawMaterials.tenantId, tenantIds));
+    const rmIds = rmList.map(rm => rm.id);
+    if (rmIds.length > 0) {
+      await db.delete(rawMaterialStocks).where(inArray(rawMaterialStocks.rawMaterialId, rmIds));
+    }
+    await db.delete(rawMaterials).where(inArray(rawMaterials.tenantId, tenantIds));
+
+    // 5. Customers, Discounts, Shifts
+    await db.delete(customers).where(inArray(customers.tenantId, tenantIds));
+    await db.delete(discounts).where(inArray(discounts.tenantId, tenantIds));
+    await db.delete(shifts).where(inArray(shifts.tenantId, tenantIds));
+
+    // 6. WhatsApp messages (tenant-level)
+    await db.delete(whatsappMessages).where(inArray(whatsappMessages.tenantId, tenantIds));
+
+    // 7. Users (sessions, tokens)
+    const userList = await db.select({ id: users.id }).from(users).where(inArray(users.tenantId, tenantIds));
+    const userIds = userList.map(u => u.id);
+    if (userIds.length > 0) {
+      await db.delete(sessions).where(inArray(sessions.userId, userIds));
+      await db.delete(emailVerificationTokens).where(inArray(emailVerificationTokens.userId, userIds));
+      await db.delete(passwordResetTokens).where(inArray(passwordResetTokens.userId, userIds));
+    }
+    await db.delete(users).where(inArray(users.tenantId, tenantIds));
+
+    // 8. Outlets
+    await db.delete(outlets).where(inArray(outlets.tenantId, tenantIds));
+
+    // 9. Finally, delete the tenant itself
+    await db.delete(tenants).where(inArray(tenants.id, tenantIds));
 
     return c.json({ success: true, message: `${tenantIds.length} tenants have been permanently deleted.` });
   } catch (error: any) {

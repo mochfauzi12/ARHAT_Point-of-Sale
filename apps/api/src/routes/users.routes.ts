@@ -18,7 +18,7 @@ usersRoutes.get('/', authMiddleware, async (c) => {
   }
 
   // Admin and supervisor can view users
-  if (user.role !== 'admin' && user.role !== 'supervisor') {
+  if (user.role !== 'admin' && user.role !== 'supervisor' && user.role !== 'owner' && user.role !== 'superadmin') {
     throw new AppError('Forbidden', 403);
   }
 
@@ -50,8 +50,8 @@ usersRoutes.post('/', authMiddleware, async (c) => {
   }
 
   // Only admin can create users
-  if (user.role !== 'admin') {
-    throw new AppError('Forbidden: Only admins can manage users', 403);
+  if (user.role !== 'admin' && user.role !== 'owner' && user.role !== 'superadmin') {
+    throw new AppError('Forbidden: Only admins, owners, or superadmins can manage users', 403);
   }
 
   const body = await c.req.json();
@@ -95,8 +95,8 @@ const updateUserSchema = z.object({
 // Update user
 usersRoutes.put('/:id', authMiddleware, async (c) => {
   const user = c.get('user' as any);
-  if (!user || user.role !== 'admin') {
-    throw new AppError('Forbidden: Only admins can manage users', 403);
+  if (!user || (user.role !== 'admin' && user.role !== 'owner' && user.role !== 'superadmin')) {
+    throw new AppError('Forbidden: Only admins, owners, or superadmins can manage users', 403);
   }
   
   const id = c.req.param('id');
@@ -124,8 +124,8 @@ usersRoutes.put('/:id', authMiddleware, async (c) => {
 // Delete user
 usersRoutes.delete('/:id', authMiddleware, async (c) => {
   const user = c.get('user' as any);
-  if (!user || user.role !== 'admin') {
-    throw new AppError('Forbidden: Only admins can manage users', 403);
+  if (!user || (user.role !== 'admin' && user.role !== 'owner' && user.role !== 'superadmin')) {
+    throw new AppError('Forbidden: Only admins, owners, or superadmins can manage users', 403);
   }
 
   const id = c.req.param('id');
