@@ -813,3 +813,16 @@ export async function deleteExpense(id: string) {
   if (!res.ok) throw new Error('Failed to delete expense');
   return res.json();
 }
+
+export async function registerTenant(payload: any) {
+  const res = await fetch(`${API_URL}/auth/register-tenant`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || err.error || 'Failed to register tenant');
+  }
+  return res.json();
+}

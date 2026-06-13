@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { fetchSuperadminTenants, deactivateTenant, activateTenant, deleteTenant, bulkActivateTenants, bulkDeactivateTenants, bulkDeleteTenants } from '@/lib/api';
-import { Building, Users, Search, ArrowLeft, MoreVertical, Trash2, Ban, CheckCircle, Mail, Calendar, AlertTriangle, X, Loader2 } from 'lucide-react';
+import { fetchSuperadminTenants, deactivateTenant, activateTenant, deleteTenant, bulkActivateTenants, bulkDeactivateTenants, bulkDeleteTenants, registerTenant } from '@/lib/api';
+import { Building, Users, Search, ArrowLeft, MoreVertical, Trash2, Ban, CheckCircle, Mail, Calendar, AlertTriangle, X, Loader2, Plus } from 'lucide-react';
 
 interface Tenant {
   id: string;
@@ -14,7 +14,7 @@ interface Tenant {
   user_count: number;
 }
 
-type ModalAction = 'deactivate' | 'activate' | 'delete' | 'bulk_deactivate' | 'bulk_activate' | 'bulk_delete' | null;
+type ModalAction = 'create' | 'deactivate' | 'activate' | 'delete' | 'bulk_deactivate' | 'bulk_activate' | 'bulk_delete' | null;
 
 export default function SuperadminTenantsPage() {
   const router = useRouter();
@@ -27,6 +27,12 @@ export default function SuperadminTenantsPage() {
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [selectedTenants, setSelectedTenants] = useState<Set<string>>(new Set());
+  const [createForm, setCreateForm] = useState({
+    tenantName: '',
+    fullName: '',
+    email: '',
+    password: ''
+  });
   const dropdownRef = useRef<HTMLTableCellElement>(null);
 
   useEffect(() => {
@@ -96,6 +102,22 @@ export default function SuperadminTenantsPage() {
     }
   };
 
+  const handleCreateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setActionLoading(true);
+    try {
+      await registerTenant(createForm);
+      await loadTenants();
+      setModalAction(null);
+      setCreateForm({ tenantName: '', fullName: '', email: '', password: '' });
+      alert('Tenant berhasil dibuat!');
+    } catch (err: any) {
+      alert('Gagal: ' + (err.message || 'Terjadi kesalahan'));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const filteredTenants = tenants.filter(t =>
     t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     t.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -137,17 +159,26 @@ export default function SuperadminTenantsPage() {
           </p>
         </div>
 
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="text-slate-400" size={18} />
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1 md:w-64">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="text-slate-400" size={18} />
+            </div>
+            <input
+              type="text"
+              placeholder="Cari tenant atau email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-sm"
+            />
           </div>
-          <input
-            type="text"
-            placeholder="Cari tenant atau email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full md:w-64 pl-10 pr-4 py-2 border border-slate-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-sm"
-          />
+          <button
+            onClick={() => setModalAction('create')}
+            className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-all"
+          >
+            <Plus size={18} />
+            <span className="hidden sm:inline">Tambah Tenant</span>
+          </button>
         </div>
       </div>
 
@@ -323,17 +354,19 @@ export default function SuperadminTenantsPage() {
         </div>
       )}
 
-      {/* Confirmation Modal */}
-      {modalAction && (selectedTenant || modalAction.startsWith('bulk_')) && (
+      {/* Confirmation & Create Modal */}
+      {modalAction && (selectedTenant || modalAction.startsWith('bulk_') || modalAction === 'create') && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-start justify-between">
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
+                modalAction === 'create' ? 'bg-teal-100 text-teal-600' :
                 modalAction.includes('delete') ? 'bg-red-100 text-red-600' :
                 modalAction.includes('deactivate') ? 'bg-amber-100 text-amber-600' :
                 'bg-emerald-100 text-emerald-600'
               }`}>
-                {modalAction.includes('delete') ? <Trash2 size={24} /> :
+                {modalAction === 'create' ? <Plus size={24} /> :
+                 modalAction.includes('delete') ? <Trash2 size={24} /> :
                  modalAction.includes('deactivate') ? <Ban size={24} /> :
                  <CheckCircle size={24} />}
               </div>
@@ -342,61 +375,135 @@ export default function SuperadminTenantsPage() {
               </button>
             </div>
 
-            <div>
-              <h3 className="text-lg font-bold text-slate-900">
-                {modalAction === 'delete' ? 'Hapus Tenant' :
-                 modalAction === 'deactivate' ? 'Nonaktifkan Tenant' :
-                 modalAction === 'activate' ? 'Aktifkan Tenant' :
-                 modalAction === 'bulk_delete' ? 'Hapus Beberapa Tenant' :
-                 modalAction === 'bulk_deactivate' ? 'Nonaktifkan Beberapa Tenant' :
-                 'Aktifkan Beberapa Tenant'}
-              </h3>
-              <p className="text-sm text-slate-500 mt-2">
-                {modalAction === 'delete' ? (
-                  <>Apakah Anda yakin ingin <strong className="text-red-600">menghapus permanen</strong> tenant <strong>{selectedTenant?.name}</strong>? Semua data (produk, transaksi, karyawan, dll.) akan dihapus dan <strong>tidak dapat dikembalikan</strong>.</>
-                ) : modalAction === 'deactivate' ? (
-                  <>Semua user milik tenant <strong>{selectedTenant?.name}</strong> akan di-nonaktifkan dan <strong>tidak bisa login</strong> sampai Anda mengaktifkannya kembali.</>
-                ) : modalAction === 'activate' ? (
-                  <>Semua user milik tenant <strong>{selectedTenant?.name}</strong> akan diaktifkan kembali dan <strong>bisa login</strong> seperti biasa.</>
-                ) : modalAction === 'bulk_delete' ? (
-                  <>Apakah Anda yakin ingin <strong className="text-red-600">menghapus permanen</strong> <strong>{selectedTenants.size} tenant</strong> yang dipilih? Semua data mereka akan dihapus dan <strong>tidak dapat dikembalikan</strong>.</>
-                ) : modalAction === 'bulk_deactivate' ? (
-                  <>Semua user dari <strong>{selectedTenants.size} tenant</strong> terpilih akan di-nonaktifkan dan <strong>tidak bisa login</strong>.</>
-                ) : (
-                  <>Semua user dari <strong>{selectedTenants.size} tenant</strong> terpilih akan diaktifkan kembali dan <strong>bisa login</strong> seperti biasa.</>
+            {modalAction === 'create' ? (
+              <form onSubmit={handleCreateSubmit} className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900 mb-4">Tambah Tenant Baru</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Nama Bisnis (Tenant)</label>
+                      <input
+                        type="text"
+                        required
+                        value={createForm.tenantName}
+                        onChange={e => setCreateForm({...createForm, tenantName: e.target.value})}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                        placeholder="Contoh: Toko Berkah"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Nama Owner</label>
+                      <input
+                        type="text"
+                        required
+                        value={createForm.fullName}
+                        onChange={e => setCreateForm({...createForm, fullName: e.target.value})}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                        placeholder="Contoh: Budi Santoso"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Email Owner</label>
+                      <input
+                        type="email"
+                        required
+                        value={createForm.email}
+                        onChange={e => setCreateForm({...createForm, email: e.target.value})}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                        placeholder="Contoh: budi@gmail.com"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                      <input
+                        type="password"
+                        required
+                        minLength={6}
+                        value={createForm.password}
+                        onChange={e => setCreateForm({...createForm, password: e.target.value})}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                        placeholder="Minimal 6 karakter"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-3 pt-4 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => { setModalAction(null); setSelectedTenant(null); }}
+                    className="flex-1 px-4 py-2.5 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={actionLoading}
+                    className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-teal-600 hover:bg-teal-700 rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+                  >
+                    {actionLoading && <Loader2 size={16} className="animate-spin" />}
+                    Buat Tenant
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">
+                    {modalAction === 'delete' ? 'Hapus Tenant' :
+                     modalAction === 'deactivate' ? 'Nonaktifkan Tenant' :
+                     modalAction === 'activate' ? 'Aktifkan Tenant' :
+                     modalAction === 'bulk_delete' ? 'Hapus Beberapa Tenant' :
+                     modalAction === 'bulk_deactivate' ? 'Nonaktifkan Beberapa Tenant' :
+                     'Aktifkan Beberapa Tenant'}
+                  </h3>
+                  <p className="text-sm text-slate-500 mt-2">
+                    {modalAction === 'delete' ? (
+                      <>Apakah Anda yakin ingin <strong className="text-red-600">menghapus permanen</strong> tenant <strong>{selectedTenant?.name}</strong>? Semua data (produk, transaksi, karyawan, dll.) akan dihapus dan <strong>tidak dapat dikembalikan</strong>.</>
+                    ) : modalAction === 'deactivate' ? (
+                      <>Semua user milik tenant <strong>{selectedTenant?.name}</strong> akan di-nonaktifkan dan <strong>tidak bisa login</strong> sampai Anda mengaktifkannya kembali.</>
+                    ) : modalAction === 'activate' ? (
+                      <>Semua user milik tenant <strong>{selectedTenant?.name}</strong> akan diaktifkan kembali dan <strong>bisa login</strong> seperti biasa.</>
+                    ) : modalAction === 'bulk_delete' ? (
+                      <>Apakah Anda yakin ingin <strong className="text-red-600">menghapus permanen</strong> <strong>{selectedTenants.size} tenant</strong> yang dipilih? Semua data mereka akan dihapus dan <strong>tidak dapat dikembalikan</strong>.</>
+                    ) : modalAction === 'bulk_deactivate' ? (
+                      <>Semua user dari <strong>{selectedTenants.size} tenant</strong> terpilih akan di-nonaktifkan dan <strong>tidak bisa login</strong>.</>
+                    ) : (
+                      <>Semua user dari <strong>{selectedTenants.size} tenant</strong> terpilih akan diaktifkan kembali dan <strong>bisa login</strong> seperti biasa.</>
+                    )}
+                  </p>
+                </div>
+
+                {modalAction.includes('delete') && (
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-red-50 border border-red-100">
+                    <AlertTriangle size={18} className="text-red-500 mt-0.5 shrink-0" />
+                    <p className="text-xs text-red-600 font-medium">Tindakan ini bersifat permanen dan tidak dapat dibatalkan!</p>
+                  </div>
                 )}
-              </p>
-            </div>
 
-            {modalAction.includes('delete') && (
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-red-50 border border-red-100">
-                <AlertTriangle size={18} className="text-red-500 mt-0.5 shrink-0" />
-                <p className="text-xs text-red-600 font-medium">Tindakan ini bersifat permanen dan tidak dapat dibatalkan!</p>
-              </div>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => { setModalAction(null); setSelectedTenant(null); }}
+                    className="flex-1 px-4 py-2.5 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    onClick={confirmAction}
+                    disabled={actionLoading}
+                    className={`flex-1 px-4 py-2.5 text-sm font-semibold text-white rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-60 ${
+                      modalAction.includes('delete') ? 'bg-red-600 hover:bg-red-700' :
+                      modalAction.includes('deactivate') ? 'bg-amber-500 hover:bg-amber-600' :
+                      'bg-emerald-600 hover:bg-emerald-700'
+                    }`}
+                  >
+                    {actionLoading && <Loader2 size={16} className="animate-spin" />}
+                    {modalAction.includes('delete') ? 'Ya, Hapus' :
+                     modalAction.includes('deactivate') ? 'Ya, Nonaktifkan' :
+                     'Ya, Aktifkan'}
+                  </button>
+                </div>
+              </>
             )}
-
-            <div className="flex gap-3 pt-2">
-              <button
-                onClick={() => { setModalAction(null); setSelectedTenant(null); }}
-                className="flex-1 px-4 py-2.5 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
-              >
-                Batal
-              </button>
-              <button
-                onClick={confirmAction}
-                disabled={actionLoading}
-                className={`flex-1 px-4 py-2.5 text-sm font-semibold text-white rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-60 ${
-                  modalAction.includes('delete') ? 'bg-red-600 hover:bg-red-700' :
-                  modalAction.includes('deactivate') ? 'bg-amber-500 hover:bg-amber-600' :
-                  'bg-emerald-600 hover:bg-emerald-700'
-                }`}
-              >
-                {actionLoading && <Loader2 size={16} className="animate-spin" />}
-                {modalAction.includes('delete') ? 'Ya, Hapus' :
-                 modalAction.includes('deactivate') ? 'Ya, Nonaktifkan' :
-                 'Ya, Aktifkan'}
-              </button>
-            </div>
           </div>
         </div>
       )}
