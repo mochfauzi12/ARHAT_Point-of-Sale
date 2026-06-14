@@ -144,28 +144,24 @@ export default function LoginPage() {
               </button>
             </div>
 
-            <div className="mt-8 mb-2">
-               <Link 
-                 href="#"
-                 className="text-[12px] text-slate-500 font-medium hover:text-slate-800 transition-colors"
-               >
-                 Need help or forgot your PIN?
-               </Link>
+            <div className="mt-8 mb-2 w-full max-w-[240px] flex flex-col gap-3">
+              <Link
+                href="/auth/login"
+                className="w-full h-12 rounded-[1rem] bg-teal-600/10 border border-teal-600/20 text-teal-800 flex items-center justify-center gap-2 font-semibold text-[14px] hover:bg-teal-600/20 transition-all active:scale-95 shadow-sm"
+              >
+                <UserCircle2 size={18} /> Login as Admin
+              </Link>
+              
+              <Link 
+                href="#"
+                className="text-[12px] text-slate-500 font-medium hover:text-slate-800 transition-colors text-center"
+              >
+                Need help or forgot your PIN?
+              </Link>
             </div>
 
           </div>
         </div>
-
-        {/* Admin Login Link */}
-        <div className="mt-8 flex justify-center z-10 relative">
-          <Link 
-            href="/auth/login"
-            className="flex items-center gap-2 text-[13px] font-medium text-teal-100/70 hover:text-white transition-colors"
-          >
-            <Key size={14} /> Switch to Admin Login
-          </Link>
-        </div>
-
       </div>
     </div>
   );
