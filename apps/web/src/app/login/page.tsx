@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { loginPin } from '@/lib/api';
 import { Delete } from 'lucide-react';
 
@@ -76,8 +77,14 @@ export default function LoginPage() {
         {/* Top Header */}
         <div className="px-6 flex justify-between items-center mt-2">
           <div className="flex items-center gap-2.5">
-            <div className="w-6 h-6 rounded-md bg-[#165a41]"></div>
-            <span className="font-bold text-[15px] text-slate-800">SalesPoint</span>
+            <Image 
+              src="/transaksi-kita-logo.png" 
+              alt="Transaksi Kita Logo" 
+              width={28} 
+              height={28} 
+              className="object-contain"
+            />
+            <span className="font-bold text-[15px] text-slate-800">Transaksi Kita</span>
           </div>
           <div className="bg-[#e6f4ea] text-[#165a41] px-3 py-1 rounded-full text-xs font-bold border border-[#cce8d5]">
             Shift Pagi
