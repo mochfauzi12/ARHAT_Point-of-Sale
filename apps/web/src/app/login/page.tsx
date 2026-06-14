@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { loginPin } from '@/lib/api';
-import { Delete, Fingerprint, UserCircle2, ShoppingCart, TrendingUp } from 'lucide-react';
+import { Delete, Fingerprint, UserCircle2, ShoppingCart, TrendingUp, Key } from 'lucide-react';
 
 export default function LoginPage() {
   const [pin, setPin] = useState('');
@@ -155,6 +155,17 @@ export default function LoginPage() {
 
           </div>
         </div>
+
+        {/* Admin Login Link */}
+        <div className="mt-8 flex justify-center z-10 relative">
+          <Link 
+            href="/auth/login"
+            className="flex items-center gap-2 text-[13px] font-medium text-teal-100/70 hover:text-white transition-colors"
+          >
+            <Key size={14} /> Switch to Admin Login
+          </Link>
+        </div>
+
       </div>
     </div>
   );
