@@ -6,7 +6,9 @@ const authRoutes = new Hono();
 
 authRoutes.post('/register-tenant', authController.registerTenant);
 authRoutes.post('/register', authController.register);
+authRoutes.post('/verify-register-otp', authController.verifyRegisterOtp);
 authRoutes.post('/login', authController.login);
+authRoutes.post('/verify-login-otp', authController.verifyLoginOtp);
 authRoutes.post('/login-pin', authController.loginPin);
 
 authRoutes.get('/me', authMiddleware, async (c) => {

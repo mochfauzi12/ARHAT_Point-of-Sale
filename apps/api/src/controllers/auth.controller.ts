@@ -22,6 +22,11 @@ const loginSchema = z.object({
   password: z.string(),
 });
 
+const verifyOtpSchema = z.object({
+  email: z.string().email(),
+  code: z.string().length(6),
+});
+
 export const authController = {
   registerTenant: async (ctx: Context) => {
     try {
@@ -60,6 +65,38 @@ export const authController = {
       
       const ipAddress = ctx.req.header('x-forwarded-for') || 'unknown';
       const result = await authService.login(data.email, data.password, ipAddress);
+      
+      return ctx.json({ success: true, data: result }, 200);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        throw new AppError(error.errors[0].message, 400);
+      }
+      throw error;
+    }
+  },
+
+  verifyRegisterOtp: async (ctx: Context) => {
+    try {
+      const body = await ctx.req.json();
+      const data = verifyOtpSchema.parse(body);
+      
+      const result = await authService.verifyRegisterOtp(data.email, data.code);
+      return ctx.json({ success: true, data: result }, 200);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        throw new AppError(error.errors[0].message, 400);
+      }
+      throw error;
+    }
+  },
+
+  verifyLoginOtp: async (ctx: Context) => {
+    try {
+      const body = await ctx.req.json();
+      const data = verifyOtpSchema.parse(body);
+      
+      const ipAddress = ctx.req.header('x-forwarded-for') || 'unknown';
+      const result = await authService.verifyLoginOtp(data.email, data.code, ipAddress);
       
       return ctx.json({ success: true, data: result }, 200);
     } catch (error: any) {

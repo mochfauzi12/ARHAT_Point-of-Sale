@@ -38,6 +38,15 @@ export const emailVerificationTokens = pgTable('email_verification_tokens', {
   usedAt: timestamp('used_at'),
 });
 
+export const otpCodes = pgTable('otp_codes', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: varchar('email', { length: 255 }).notNull(),
+  code: varchar('code', { length: 6 }).notNull(),
+  type: varchar('type', { length: 50 }).notNull(), // 'register', 'login'
+  expiresAt: timestamp('expires_at').notNull(),
+  usedAt: timestamp('used_at'),
+});
+
 export const passwordResetTokens = pgTable('password_reset_tokens', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull().references(() => users.id),

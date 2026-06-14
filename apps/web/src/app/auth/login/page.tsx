@@ -5,12 +5,14 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Logo } from '@/components/ui/Logo';
 import { API_URL } from '@/lib/api';
-import { ArrowLeft, Loader2, Mail, Lock, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Mail, Lock, CheckCircle2, KeyRound } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [otp, setOtp] = useState('');
+  const [step, setStep] = useState<'login' | 'otp'>('login');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -20,21 +22,39 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await response.json();
-      
-      if (response.ok && data?.data?.accessToken) {
-        document.cookie = `token=${data.data.accessToken}; path=/; max-age=86400`;
-        router.push('/dashboard');
+      if (step === 'login') {
+        const response = await fetch(`${API_URL}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await response.json();
+        
+        if (response.ok && data?.requiresOtp) {
+          setStep('otp');
+        } else if (response.ok && data?.data?.accessToken) {
+          document.cookie = `token=${data.data.accessToken}; path=/; max-age=86400`;
+          router.push('/dashboard');
+        } else {
+          throw new Error(data.error || 'Email atau password salah');
+        }
       } else {
-        throw new Error(data.error || 'Email atau password salah');
+        const response = await fetch(`${API_URL}/auth/verify-login-otp`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, code: otp })
+        });
+        const data = await response.json();
+        
+        if (response.ok && data?.data?.accessToken) {
+          document.cookie = `token=${data.data.accessToken}; path=/; max-age=86400`;
+          router.push('/dashboard');
+        } else {
+          throw new Error(data.error || 'Kode OTP tidak valid');
+        }
       }
     } catch (err: any) {
-      setError(err.message || 'Gagal untuk login. Silakan periksa kembali email dan password Anda.');
+      setError(err.message || 'Gagal untuk login. Silakan periksa kembali data Anda.');
     } finally {
       setIsLoading(false);
     }
@@ -97,8 +117,12 @@ export default function LoginPage() {
             <div className="lg:hidden flex justify-center mb-6">
               <Logo width={64} height={64} showText={false} />
             </div>
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">Selamat Datang Kembali</h1>
-            <p className="text-slate-500 font-medium">Masuk ke akun admin untuk mengelola sistem.</p>
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+              {step === 'login' ? 'Selamat Datang Kembali' : 'Verifikasi OTP'}
+            </h1>
+            <p className="text-slate-500 font-medium">
+              {step === 'login' ? 'Masuk ke akun admin untuk mengelola sistem.' : `Masukkan kode OTP 6 angka yang dikirim ke ${email}`}
+            </p>
           </div>
 
           <form className="space-y-6" onSubmit={handleSubmit}>
@@ -110,46 +134,70 @@ export default function LoginPage() {
             )}
 
             <div className="space-y-5">
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700" htmlFor="email">Alamat Email</label>
-                <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-teal-600 transition-colors">
-                    <Mail size={20} strokeWidth={2} />
+              {step === 'login' ? (
+                <>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700" htmlFor="email">Alamat Email</label>
+                    <div className="relative group">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-teal-600 transition-colors">
+                        <Mail size={20} strokeWidth={2} />
+                      </div>
+                      <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        required
+                        className="block w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all duration-200 shadow-sm"
+                        placeholder="nama@perusahaan.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                      />
+                    </div>
                   </div>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    required
-                    className="block w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all duration-200 shadow-sm"
-                    placeholder="nama@perusahaan.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-              </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-bold text-slate-700" htmlFor="password">Password</label>
-                  <a href="#" className="text-sm font-semibold text-teal-600 hover:text-teal-700 hover:underline">Lupa password?</a>
-                </div>
-                <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-teal-600 transition-colors">
-                    <Lock size={20} strokeWidth={2} />
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-bold text-slate-700" htmlFor="password">Password</label>
+                      <a href="#" className="text-sm font-semibold text-teal-600 hover:text-teal-700 hover:underline">Lupa password?</a>
+                    </div>
+                    <div className="relative group">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-teal-600 transition-colors">
+                        <Lock size={20} strokeWidth={2} />
+                      </div>
+                      <input
+                        id="password"
+                        name="password"
+                        type="password"
+                        required
+                        className="block w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all duration-200 shadow-sm"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                      />
+                    </div>
                   </div>
-                  <input
-                    id="password"
-                    name="password"
-                    type="password"
-                    required
-                    className="block w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all duration-200 shadow-sm"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
+                </>
+              ) : (
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700" htmlFor="otp">Kode OTP</label>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-teal-600 transition-colors">
+                      <KeyRound size={20} strokeWidth={2} />
+                    </div>
+                    <input
+                      id="otp"
+                      name="otp"
+                      type="text"
+                      maxLength={6}
+                      required
+                      className="block w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all duration-200 shadow-sm text-center tracking-[0.5em] text-lg"
+                      placeholder="000000"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <button
@@ -163,7 +211,7 @@ export default function LoginPage() {
                   <span>Memproses...</span>
                 </>
               ) : (
-                <span>Masuk ke Dashboard</span>
+                <span>{step === 'login' ? 'Lanjutkan ke Verifikasi' : 'Masuk ke Dashboard'}</span>
               )}
             </button>
           </form>

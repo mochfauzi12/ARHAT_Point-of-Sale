@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Logo } from '@/components/ui/Logo';
 import { API_URL } from '@/lib/api';
-import { ArrowLeft, Loader2, Mail, Lock, User, Store } from 'lucide-react';
+import { ArrowLeft, Loader2, Mail, Lock, User, Store, KeyRound } from 'lucide-react';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -13,6 +13,8 @@ export default function RegisterPage() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [otp, setOtp] = useState('');
+  const [step, setStep] = useState<'register' | 'otp'>('register');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -22,31 +24,61 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}/auth/register-tenant`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tenantName, fullName, email, password })
-      });
-      const data = await response.json();
-      
-      if (response.ok && data?.success) {
-        // Automatically login the user after successful registration
-        const loginResponse = await fetch(`${API_URL}/auth/login`, {
+      if (step === 'register') {
+        const response = await fetch(`${API_URL}/auth/register-tenant`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
+          body: JSON.stringify({ tenantName, fullName, email, password })
         });
-        const loginData = await loginResponse.json();
+        const data = await response.json();
         
-        if (loginResponse.ok && loginData?.data?.accessToken) {
-          document.cookie = `token=${loginData.data.accessToken}; path=/; max-age=86400`;
-          router.push('/dashboard');
+        if (response.ok && data?.requiresOtp) {
+          setStep('otp');
+        } else if (response.ok && data?.success) {
+          // If no OTP required (fallback)
+          const loginResponse = await fetch(`${API_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+          });
+          const loginData = await loginResponse.json();
+          if (loginResponse.ok && loginData?.data?.accessToken) {
+            document.cookie = `token=${loginData.data.accessToken}; path=/; max-age=86400`;
+            router.push('/dashboard');
+          } else {
+            router.push('/auth/login?registered=true');
+          }
         } else {
-          // If auto-login fails, redirect to login page
-          router.push('/auth/login?registered=true');
+          throw new Error(data.error || 'Gagal mendaftarkan toko. Silakan coba lagi.');
         }
       } else {
-        throw new Error(data.error || 'Gagal mendaftarkan toko. Silakan coba lagi.');
+        const response = await fetch(`${API_URL}/auth/verify-register-otp`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, code: otp })
+        });
+        const data = await response.json();
+        
+        if (response.ok && data?.success) {
+          // After verification, try to login automatically
+          const loginResponse = await fetch(`${API_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+          });
+          const loginData = await loginResponse.json();
+          
+          if (loginResponse.ok && loginData?.data?.accessToken) {
+            document.cookie = `token=${loginData.data.accessToken}; path=/; max-age=86400`;
+            router.push('/dashboard');
+          } else if (loginData?.requiresOtp) {
+             router.push('/auth/login?verified=true');
+          } else {
+            router.push('/auth/login?registered=true');
+          }
+        } else {
+          throw new Error(data.error || 'Kode OTP tidak valid');
+        }
       }
     } catch (err: any) {
       setError(err.message || 'Gagal mendaftarkan toko');
@@ -71,8 +103,12 @@ export default function RegisterPage() {
           <div className="mb-4 transform hover:scale-105 transition-transform duration-500 cursor-default">
             <Logo width={64} height={64} showText={false} />
           </div>
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight mb-1">Daftarkan Toko Anda</h1>
-          <p className="text-slate-500 font-medium text-sm">Bergabung dan kelola bisnis Anda dengan mudah</p>
+          <h1 className="text-2xl font-bold text-slate-800 tracking-tight mb-1">
+            {step === 'register' ? 'Daftarkan Toko Anda' : 'Verifikasi OTP'}
+          </h1>
+          <p className="text-slate-500 font-medium text-sm">
+            {step === 'register' ? 'Bergabung dan kelola bisnis Anda dengan mudah' : `Masukkan kode OTP 6 angka yang dikirim ke ${email}`}
+          </p>
         </div>
 
         <form className="space-y-5" onSubmit={handleSubmit}>
@@ -84,71 +120,91 @@ export default function RegisterPage() {
           )}
 
           <div className="space-y-4">
-            
-            <div className="relative group">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-teal-600 transition-colors">
-                <Store size={18} strokeWidth={2.5} />
-              </div>
-              <input
-                id="tenantName"
-                name="tenantName"
-                type="text"
-                required
-                className="block w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all duration-200"
-                placeholder="Nama Toko / Bisnis (Contoh: Arhat Cafe)"
-                value={tenantName}
-                onChange={(e) => setTenantName(e.target.value)}
-              />
-            </div>
+            {step === 'register' ? (
+              <>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-teal-600 transition-colors">
+                    <Store size={18} strokeWidth={2.5} />
+                  </div>
+                  <input
+                    id="tenantName"
+                    name="tenantName"
+                    type="text"
+                    required
+                    className="block w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all duration-200"
+                    placeholder="Nama Toko / Bisnis (Contoh: Arhat Cafe)"
+                    value={tenantName}
+                    onChange={(e) => setTenantName(e.target.value)}
+                  />
+                </div>
 
-            <div className="relative group">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-teal-600 transition-colors">
-                <User size={18} strokeWidth={2.5} />
-              </div>
-              <input
-                id="fullName"
-                name="fullName"
-                type="text"
-                required
-                className="block w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all duration-200"
-                placeholder="Nama Lengkap Pemilik"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-              />
-            </div>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-teal-600 transition-colors">
+                    <User size={18} strokeWidth={2.5} />
+                  </div>
+                  <input
+                    id="fullName"
+                    name="fullName"
+                    type="text"
+                    required
+                    className="block w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all duration-200"
+                    placeholder="Nama Lengkap Pemilik"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                  />
+                </div>
 
-            <div className="relative group">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-teal-600 transition-colors">
-                <Mail size={18} strokeWidth={2.5} />
-              </div>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                className="block w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all duration-200"
-                placeholder="Alamat Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-teal-600 transition-colors">
+                    <Mail size={18} strokeWidth={2.5} />
+                  </div>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    required
+                    className="block w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all duration-200"
+                    placeholder="Alamat Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
 
-            <div className="relative group">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-teal-600 transition-colors">
-                <Lock size={18} strokeWidth={2.5} />
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-teal-600 transition-colors">
+                    <Lock size={18} strokeWidth={2.5} />
+                  </div>
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    required
+                    minLength={6}
+                    className="block w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all duration-200"
+                    placeholder="Password (Min. 6 Karakter)"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-teal-600 transition-colors">
+                  <KeyRound size={18} strokeWidth={2.5} />
+                </div>
+                <input
+                  id="otp"
+                  name="otp"
+                  type="text"
+                  maxLength={6}
+                  required
+                  className="block w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all duration-200 text-center tracking-[0.5em] text-lg"
+                  placeholder="000000"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                />
               </div>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                minLength={6}
-                className="block w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all duration-200"
-                placeholder="Password (Min. 6 Karakter)"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+            )}
           </div>
 
           <button
@@ -162,7 +218,7 @@ export default function RegisterPage() {
                 <span>Mendaftarkan Toko...</span>
               </>
             ) : (
-              <span>Daftar Sekarang</span>
+              <span>{step === 'register' ? 'Daftar Sekarang' : 'Verifikasi Akun'}</span>
             )}
           </button>
         </form>

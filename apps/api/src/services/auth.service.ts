@@ -3,7 +3,7 @@ import { sign, verify } from 'jsonwebtoken';
 import { eq, and } from 'drizzle-orm';
 import { AppError } from '../lib/errors';
 import { db } from '../lib/db';
-import { users, emailVerificationTokens, sessions, passwordResetTokens, tenants, outlets } from '../models';
+import { users, emailVerificationTokens, sessions, passwordResetTokens, tenants, outlets, otpCodes } from '../models';
 import { emailService } from './email.service';
 
 export class AuthService {
@@ -65,7 +65,7 @@ export class AuthService {
           tenantId,
           role: 'admin',
           status: 'active',
-          emailVerified: true, // Auto verify for now
+          emailVerified: false,
         })
         .returning();
 
@@ -80,6 +80,26 @@ export class AuthService {
         }
       };
     });
+
+    // Generate and send OTP
+    const code = this.generateOtp(6);
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
+
+    await db.insert(otpCodes).values({
+      email: data.email,
+      code,
+      type: 'register',
+      expiresAt,
+    });
+
+    await emailService.sendOtp(data.email, code, 'register');
+
+    return {
+      success: true,
+      requiresOtp: true,
+      email: data.email,
+      ...result
+    };
   }
 
   async register(data: {
@@ -113,27 +133,27 @@ export class AuthService {
         fullName: data.fullName,
         tenantId: data.tenantId,
         status: 'active',
-        emailVerified: true, // Auto verify for development
+        emailVerified: false,
       })
       .returning();
 
-    const token = this.generateRandomToken(32);
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const code = this.generateOtp(6);
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
-    const verificationToken = await db
-      .insert(emailVerificationTokens)
-      .values({
-        userId: newUser[0].id,
-        token,
-        expiresAt,
-      })
-      .returning();
+    await db.insert(otpCodes).values({
+      email: data.email,
+      code,
+      type: 'register',
+      expiresAt,
+    });
 
-    await emailService.sendVerificationEmail(newUser[0].email, token);
+    await emailService.sendOtp(newUser[0].email, code, 'register');
 
     return {
+      success: true,
+      requiresOtp: true,
+      email: newUser[0].email,
       user: newUser[0],
-      verificationTokenId: verificationToken[0].id,
     };
   }
 
@@ -166,6 +186,71 @@ export class AuthService {
       throw new AppError('Please verify your email first', 403);
     }
 
+    const code = this.generateOtp(6);
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+    // Delete previous login OTPs to avoid clutter
+    await db.delete(otpCodes).where(and(eq(otpCodes.email, email), eq(otpCodes.type, 'login')));
+
+    await db.insert(otpCodes).values({
+      email,
+      code,
+      type: 'login',
+      expiresAt,
+    });
+
+    await emailService.sendOtp(email, code, 'login');
+
+    return {
+      success: true,
+      requiresOtp: true,
+      email: userRecord.email,
+    };
+  }
+
+  async verifyRegisterOtp(email: string, code: string) {
+    const otpList = await db
+      .select()
+      .from(otpCodes)
+      .where(and(
+        eq(otpCodes.email, email),
+        eq(otpCodes.code, code),
+        eq(otpCodes.type, 'register')
+      ));
+
+    const otpRecord = otpList.find(o => !o.usedAt && o.expiresAt > new Date());
+
+    if (!otpRecord) {
+      throw new AppError('Kode OTP tidak valid atau sudah kadaluarsa', 400);
+    }
+
+    await db.update(users).set({ emailVerified: true }).where(eq(users.email, email));
+    await db.update(otpCodes).set({ usedAt: new Date() }).where(eq(otpCodes.id, otpRecord.id));
+
+    return { success: true, message: 'Email berhasil diverifikasi' };
+  }
+
+  async verifyLoginOtp(email: string, code: string, ipAddress?: string) {
+    const otpList = await db
+      .select()
+      .from(otpCodes)
+      .where(and(
+        eq(otpCodes.email, email),
+        eq(otpCodes.code, code),
+        eq(otpCodes.type, 'login')
+      ));
+
+    const otpRecord = otpList.find(o => !o.usedAt && o.expiresAt > new Date());
+
+    if (!otpRecord) {
+      throw new AppError('Kode OTP tidak valid atau sudah kadaluarsa', 400);
+    }
+
+    const usersList = await db.select().from(users).where(eq(users.email, email));
+    const userRecord = usersList[0];
+
+    await db.update(otpCodes).set({ usedAt: new Date() }).where(eq(otpCodes.id, otpRecord.id));
+
     const accessToken = this.generateAccessToken(userRecord);
     const refreshToken = this.generateRefreshToken(userRecord);
 
@@ -180,6 +265,7 @@ export class AuthService {
         email: userRecord.email,
         fullName: userRecord.fullName,
         role: userRecord.role,
+        tenantId: userRecord.tenantId,
       }
     };
   }
@@ -230,6 +316,15 @@ export class AuthService {
 
   private generateRandomToken(length: number): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }
+
+  private generateOtp(length: number): string {
+    const chars = '0123456789';
     let result = '';
     for (let i = 0; i < length; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
