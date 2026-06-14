@@ -186,25 +186,23 @@ export class AuthService {
       throw new AppError('Please verify your email first', 403);
     }
 
-    const code = this.generateOtp(6);
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+    const accessToken = this.generateAccessToken(userRecord);
+    const refreshToken = this.generateRefreshToken(userRecord);
 
-    // Delete previous login OTPs to avoid clutter
-    await db.delete(otpCodes).where(and(eq(otpCodes.email, email), eq(otpCodes.type, 'login')));
-
-    await db.insert(otpCodes).values({
-      email,
-      code,
-      type: 'login',
-      expiresAt,
-    });
-
-    await emailService.sendOtp(email, code, 'login');
+    await this.createSession(userRecord.id, refreshToken, ipAddress);
+    await db.update(users).set({ lastLogin: new Date() }).where(eq(users.id, userRecord.id));
 
     return {
       success: true,
-      requiresOtp: true,
-      email: userRecord.email,
+      accessToken,
+      refreshToken,
+      user: {
+        id: userRecord.id,
+        email: userRecord.email,
+        fullName: userRecord.fullName,
+        role: userRecord.role,
+        tenantId: userRecord.tenantId,
+      }
     };
   }
 
