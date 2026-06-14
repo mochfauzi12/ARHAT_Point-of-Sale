@@ -4,20 +4,23 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { loginPin } from '@/lib/api';
-import { Delete, Fingerprint, UserCircle2, ShoppingCart, TrendingUp, Key } from 'lucide-react';
+import { Delete } from 'lucide-react';
 
 export default function LoginPage() {
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [greeting, setGreeting] = useState('Welcome');
+  const [currentTime, setCurrentTime] = useState('');
   const router = useRouter();
 
   useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) setGreeting('Good Morning!');
-    else if (hour < 18) setGreeting('Good Afternoon!');
-    else setGreeting('Good Evening!');
+    const updateTime = () => {
+      const now = new Date();
+      setCurrentTime(now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }));
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleNumber = async (num: string) => {
@@ -46,122 +49,125 @@ export default function LoginPage() {
     setError(false);
   };
 
+  const letters: Record<string, string> = {
+    '1': '',
+    '2': 'ABC',
+    '3': 'DEF',
+    '4': 'GHI',
+    '5': 'JKL',
+    '6': 'MNO',
+    '7': 'PQRS',
+    '8': 'TUV',
+    '9': 'WXYZ',
+    '0': ''
+  };
+
   return (
-    <div className="min-h-screen bg-[#114b48] flex items-center justify-center p-4 relative font-sans selection:bg-teal-100">
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4 sm:p-8 font-sans">
       
-      {/* Background gradients for depth */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-[#165a55] to-[#0a2e2c]"></div>
-        {/* Soft radial highlight */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-teal-300/10 rounded-full blur-[100px]"></div>
-      </div>
+      {/* Mobile-like Container */}
+      <div className="bg-white w-full max-w-[440px] rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col relative border border-slate-200">
+        
+        {/* Status Bar */}
+        <div className="px-6 pt-5 pb-2 flex justify-between items-center text-xs font-bold text-slate-800">
+          <span>{currentTime || '10:45'}</span>
+        </div>
 
-      <div className="relative z-10 w-full max-w-[360px]">
-        {/* Main Card (Clear Glass Wrapper) */}
-        <div className="bg-white/10 backdrop-blur-xl rounded-[2.5rem] shadow-[0_24px_60px_-15px_rgba(0,0,0,0.4)] border border-white/20 flex flex-col overflow-hidden relative">
-          
-          {/* Top Header Area (Clear Glass) */}
-          <div className="p-6 pb-4 flex flex-col items-center relative min-h-[110px]">
-            {/* Top Demo PIN Badge */}
-            <div className="absolute top-5 right-5 bg-white/20 backdrop-blur-md rounded-full px-3 py-1 text-[10px] font-medium text-white/80 border border-white/20 flex items-center gap-1.5 shadow-sm">
-              Demo PIN <span className="text-white/40">|</span> <span className="font-bold text-white">1234</span>
-            </div>
-
-            {/* 3D-like Icon Area */}
-            <div className="relative w-16 h-16 mt-2 flex items-center justify-center">
-               <div className="absolute inset-0 bg-white/20 rounded-full blur-xl"></div>
-               <div className="relative z-10 flex flex-col items-center justify-center">
-                  <div className="relative">
-                    <ShoppingCart className="w-10 h-10 text-white drop-shadow-lg" strokeWidth={1.5} />
-                    <TrendingUp className="w-6 h-6 text-teal-300 absolute -top-2 -right-3 drop-shadow-md" strokeWidth={2.5} />
-                  </div>
-               </div>
-            </div>
+        {/* Top Header */}
+        <div className="px-6 flex justify-between items-center mt-2">
+          <div className="flex items-center gap-2.5">
+            <div className="w-6 h-6 rounded-md bg-[#165a41]"></div>
+            <span className="font-bold text-[15px] text-slate-800">SalesPoint</span>
           </div>
-
-          {/* Bottom Body Area (Milky Inset Card) */}
-          <div className="bg-white/60 backdrop-blur-2xl flex-1 rounded-t-[2rem] border-t border-white/70 p-8 pt-6 flex flex-col items-center shadow-[0_-10px_20px_rgba(0,0,0,0.05)] relative z-10">
-            
-            <h1 className="text-2xl font-semibold text-slate-800 tracking-tight">{greeting}</h1>
-            
-            <p className="text-slate-600 font-medium text-[12px] sm:text-[13px] mt-1.5 flex items-center gap-1.5">
-              <UserCircle2 size={14} className="text-slate-500" /> Enter your secure PIN to access POS.
-            </p>
-
-            {/* PIN Indicators */}
-            <div className={`mt-6 mb-6 flex justify-center bg-black/5 px-6 py-3 rounded-full shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] border border-white/40 ${error ? 'animate-shake' : ''}`}>
-              <div className="flex gap-4">
-                {[...Array(4)].map((_, i) => (
-                  <div 
-                    key={i} 
-                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                      i < pin.length 
-                        ? 'bg-slate-700 scale-110 shadow-[0_2px_4px_rgba(0,0,0,0.2)]' 
-                        : 'bg-black/15 shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)]'
-                    } ${error ? 'bg-red-500 shadow-[0_2px_4px_rgba(239,68,68,0.4)]' : ''}`}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Numpad */}
-            <div className="grid grid-cols-3 gap-3 w-full max-w-[240px] mx-auto">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-                <button
-                  key={num}
-                  onClick={() => handleNumber(num.toString())}
-                  disabled={loading}
-                  className="h-[60px] sm:h-[64px] rounded-[1rem] bg-white/90 backdrop-blur-md border border-white text-slate-800 text-[20px] font-medium shadow-[0_4px_12px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1)] flex items-center justify-center hover:bg-white hover:scale-105 transition-all active:scale-95 active:shadow-inner outline-none"
-                >
-                  <span>{num}</span>
-                </button>
-              ))}
-              
-              {/* Fingerprint Button */}
-              <button
-                disabled={loading}
-                className="h-[60px] sm:h-[64px] rounded-[1rem] bg-transparent border border-transparent text-slate-500 flex items-center justify-center hover:bg-white/40 transition-all active:scale-95 outline-none"
-              >
-                <Fingerprint size={26} strokeWidth={1.5} />
-              </button>
-
-              {/* Zero Button */}
-              <button
-                onClick={() => handleNumber('0')}
-                disabled={loading}
-                className="h-[60px] sm:h-[64px] rounded-[1rem] bg-white/90 backdrop-blur-md border border-white text-slate-800 text-[20px] font-medium shadow-[0_4px_12px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1)] flex items-center justify-center hover:bg-white hover:scale-105 transition-all active:scale-95 active:shadow-inner outline-none"
-              >
-                <span>0</span>
-              </button>
-
-              {/* Delete Button */}
-              <button
-                onClick={handleDelete}
-                disabled={loading || pin.length === 0}
-                className="h-[60px] sm:h-[64px] rounded-[1rem] bg-white/90 backdrop-blur-md border border-white text-[#e87a38] flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1)] hover:bg-white hover:scale-105 transition-all active:scale-95 active:shadow-inner outline-none disabled:opacity-50"
-              >
-                <Delete size={22} strokeWidth={2} />
-              </button>
-            </div>
-
-            <div className="mt-8 mb-2 w-full max-w-[240px] flex flex-col gap-3">
-              <Link
-                href="/auth/login"
-                className="w-full h-12 rounded-[1rem] bg-teal-600/10 border border-teal-600/20 text-teal-800 flex items-center justify-center gap-2 font-semibold text-[14px] hover:bg-teal-600/20 transition-all active:scale-95 shadow-sm"
-              >
-                <UserCircle2 size={18} /> Login as Admin
-              </Link>
-              
-              <Link 
-                href="#"
-                className="text-[12px] text-slate-500 font-medium hover:text-slate-800 transition-colors text-center"
-              >
-                Need help or forgot your PIN?
-              </Link>
-            </div>
-
+          <div className="bg-[#e6f4ea] text-[#165a41] px-3 py-1 rounded-full text-xs font-bold border border-[#cce8d5]">
+            Shift Pagi
           </div>
         </div>
+
+        {/* PIN Entry Area */}
+        <div className="flex flex-col items-center mt-24 px-6">
+          <div className="text-[11px] font-bold tracking-widest text-slate-400 mb-5">
+            MASUKKAN PIN
+          </div>
+          
+          {/* PIN Dots */}
+          <div className={`flex gap-5 mb-10 ${error ? 'animate-shake' : ''}`}>
+            {[...Array(4)].map((_, i) => (
+              <div 
+                key={i} 
+                className={`w-3.5 h-3.5 rounded-full border-[2px] transition-all duration-200 ${
+                  i < pin.length 
+                    ? 'bg-slate-300 border-slate-300' 
+                    : 'bg-transparent border-slate-200'
+                } ${error ? 'border-red-500 bg-red-500' : ''}`}
+              />
+            ))}
+          </div>
+
+          {/* Numpad */}
+          <div className="grid grid-cols-3 gap-3 sm:gap-4 w-full">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+              <button
+                key={num}
+                onClick={() => handleNumber(num.toString())}
+                disabled={loading}
+                className="h-[68px] rounded-2xl bg-[#f8fafc] border border-slate-100 flex flex-col items-center justify-center hover:bg-slate-100 active:bg-slate-200 transition-colors outline-none"
+              >
+                <span className="text-xl font-semibold text-slate-800 leading-none">{num}</span>
+                {letters[num] && (
+                  <span className="text-[9px] font-bold text-slate-400 mt-1 tracking-[0.15em]">{letters[num]}</span>
+                )}
+              </button>
+            ))}
+            
+            {/* Blank Button */}
+            <div className="h-[68px] rounded-2xl bg-[#f8fafc] border border-slate-100"></div>
+
+            {/* Zero Button */}
+            <button
+              onClick={() => handleNumber('0')}
+              disabled={loading}
+              className="h-[68px] rounded-2xl bg-[#f8fafc] border border-slate-100 flex flex-col items-center justify-center hover:bg-slate-100 active:bg-slate-200 transition-colors outline-none"
+            >
+              <span className="text-xl font-semibold text-slate-800">0</span>
+            </button>
+
+            {/* Delete Button */}
+            <button
+              onClick={handleDelete}
+              disabled={loading || pin.length === 0}
+              className="h-[68px] rounded-2xl bg-[#fff5f5] border border-[#fed7d7] flex items-center justify-center hover:bg-[#ffebeb] active:bg-[#fed7d7] transition-colors outline-none disabled:opacity-50 text-[#f56565]"
+            >
+               <Delete size={20} strokeWidth={2.5} />
+            </button>
+          </div>
+        </div>
+
+        {/* Bottom Section */}
+        <div className="px-6 pb-6 mt-12 w-full">
+          <Link
+            href="/auth/login"
+            className="w-full h-14 rounded-xl bg-[#165a41] text-white flex items-center justify-center font-bold text-[15px] hover:bg-[#114a35] transition-colors shadow-sm"
+          >
+            Masuk sebagai Admin
+          </Link>
+
+          <div className="flex items-center my-5">
+            <div className="flex-1 h-px bg-slate-100"></div>
+            <span className="px-3 text-[11px] font-medium text-slate-400">atau</span>
+            <div className="flex-1 h-px bg-slate-100"></div>
+          </div>
+
+          <button className="w-full text-center text-xs font-semibold text-slate-400 hover:text-slate-600 transition-colors">
+            Lupa PIN? Hubungi supervisor
+          </button>
+          
+          <div className="mt-8 pt-5 border-t border-slate-100 flex justify-between items-center text-xs font-bold text-slate-400">
+            <span>Demo PIN</span>
+            <span className="tracking-[0.2em] text-slate-800">1 2 3 4</span>
+          </div>
+        </div>
+
       </div>
     </div>
   );
