@@ -78,6 +78,9 @@ importers:
       '@types/jsonwebtoken':
         specifier: ^9.0.6
         version: 9.0.10
+      '@types/node':
+        specifier: ^20.19.41
+        version: 20.19.41
       drizzle-kit:
         specifier: ^0.31.10
         version: 0.31.10
@@ -89,7 +92,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^1.4.0
-        version: 1.6.1(@types/node@25.9.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@20.19.41)(lightningcss@1.32.0)
       wrangler:
         specifier: ^3.48.0
         version: 3.114.17(@cloudflare/workers-types@4.20260603.1)
@@ -2037,9 +2040,6 @@ packages:
 
   '@types/node@20.19.41':
     resolution: {integrity: sha512-ECymXOukMnOoVkC2bb1Vc/w/836DXncOg5m8Xj1RH7xSHZJWNYY6Zh7EH477vcnD5egKNNfy2RpNOmuChhFPgQ==}
-
-  '@types/node@25.9.1':
-    resolution: {integrity: sha512-xfrlY7UD5rMJk3ZVJP8BNzS28J36YJg+xp+LPXV1TdWxr8uMH5A860QNxYDGQe/ylDSgjxE52Q9VnO7p75tJxg==}
 
   '@types/react-dom@19.2.3':
     resolution: {integrity: sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ==}
@@ -5052,9 +5052,6 @@ packages:
   undici-types@6.21.0:
     resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
 
-  undici-types@7.24.6:
-    resolution: {integrity: sha512-WRNW+sJgj5OBN4/0JpHFqtqzhpbnV0GuB+OozA9gCL7a993SmU+1JBZCzLNxYsbMfIeDL+lTsphD5jN5N+n0zg==}
-
   undici@5.29.0:
     resolution: {integrity: sha512-raqeBD6NQK4SkWhQzeYKd1KmIG6dllBOTt55Rmkt4HtI9mwdWtJljnrXjAFUBLTSN67HWrOIZ3EPF4kjUw80Bg==}
     engines: {node: '>=14.0'}
@@ -6685,17 +6682,13 @@ snapshots:
   '@types/jsonwebtoken@9.0.10':
     dependencies:
       '@types/ms': 2.1.0
-      '@types/node': 25.9.1
+      '@types/node': 20.19.41
 
   '@types/ms@2.1.0': {}
 
   '@types/node@20.19.41':
     dependencies:
       undici-types: 6.21.0
-
-  '@types/node@25.9.1':
-    dependencies:
-      undici-types: 7.24.6
 
   '@types/react-dom@19.2.3(@types/react@19.2.16)':
     dependencies:
@@ -10067,8 +10060,6 @@ snapshots:
 
   undici-types@6.21.0: {}
 
-  undici-types@7.24.6: {}
-
   undici@5.29.0:
     dependencies:
       '@fastify/busboy': 2.1.1
@@ -10155,13 +10146,13 @@ snapshots:
       d3-time: 3.1.0
       d3-timer: 3.0.1
 
-  vite-node@1.6.1(@types/node@25.9.1)(lightningcss@1.32.0):
+  vite-node@1.6.1(@types/node@20.19.41)(lightningcss@1.32.0):
     dependencies:
       cac: 6.7.14
       debug: 4.4.3
       pathe: 1.1.2
       picocolors: 1.1.1
-      vite: 5.4.21(@types/node@25.9.1)(lightningcss@1.32.0)
+      vite: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -10173,17 +10164,17 @@ snapshots:
       - supports-color
       - terser
 
-  vite@5.4.21(@types/node@25.9.1)(lightningcss@1.32.0):
+  vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0):
     dependencies:
       esbuild: 0.21.5
       postcss: 8.5.15
       rollup: 4.61.0
     optionalDependencies:
-      '@types/node': 25.9.1
+      '@types/node': 20.19.41
       fsevents: 2.3.3
       lightningcss: 1.32.0
 
-  vitest@1.6.1(@types/node@25.9.1)(lightningcss@1.32.0):
+  vitest@1.6.1(@types/node@20.19.41)(lightningcss@1.32.0):
     dependencies:
       '@vitest/expect': 1.6.1
       '@vitest/runner': 1.6.1
@@ -10202,11 +10193,11 @@ snapshots:
       strip-literal: 2.1.1
       tinybench: 2.9.0
       tinypool: 0.8.4
-      vite: 5.4.21(@types/node@25.9.1)(lightningcss@1.32.0)
-      vite-node: 1.6.1(@types/node@25.9.1)(lightningcss@1.32.0)
+      vite: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
+      vite-node: 1.6.1(@types/node@20.19.41)(lightningcss@1.32.0)
       why-is-node-running: 2.3.0
     optionalDependencies:
-      '@types/node': 25.9.1
+      '@types/node': 20.19.41
     transitivePeerDependencies:
       - less
       - lightningcss

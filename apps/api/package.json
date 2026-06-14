@@ -27,6 +27,7 @@
     "@cloudflare/workers-types": "^4.20240405.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.6",
+    "@types/node": "^20.19.41",
     "drizzle-kit": "^0.31.10",
     "tsx": "^4.22.4",
     "typescript": "^5.0.0",

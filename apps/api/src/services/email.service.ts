@@ -4,14 +4,14 @@ export const emailService = {
     
     if (process.env.RESEND_API_KEY) {
       const subject = type === 'register' ? 'Verifikasi Email ARHAT POS' : 'Kode OTP Login ARHAT POS';
-      const html = \`<p>Kode OTP Anda adalah: <strong>\${token}</strong></p><p>Kode ini berlaku selama 15 menit.</p>\`;
+      const html = `<p>Kode OTP Anda adalah: <strong>${token}</strong></p><p>Kode ini berlaku selama 15 menit.</p>`;
       
       try {
         const response = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': \`Bearer \${process.env.RESEND_API_KEY}\`
+            'Authorization': `Bearer ${process.env.RESEND_API_KEY}`
           },
           body: JSON.stringify({
             from: 'ARHAT POS <onboarding@resend.dev>', // Change to verified domain if available
